@@ -26,37 +26,24 @@ Serial_Number		dd	0x01020304	;N° de série
 Disk_Name		db	"COS2000    "	;Nom de volume
 Fat_Type		db	"FAT12   "	;Type de système de fichiers
 
-;Cpu_Message		db "CPU test",0
-Boot_Message		db "Booting ",0
-Finding_Message		db "System  ",0
-Loading_Message		db "Loading ",0
-System_File		db "SYSTEM  SYS"
-Is_Ok			db "[  OK  ]",0x0A,0x0D,0
-Is_Failed		db "[Failed]",0x0A,0x0D,"Press a key",0x0A,0x0D,0
+Boot_Message		db "Demarrage de COS",0
+Loading_Message		db "Chargement",0
+System_File		db "LOADER  SYS"
+Is_Ok			db " [  OK  ]",0x0A,0x0D,0
+Is_Failed		db " [Erreur]",0x0A,0x0D,"<Appuyer une touche>",0
 The_Dot			db '.',0
 
 Boot_Error:
         mov	si,Is_Failed
         call	ShowString
-        mov	ah,0
+        xor ax,ax
         int	0x16
         int	0x19
 
 Boot_Ok:
-	mov	al,[Stage]
-	cmp	al,0
-	jz	No_Ok
 	mov	si,Is_Ok
 	call	ShowString
-No_Ok:	
-	xor	ah,ah
-	mov	si,ax
-	add	si,Boot_Message ;Cpu_Message
-	call	ShowString
-	add	byte [Stage],0x09	
-        ret
-
-Stage	db 0
+	ret
 
 Boot:
         push	cs
@@ -69,21 +56,29 @@ Boot:
         mov	ss,ax
         mov	sp,0xFFFF
         sti
-;	call	Detect_Cpu
-;	jc	Boot_Error
-        call	Boot_Ok	
+        mov si,Boot_Message
+        call ShowString	
         xor	ax,ax
         int	0x13
         jc	Boot_Error
 	mov	cx,[Reserved_Sectors]
         add	cx,[Sectors_Hidden]
         adc	cx,[Sectors_Hidden+2]
-        mov	di,Fat_Buffer
-        call	ReadSector
-        jc	Boot_Error
+        mov	bx,[Sectors_Per_Fat]
+        mov di,Fat_Buffer
+         push bx
+        push cx
+readfat:
+	    call     ReadSector
+        jc       Boot_Error
+	    inc      cx
+	    add      di,[Sectors_Size]
+	    dec      bx
+	   jnz      readfat          
+        pop cx
+        pop bx
         xor	ax,ax
         mov	al,[Fats_Number]
-        mov	bx,[Sectors_Per_Fat]
         mul	bx
         add	cx,ax
         mov	ax,32
@@ -93,7 +88,9 @@ Boot:
         sub	ax,2
         mov	word [Serial_Number],ax
         xor	dx,dx
-	call	Boot_Ok
+	    call	Boot_Ok
+        mov si,Loading_Message
+        call ShowString	
 Find_System:
         mov	di,Buffer
         call	ReadSector
@@ -121,12 +118,11 @@ Next_Root_Entrie:
         jmp	Find_System
 System_Found:
         mov	cx,[di+26]
-        mov	ax,0x0071
+        mov	ax,0x0070
         mov	es,ax
         push	es
         mov	di,0x100
         push	di
-        call	Boot_Ok
 	mov	si,The_Dot
 Resume_Loading:
         cmp	cx,0x0FF0
@@ -232,34 +228,7 @@ End_Show:
         popa
 	ret
 
-;======================DETECTCPU======================
-;Detecte si le processeur est un 386 au mini
-;->
-;<- Flag Carry si erreur
-;=====================================================
-;Detect_Cpu:
-;	push	ax		; test if 8088/8086 is present (flag bits 12-15 will be set)
-; 	xor	ah,ah		; ah = 0
-;	push	ax		; copy ax into the flags
-;	popf			; with bits 12-15 clear
-;	pushf			; Read flags back into ax
-;	pop	ax
-;	and	ah,0xF0		; check if bits 12-15 are set
-;	cmp	ah,0xF0
-;	je	No_386		; no 386 detected (8088/8086 present)
-;				; check for a 286 (bits 12-15 are clear)
-;	mov	ah,0xF0		; set bits 12-15
-;	push	ax		; copy ax onto the flags
-;	popf
-;	pushf			; copy the flags into ax
-;	pop	ax
-;	and	ah,0xF0		; check if bits 12-15 are clear
-;	jz	No_386		; no 386 detected (80286 present)
-;	clc
-;	ret
-;No_386:
-;	stc	
-;	ret
+
 
 times 510-($-$$) db ' '
 
