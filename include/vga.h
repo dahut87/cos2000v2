@@ -2,6 +2,7 @@
 
 #define TEXTSCREEN 0xB8000	/* debut de la memoire video texte*/
 #define GRPHSCREEN 0xA0000	/* debut de la memoire video graphique*/
+
 typedef u8 mode_def[64];
 
 
@@ -18,7 +19,11 @@ void disablecursor (void);
 void enablescroll (void);
 void disablescroll (void);
 void (*writepxl)(u16 x, u16 y, u32 c);
-void (*showchar)(u8 thechar);
-void (*cls)(void);
-void (*scroll)(u8 lines);
+void (*showchar)(u16 coordx,u16 coordy,u8 thechar,u8 attrib);
+void (*fill)(u8 attrib);
+void (*scroll)(u8 lines,u8 attrib);
+
+
+
+
 
