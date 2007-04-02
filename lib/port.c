@@ -1,6 +1,11 @@
 #include "types.h"
 #include "asm.h"
 
+/*******************************************************************************/
+
+/* Envoie une série d'octet a destination d'une portion de mémoire
+vers le registre video spécifié */
+
 void outreg(u16 port,u8 *src,u16 num)
 {
 int i;	       
@@ -11,17 +16,27 @@ for(i=0;i<num;i++)
 	}
 }
 
+
+/*******************************************************************************/
+
+/* Envoie une série d'octet a destination d'une portion de mémoire
+vers le registre video spécifié (accés data et index confondu) */
+
 void outregsame(u16 port,u8 *src,u16 num)
 {
 int i;	
 for(i=0;i<num;i++)
 	{
-		inw(port);
+		inb(port);
 	 	outb(port,i);
 	 	outb(port,*src++);	
 	}
 }
 
+/*******************************************************************************/
+
+/* Récupère une série d'octet en provenance d'un registre video spécifié
+vers portion de mémoire */
 
 void inreg(u16 port,u8 *src,u16 num)
 {
@@ -33,34 +48,21 @@ for(i=0;i<num;i++)
 	}
 }
 
+/*******************************************************************************/
+
+/* Récupère une série d'octet en provenance d'un registre video spécifié
+vers portion de mémoire (accés data et index confondu) */
+
 void inregsame(u16 port,u8 *src,u16 num)
 {
 int i;	
 for(i=0;i<num;i++)
 	{
-		inw(port);
+		inb(port);
 	 	outb(port,i);
 	 	*src++=inb(port);	
 	}
 }
 
-void initreg(u16 port,u8 *src,u16 num)
-{
-int i;	       
-for(i=0;i<num;i++)
-	{
-	 	outb(port,*src++);
-	 	outb(port+1,*src++);	
-	}
-}
+/*******************************************************************************/
 
-void initregsame(u16 port,u8 *src,u16 num)
-{
-int i;	       
-for(i=0;i<num;i++)
-	{
-		inw(port);
-	 	outb(port,*src++);
-	 	outb(port,*src++);	
-	}
-}
