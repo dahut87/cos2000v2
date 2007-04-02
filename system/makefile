@@ -1,4 +1,4 @@
-CC=gcc -O1 -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include -c -o 
+CC=gcc -O0 -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include -c -o 
 
 
 LINK=ld -e __main -o
