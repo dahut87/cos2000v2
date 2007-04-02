@@ -34,7 +34,7 @@ void initpic(void)
 	outb(0xA0,0x11);
 	nop();
 	/* Initialisation de ICW2 - vecteur de depart = 96 */
-	outb(0xA1,0x70);   
+	outb(0xA1,0x60);   
 	nop();   
 	/* Initialisation de ICW3 */
 	outb(0xA1,0x02);
@@ -232,6 +232,8 @@ void irq0()
  {
    cli();
 	print("irq 1");
+	while ((inb(0x64)&1)==0);
+ inb(0x60);
 	irqendmaster();
 	sti();
   iret();
@@ -296,6 +298,7 @@ void irq8()
    cli();
 	print("irq 8");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -305,6 +308,7 @@ void irq9()
    cli();
 	print("irq 9");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -314,6 +318,7 @@ void irq10()
    cli();
 	print("irq 10");
 	irqendslave();
+		irqendmaster();
 		sti();
   iret();
   }
@@ -323,6 +328,7 @@ void irq11()
    cli();
 	print("irq 11");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -331,7 +337,10 @@ void irq12()
  {
    cli();
 	print("irq 12");
-	irqendslave();
+	while ((inb(0x64)&1)==0);
+ inb(0x60);
+ 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -341,6 +350,7 @@ void irq12()
    cli();
 	print("irq 13");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -350,6 +360,7 @@ void irq14()
    cli();
 	print("irq 14");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }
@@ -359,6 +370,7 @@ void irq15()
    cli();
 	print("irq 15");
 	irqendslave();
+	irqendmaster();
 		sti();
   iret();
   }  
@@ -366,52 +378,52 @@ void irq15()
  void initidt(void)
 {
 u16 i;
-	putidt((u32)exception0, 0x30, INTGATE, 0);
-	putidt((u32)exception1, 0x30, INTGATE, 1);
-	putidt((u32)exception2, 0x30, INTGATE, 2);
-	putidt((u32)exception3, 0x30, INTGATE, 3);
-	putidt((u32)exception4, 0x30, INTGATE, 4);
-	putidt((u32)exception5, 0x30, INTGATE, 5);
-	putidt((u32)exception6, 0x30, INTGATE, 6);
-	putidt((u32)exception7, 0x30, INTGATE, 7);
-	putidt((u32)exception8, 0x30, INTGATE, 8);
-	putidt((u32)exception9, 0x30, INTGATE, 9);
-	putidt((u32)exception10, 0x30, INTGATE, 10);
-	putidt((u32)exception11, 0x30, INTGATE, 11);
-	putidt((u32)exception12, 0x30, INTGATE, 12);
-	putidt((u32)exception13, 0x30, INTGATE, 13);
-	putidt((u32)exception14, 0x30, INTGATE, 14);
-	putidt((u32)exception15, 0x30, INTGATE, 15);
-	putidt((u32)exception16, 0x30, INTGATE, 16);
-	putidt((u32)exception17, 0x30, INTGATE, 17);
-	putidt((u32)exception18, 0x30, INTGATE, 18);
+	putidt((u32)exception0, 0x20, INTGATE, 0);
+	putidt((u32)exception1, 0x20, INTGATE, 1);
+	putidt((u32)exception2, 0x20, INTGATE, 2);
+	putidt((u32)exception3, 0x20, INTGATE, 3);
+	putidt((u32)exception4, 0x20, INTGATE, 4);
+	putidt((u32)exception5, 0x20, INTGATE, 5);
+	putidt((u32)exception6, 0x20, INTGATE, 6);
+	putidt((u32)exception7, 0x20, INTGATE, 7);
+	putidt((u32)exception8, 0x20, INTGATE, 8);
+	putidt((u32)exception9, 0x20, INTGATE, 9);
+	putidt((u32)exception10, 0x20, INTGATE, 10);
+	putidt((u32)exception11, 0x20, INTGATE, 11);
+	putidt((u32)exception12, 0x20, INTGATE, 12);
+	putidt((u32)exception13, 0x20, INTGATE, 13);
+	putidt((u32)exception14, 0x20, INTGATE, 14);
+	putidt((u32)exception15, 0x20, INTGATE, 15);
+	putidt((u32)exception16, 0x20, INTGATE, 16);
+	putidt((u32)exception17, 0x20, INTGATE, 17);
+	putidt((u32)exception18, 0x20, INTGATE, 18);
 	for(i=19;i<32;i++)
   {
-	putidt((u32)interruption, 0x30, INTGATE, i);  
+	putidt((u32)interruption, 0x20, INTGATE, i);  
   } 
-	putidt((u32)irq0, 0x30, INTGATE, 32);
-	putidt((u32)irq1, 0x30, INTGATE, 33);
-	putidt((u32)irq2, 0x30, INTGATE, 34);
-	putidt((u32)irq3, 0x30, INTGATE, 35);
-	putidt((u32)irq4, 0x30, INTGATE, 36);
-	putidt((u32)irq5, 0x30, INTGATE, 37);
-	putidt((u32)irq6, 0x30, INTGATE, 38);
-	putidt((u32)irq7, 0x30, INTGATE, 39);
-	for(i=40;i<112;i++)
+	putidt((u32)irq0, 0x20, INTGATE, 32);
+	putidt((u32)irq1, 0x20, INTGATE, 33);
+	putidt((u32)irq2, 0x20, INTGATE, 34);
+	putidt((u32)irq3, 0x20, INTGATE, 35);
+	putidt((u32)irq4, 0x20, INTGATE, 36);
+	putidt((u32)irq5, 0x20, INTGATE, 37);
+	putidt((u32)irq6, 0x20, INTGATE, 38);
+	putidt((u32)irq7, 0x20, INTGATE, 39);
+	for(i=40;i<96;i++)
   {
-	putidt((u32)interruption, 0x30, INTGATE, i);  
+	putidt((u32)interruption, 0x20, INTGATE, i);  
   } 
-	putidt((u32)irq8, 0x30, INTGATE, 112);
-	putidt((u32)irq9, 0x30, INTGATE, 113);
-	putidt((u32)irq10, 0x30, INTGATE, 114);
-	putidt((u32)irq11, 0x30, INTGATE, 115);
-	putidt((u32)irq12, 0x30, INTGATE, 116);
-	putidt((u32)irq13, 0x30, INTGATE, 117);
-	putidt((u32)irq14, 0x30, INTGATE, 118);
-	putidt((u32)irq15, 0x30, INTGATE, 119);  
-	for(i=120;i<255;i++)
+	putidt((u32)irq8, 0x20, INTGATE, 96);
+	putidt((u32)irq9, 0x20, INTGATE, 97);
+	putidt((u32)irq10, 0x20, INTGATE, 98);
+	putidt((u32)irq11, 0x20, INTGATE, 99);
+	putidt((u32)irq12, 0x20, INTGATE, 100);
+	putidt((u32)irq13, 0x20, INTGATE, 101);
+	putidt((u32)irq14, 0x20, INTGATE, 102);
+	putidt((u32)irq15, 0x20, INTGATE, 103);  
+	for(i=104;i<255;i++)
   {
-	putidt((u32)interruption, 0x30, INTGATE, i);  
+	putidt((u32)interruption, 0x20, INTGATE, i);  
   } 
   /* initialise le registre idt */
 	idtreg.limite = 256*8;
