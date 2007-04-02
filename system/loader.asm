@@ -7,6 +7,10 @@
 		pop 	ds
 		pop 	es
                 call EnableA20
+	        mov si,msgpmode
+		call showstr
+		xor ax,ax
+		int 16h
 		mov ax,cs	
 		mov [RealCS],ax
 		lea ax,[Real]
@@ -37,8 +41,6 @@
 		;out 0x21,al
 		mov al,0x80	
 		out 0x70,al
-		mov si,msgpmode
-		call showstr
 
 		mov eax,cr0	
 		or al,1
