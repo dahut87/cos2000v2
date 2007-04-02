@@ -1,6 +1,6 @@
 all:	makall
 
-makall: 
+makall: iflop/iflop.com mbrol/mbrol.com
 	sync
 
 clean:
@@ -12,7 +12,6 @@ iflop/iflop.com:
 
 mbrol/mbrol.com:
 	(cd mbrol; make)
-
 
 
 	
