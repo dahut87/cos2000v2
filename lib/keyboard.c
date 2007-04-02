@@ -96,8 +96,9 @@ static const u8 set1_ctrl[] =
 
 u8 waitascii()
 {	
+u8 oldptrscan=ptrscan;
 u8 oldptrascii=ptrascii;
-while(oldptrascii==ptrascii) {};
+while((oldptrascii==ptrascii));/*(oldptrscan==ptrscan)&&*/
 return bufferascii[ptrascii];
 }
 
@@ -143,7 +144,6 @@ static void reboot(void)
 /******************************************************************************/
 unsigned convert(u32 keypressed)
 {
-	
 	u8 temp,key,lastscan;
 /* garde le dernier pointeur du buffer scan */
    lastscan=ptrscan;
@@ -292,7 +292,7 @@ scancode=inb(0x60);
 ascii = convert(scancode);
 if(ascii != 0) 
 {
-/*putchar(ascii);*/
+putchar(ascii);
 ptrascii++;
 if (ptrascii==255) ptrascii==0;
 bufferascii[ptrascii]=ascii;
