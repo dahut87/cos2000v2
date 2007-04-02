@@ -1,10 +1,19 @@
 #include "vga.h"
 #include "video.h"
+#include "stdarg.h"
 
-u8 attrib=0x07;
-u16 cursX,cursY;      /* position du curseur */
-extern u16 resX,resY;        /* resolution x,y en caractères*/	
-u8 ansi,param1,param2,param3;
+
+console vc[8]={
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0},
+{0x07,0,0,0,0,0,0,0}};
+
+u8 usedvc=0;
 
 
 /*******************************************************************************/
@@ -19,10 +28,16 @@ void setattrib(u8 att)
 	};
 	u8 tempattr;
 
-	tempattr = attrib;
+	tempattr = vc[usedvc].attrib;
 	if(att == 0)
-		tempattr &= ~0x08;		/* Faible intensité */
-	else if(att == 1)
+		tempattr = 0x07;		/* Couleur Grise sur fond noir */
+	else if (att == 5)
+    tempattr |= 0x80;	
+	else if (att == 7)
+    tempattr = ((tempattr&0x0F)<<4)+((tempattr&0xF0)>>4);	
+	else if (att == 8)
+    tempattr = 0;	
+	else if (att == 1)
 		tempattr |= 0x08;		/* Forte intensité */
 	else if(att >= 30 && att <= 37)
 	{
@@ -34,7 +49,7 @@ void setattrib(u8 att)
 		att = ansitovga[att - 40] << 4;
 		tempattr = (tempattr & ~0x70) | att;/* couleur de fond */
 	}
-	attrib = tempattr;
+	vc[usedvc].attrib = tempattr;
 }
 
 /*******************************************************************************/
@@ -44,13 +59,13 @@ void setattrib(u8 att)
 bool makeansi(u8 c)
 {
 /* state machine to handle the escape sequences */
-	switch(ansi)
+	switch(vc[usedvc].ansi)
 	{
 	case 0:
 /* ESC -- next state */
 		if(c == 0x1B)
 		{
-			ansi++;
+			vc[usedvc].ansi++;
 			return 1; /* "I handled it" */
 		}
 		break;
@@ -58,8 +73,8 @@ bool makeansi(u8 c)
 	case 1:
 		if(c == '[')
 		{
-			ansi++;
-			param1 = 0;
+			vc[usedvc].ansi++;
+			vc[usedvc].param1 = 0;
 			return 1;
 		}
 		break;
@@ -67,62 +82,69 @@ bool makeansi(u8 c)
 	case 2:
 		if(isdigit(c))
 		{
-			param1 = param1 * 10 + c - '0';
+			vc[usedvc].param1 = vc[usedvc].param1 * 10 + c - '0';
 			return 1;
 		}
 		else if(c == ';')
 		{
-			ansi++;
-			param2 = 0;
+			vc[usedvc].ansi++;
+			vc[usedvc].param2 = 0;
 			return 1;
 		}
 /* ESC[2J -- efface l'ecran */
 		else if(c == 'J')
 		{
-			if(param1 == 2)
+			if(vc[usedvc].param1 == 2)
 			{
-				fill(attrib);
-				ansi = 0;
+				fill(vc[usedvc].attrib);
+				vc[usedvc].cursX=0;
+				vc[usedvc].cursY=0;
+				gotoscr(0,0);
+				vc[usedvc].ansi = 0;
 				return 1;
 			}
 		}
 /* ESC[num1m -- met l'attribut num1 */
 		else if(c == 'm')
 		{
-			setattrib(param1);
-			ansi = 0;
+			setattrib(vc[usedvc].param1);
+			vc[usedvc].ansi = 0;
 			return 1;
 		}
 /* ESC[num1A -- bouge le curseur de num1 vers le haut */
 		else if(c == 'A')
 		{
-     cursY-=param1;
-			ansi = 0;
-			gotoscr(cursX,cursY);
+     vc[usedvc].cursY-=vc[usedvc].param1;
+     if (vc[usedvc].cursY<0) vc[usedvc].cursY=0;
+			vc[usedvc].ansi = 0;
+			gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
 			return 1;    
     }
 /* ESC[num1B -- bouge le curseur de num1 vers le bas */
 		else if(c == 'B')
 		{
-     cursY+=param1;
-			ansi = 0;
-		gotoscr(cursX,cursY);
+     vc[usedvc].cursY+=vc[usedvc].param1;
+     if (vc[usedvc].cursY>=getyres()-1) vc[usedvc].cursY=getyres();
+			vc[usedvc].ansi = 0;
+		gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
 			return 1;    
     }
-/* ESC[num1C -- bouge le curseur de num1 vers la gauche */
-		else if(c == 'C')
-		{
-     cursX-=param1;
-			ansi = 0;
-		gotoscr(cursX,cursY);
-			return 1;    
-    }
-/* ESC[num1D -- bouge le curseur de num1 vers la droite */
+/* ESC[num1D -- bouge le curseur de num1 vers la gauche */
 		else if(c == 'D')
 		{
-     cursX+=param1;
-			ansi = 0;
-		gotoscr(cursX,cursY);
+     vc[usedvc].cursX-=vc[usedvc].param1;
+     if (vc[usedvc].cursX<0) vc[usedvc].cursX=0;
+			vc[usedvc].ansi = 0;
+		gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
+			return 1;    
+    }
+/* ESC[num1C -- bouge le curseur de num1 vers la droite */
+		else if(c == 'C')
+		{
+     vc[usedvc].cursX+=vc[usedvc].param1;
+     if (vc[usedvc].cursX>=getxres()-1) vc[usedvc].cursX=getxres();
+			vc[usedvc].ansi = 0;
+		gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
 			return 1;    
     }
 		break;
@@ -130,32 +152,32 @@ bool makeansi(u8 c)
 	case 3:
 		if(isdigit(c))
 		{
-			param2 = param2 * 10 + c - '0';
+			vc[usedvc].param2 = vc[usedvc].param2 * 10 + c - '0';
 			return 1;
 		}
 		else if(c == ';')
 		{
-			ansi++;
-			param3 = 0;
+			vc[usedvc].ansi++;
+			vc[usedvc].param3 = 0;
 			return 1;
 		}
 /* ESC[num1;num2H ou ESC[num1;num2f-- bouge le curseur en num1,num2 */
 		else if((c == 'H')||(c == 'f'))
 		{
 	/* Remet la position du curseur matériel  a num1,num2 */
-			gotoscr(param2,param1);
+			gotoscr(vc[usedvc].param2,vc[usedvc].param1);
 	/* Remet la position du curseur logiciel  a num1,num2 */
-	    cursX=param2;
-	    cursY=param1;			
-			ansi = 0;
+	    vc[usedvc].cursX=vc[usedvc].param2;
+	    vc[usedvc].cursY=vc[usedvc].param1;			
+			vc[usedvc].ansi = 0;
 			return 1;
 		}
 /* ESC[num1;num2m -- met les attributs num1,num2 */
 		else if(c == 'm')
 		{
-			setattrib(param1);
-			setattrib(param2);
-			ansi = 0;
+			setattrib(vc[usedvc].param1);
+			setattrib(vc[usedvc].param2);
+			vc[usedvc].ansi = 0;
 			return 1;
 		}
 		break;
@@ -163,26 +185,38 @@ bool makeansi(u8 c)
 	case 4:
 		if(isdigit(c))
 		{
-			param3 = param3 * 10 + c - '0';
+			vc[usedvc].param3 = vc[usedvc].param3 * 10 + c - '0';
 			return 1;
 		}
 /* ESC[num1;num2;num3m -- met les attributs num1,num2,num3 */
 		else if(c == 'm')
 		{
-			setattrib(param1);
-			setattrib(param2);
-			setattrib(param3);
-			ansi = 0;
+			setattrib(vc[usedvc].param1);
+			setattrib(vc[usedvc].param2);
+			setattrib(vc[usedvc].param3);
+			vc[usedvc].ansi = 0;
 			return 1;
 		}
 		break;
 /* Mauvais etat >> reset */
 	default:
-		ansi = 0;
+		vc[usedvc].ansi = 0;
 		break;
 	}
-	ansi = 0;
+	vc[usedvc].ansi = 0;
 	return 0; /* Ansi fini ;)*/
+}
+
+/*******************************************************************************/
+
+/* Change la console en cours d'utilisation */
+
+void changevc(u8 avc)
+{
+usedvc=avc;
+showpage(usedvc);
+setpage(usedvc);  
+gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
 }
 
 /*******************************************************************************/
@@ -191,76 +225,78 @@ bool makeansi(u8 c)
 
 void putchar(u8 thechar)
 {
+showpage(usedvc);
+setpage(usedvc);
 if(makeansi(thechar)) return;
 switch (thechar)
 {
 case 0x11:
-if (cursY>0) cursY--;
+if (vc[usedvc].cursY>0) vc[usedvc].cursY--;
 break;
 case 0x12:
-if (cursY<resY-1) cursY++;
+if (vc[usedvc].cursY<getyres()-1) vc[usedvc].cursY++;
 break;
 case 0x13:
-if (cursX>0) cursX--;
+if (vc[usedvc].cursX>0) vc[usedvc].cursX--;
 break;
 case 0x14:
-if (cursX<resX-1) cursX++;
+if (vc[usedvc].cursX<getxres()-1) vc[usedvc].cursX++;
 break;
 case 0x2:
-cursX=0;
-cursY=0;
+vc[usedvc].cursX=0;
+vc[usedvc].cursY=0;
 break;
 case 0x3:
-cursX=0;
-cursY=resY-1;
+vc[usedvc].cursX=0;
+vc[usedvc].cursY=getyres()-1;
 break;
 case 0x19:
-cursX=resX-1;
+vc[usedvc].cursX=getxres()-1;
 break;
 case '\b':
-if (cursX==0) 
+if (vc[usedvc].cursX==0) 
 {
-if (cursY>0)
+if (vc[usedvc].cursY>0)
 {
-cursX=resX-1;
-cursY--;
+vc[usedvc].cursX=getxres()-1;
+vc[usedvc].cursY--;
 }
 }
 else
 {
-cursX--;
+vc[usedvc].cursX--;
 }
-showchar(cursX,cursY,' ',attrib);
+showchar(vc[usedvc].cursX,vc[usedvc].cursY,' ',vc[usedvc].attrib);
 break;
 case '\t':
-cursX=(cursX + 8) & ~(8 - 1);
+vc[usedvc].cursX=(vc[usedvc].cursX + 8) & ~(8 - 1);
 break;
 case '\n':
-cursX=0;
+vc[usedvc].cursX=0;
 break;
 case '\r':
-cursX=0;
-cursY++;
+vc[usedvc].cursX=0;
+vc[usedvc].cursY++;
 break;
 default:
 if (thechar>=' ') 
 {
-showchar(cursX,cursY,thechar,attrib);
-cursX++;
+showchar(vc[usedvc].cursX,vc[usedvc].cursY,thechar,vc[usedvc].attrib);
+vc[usedvc].cursX++;
 }
 break;
 }
-if (cursX>=resX)
+if (vc[usedvc].cursX>=getxres())
 	{
-		cursX=0;
-		cursY++;
+		vc[usedvc].cursX=0;
+		vc[usedvc].cursY++;
 	}
-if (cursY>=resY)
+if (vc[usedvc].cursY>=getyres())
 		{
-			scroll(1,attrib);
-			cursY=resY-1;
+			scroll(1,vc[usedvc].attrib);
+			vc[usedvc].cursY=getyres()-1;
 		}
-	gotoscr(cursX,cursY);
+	gotoscr(vc[usedvc].cursX,vc[usedvc].cursY);
 }
 
 /*******************************************************************************/
@@ -271,7 +307,7 @@ void print(u8* string)
 {
 	u8 *source;		
 	source = string;
-	while(*source!=0x00)
+	while(*source!=0)
         {
         putchar(*source++);
         }
@@ -279,13 +315,87 @@ void print(u8* string)
 
 /*******************************************************************************/
 
-/* affiche un octet sous forme hexadécimale a l'ecran */
+/* affiche une chaine de caractère formaté a l'ecran */
 
-void showhex(u8 src)
+void printf (const u8 *string, ...)
 {
-	static u8 hexadigit[16] = "0123456789ABCDEF";
-	putchar(hexadigit[(src&0xF0)>>4]);
-	putchar(hexadigit[src&0x0F]);
+   va_list ap;
+   u8 buffer[50];
+   u8 *pointer;
+   
+   u8 radix;
+   bool signe;
+   long num;
+   
+   
+   va_start(ap, string);
+   while(*string!= 0)
+   {
+      if (*string != '%')
+           putchar (*string);
+      else
+      {
+	   switch (*++string)
+	  {
+	    case 'c':	  
+	       putchar (va_arg(ap, int));
+	       break;
+	    case 'u':
+	    	 radix=10;
+	    	 signe=0;
+showstring:
+        num=va_arg(ap, int);	    
+			  pointer = buffer + 50 - 1;
+			  *pointer = '\0';
+		     if ((signe==1)&&(num<0)) 
+          {
+          num = -num;		  
+				  signe++;
+				  }
+        do
+				{
+					unsigned long temp;
+					temp = (unsigned long)num % radix;
+					pointer--;
+					if(temp < 10)
+						*pointer = temp + '0';
+					else
+						*pointer = temp - 10 + 'a';
+					num = (unsigned long)num / radix;
+				}
+				while(num != 0);
+				if (signe>1) *(--pointer)='-';
+        while (*pointer!=0) putchar(*pointer++);
+         break;	 
+      case 'o':
+      				radix = 8;
+              signe=0;
+             goto showstring;                
+	    case 'd':
+	    case 'i':
+	    	 radix=10;
+	    	 signe=1;
+         goto showstring;
+	    case 'x':
+	    	 radix=16;
+	    	 signe=0;	       
+         goto showstring;
+	    case 's':
+	       pointer=va_arg(ap, u8*);
+	       if (!pointer) pointer="(null)";
+	       while (*pointer!=0) putchar(*pointer++);
+	       break;
+	    case '%':	     
+	       putchar ('%');
+	       break;
+	    default:
+	       putchar (va_arg(ap, int));
+	       break;
+	    }
+    }
+    string++;
+   }
+   va_end(ap);
 }
 
 /*******************************************************************************/
