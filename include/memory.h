@@ -1,6 +1,5 @@
 #include "types.h"
-#include "asm.h"
 
-void memset(void *dest, u8 val, u16 count,int size);
-void memcpy(void *dest, const void *src, int size);
-int memcmp(const void *memptr1, const void *memptr2, int count);
+void memset(void *dst, u8 val, u32 count,u32 size);
+void memcpy(void *src, void *dst, u32 count, u32 size);
+u32 memcmp(void *src, void *dst, u32 count, u32 size);
