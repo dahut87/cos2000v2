@@ -6,7 +6,7 @@
 
 #include "video.h"
 
-static u8 bufferscan[256];
+static u8 bufferscan[256]={0};
 static u8 bufferascii[256]={0};
 static u8 ptrscan=0;
 static u8 ptrascii=0;
@@ -92,7 +92,14 @@ static const u8 set1_ctrl[] =
 '2',	'3','0','.',0,	0,	0,	0,
 0
 };
-	
+/******************************************************************************/	
+
+u8 waitascii()
+{	
+u8 oldptrascii=ptrascii;
+while(oldptrascii==ptrascii) {};
+return bufferascii[ptrascii];
+}
 
 /******************************************************************************/	
 
@@ -182,6 +189,11 @@ unsigned convert(u32 keypressed)
 		return 0;
 	}
 	
+	if ((key >= SCAN_F1) && (key <= SCAN_F8))
+	{
+  changevc(key-SCAN_F1);
+  }
+	
 /* Scroll Lock, Num Lock, and Caps Lock mise a jour des leds */
 	if(key == SCAN_SCROLLLOCK)
 	{
@@ -259,7 +271,7 @@ if ((bufferscan[lastscan]==0xE0)||((kbdstatus & STATUS_NUM)&&(key>=0x47)&&(key<=
 	if(temp == 0) return temp;
 /* Appuie de CRTL + ALT + SUPR ? */
 	if((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT) &&
-		(temp == KEY_DEL))
+		(key == 76))
 	{
 		print("redemarrage du systeme");
 		reboot();
@@ -280,7 +292,7 @@ scancode=inb(0x60);
 ascii = convert(scancode);
 if(ascii != 0) 
 {
-putchar(ascii);
+/*putchar(ascii);*/
 ptrascii++;
 if (ptrascii==255) ptrascii==0;
 bufferascii[ptrascii]=ascii;
