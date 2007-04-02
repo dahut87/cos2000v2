@@ -45,7 +45,7 @@ int main(void) {
         ok();
         
         print("Activation de l'IRQ 0\000"); 
-        //enableirq(0); 
+        enableirq(0); 
         ok();
         
         print("Installation du handler clavier\000");
