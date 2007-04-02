@@ -1,4 +1,4 @@
-CC=gcc -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include 
+CC=gcc -O0 -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include 
 LINK=ld -r -o
 OBJS=	memory.o vga.o port.o video.o mouse.o idt.o timer.o keyboard.o types.o string.o graph.o 3d.o math.o cpu.o
 
