@@ -1,5 +1,5 @@
-#ifndef I386_TYPE
-#define I386_TYPE
+#ifndef TYPE
+#define TYPE
 typedef unsigned char	u8;
 typedef unsigned short	u16;
 typedef unsigned int	u32;
