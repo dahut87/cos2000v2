@@ -1,8 +1,9 @@
 #include "vga.h"
 
-int __main(void) {
-	setvmode(1);
-	cls();
-	print("Hello cos is here !");
+int main(void) {
+	setvmode(0x1);
+	clearscreen();
+	setfont(1);
+	print("Hello cos is here");
 	while(1);
 }
