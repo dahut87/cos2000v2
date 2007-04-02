@@ -8,7 +8,7 @@
 	asm volatile ("outb %%al,%%dx"::"d" (port), "a" (value));
 
 #define outw(port,value) \
-	asm volatile ("outb %%ax,%%dx"::"d" (port), "a" (value));
+	asm volatile ("outw %%ax,%%dx"::"d" (port), "a" (value));
 
 #define inb(port) ({	\
 	u8 _v;	\
