@@ -1,19 +1,24 @@
 FREEC=gcc -O2 -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include -c 
-PARTIAL=-r
-OBJS=	memory.o port.o vgatxt.o 
+PARTIAL=ld -r -o
+OBJS=	memory.o vga.o port.o video.o
 
 all: makeall
 
-makeall: $(OBJS)
-	  (sync;ld $(PARTIAL) -o libs.o $(OBJS))
+makeall: libs.o
 
-vgatxt.o:vgatxt.c 
+libs.o:$(OBJS)
+	$(PARTIAL) libs.o $(OBJS)
+
+vga.o:vga.c 
+	$(FREEC) $^
+
+video.o:video.c 
+	$(FREEC) $^
+
+port.o:port.c
 	$(FREEC) $^
 
 memory.o:memory.c 
-	$(FREEC) $^
-
-port.o:port.c 
 	$(FREEC) $^
 clean:
 	rm -f *.o
