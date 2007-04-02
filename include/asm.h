@@ -1,12 +1,25 @@
 #include "types.h"
-#define sti() __asm__ ("sti"::)
-#define cli() __asm__ ("cli"::)
-#define nop() __asm__ ("nop"::)
-#define iret() __asm__ ("iret"::)
-#define pause() __asm__ ("iret"::)
 
-#define outbp(port,value) \
-	asm volatile ("outb %%al,%%dx; jmp 1f; 1:"::"d" (port), "a" (value));
+/******************************************************************************/
+
+#define sti() asm("sti"::)
+
+#define cli() asm("cli"::)
+
+#define nop() asm("nop"::)
+
+#define iret() asm("addl  $0x0C, %esp; \
+                          iret;")
+
+#define irqendmaster() asm("movb $0x20,%al; \
+                       outb %al,$0x20;")
+
+#define irqendslave() asm("movb $0x20,%al; \
+                       outb %al,$0xA0;")
+
+#define lidt(dtr) asm ("lidtl %0"::"m" (*dtr))
+
+/******************************************************************************/
 
 #define outb(port,value) \
 	asm volatile ("outb %%al,%%dx"::"d" (port), "a" (value));
@@ -15,7 +28,9 @@
 	asm volatile ("outw %%ax,%%dx"::"d" (port), "a" (value));
 
 #define outd(port,value) \
-	asm volatile ("outd %%eax,%%dx"::"d" (port), "a" (value));
+	asm volatile ("outl %%eax,%%dx"::"d" (port), "a" (value));
+
+/******************************************************************************/
 
 #define inb(port) ({	\
 	u8 _v;	\
@@ -29,16 +44,24 @@
 	_v;	\
 }
 
+
 #define ind(port) ({	\
 	u32 _v;	\
- 	asm volatile ("ind %%dx,%%eax" : "=a" (_v) : "d"(port));	\
+ 	asm volatile ("inl %%dx,%%eax" : "=a" (_v) : "d"(port));	\
 	_v;	\
 }
+
+/******************************************************************************/
+
+/* pas terminé */
 
 #define rolb(input,rotate) ({	\
 	u32 _v;	\
         asm volatile ("roll %1,%0" : "=g" (_v) : "cI" (rotate), "0" (input));  \
 	_v;	\
 }
+
+
+
 
 
