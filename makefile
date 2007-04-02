@@ -16,10 +16,14 @@ allbackup: backup
 	(echo Inserez une disquette; sleep ; cp ../backup.tar.bz2 /dev/fd0) 	
 		
 copy: 
+	(cp boot/loader.sys /cygdrive/a)
 	(cp system/system.sys /cygdrive/a)
+	(dd if=boot/boot12.bin of=/cygdrive/a bs=512 count=1)
 
 copy2: 
+	(cp boot/loader.sys /cygdrive/b)
 	(cp system/system.sys /cygdrive/b)
+	(dd if=boot/boot12.bin of=/cygdrive/b bs=512 count=1)
 	
 test: clean all copy2
 	
