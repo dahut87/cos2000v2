@@ -6,9 +6,7 @@
 		push 	cs
 		pop 	ds
 		pop 	es
-  call EnableA20
-  mov si,msgpmode
-		call showstr
+                call EnableA20
 		mov ax,cs	
 		mov [RealCS],ax
 		lea ax,[Real]
@@ -39,6 +37,8 @@
 		;out 0x21,al
 		mov al,0x80	
 		out 0x70,al
+		mov si,msgpmode
+		call showstr
 
 		mov eax,cr0	
 		or al,1
@@ -50,7 +50,7 @@ GoPMode32:
 [BITS 32]
 		mov ax,SYS_DATA_SEL
 		mov ds,ax
-                mov ecx,50000/4
+                mov ecx,20000/4
                 cld
 		mov esi,kernel
                 mov edi,0x100000
