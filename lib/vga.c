@@ -2,29 +2,31 @@
 #include "memory.h"
 #include "asm.h"
 #include "port.h"
-
+#include "types.h"
 #include "modes.c"
 #include "8x8fnt.c"
 #include "8x16fnt.c"
 
 /* Registres VGAs */
+
 #define sequencer 0x3c4
 #define misc 0x3c2
 #define ccrt 0x3D4
 #define attribs 0x3c0
 #define graphics 0x3ce
 #define state 0x3da
+
 /* Taille d'un plan de bit */
+
 #define planesize 0x10000
 
+u16 resX,resY;        /* resolution x,y en caractères*/	
 
-static u16 resX,resY;        /* resolution x,y en caractères*/
-static u16 cursX,cursY;      /* position du curseur */		
 static u8  pages,activepage; /* nombre de pages disponibles N° de la page active*/
 static u32 linesize,pagesize;/* Taille d'une ligne et d'une page */
 static u8  vmode=0xFF,color; /* mode en cours d'utilisation et profondeur */
 static u32 basemem; 	     /* Adresse de la mémoire vidéo */
-static bool scrolling,graphic;/* Activation du défilement, Flag du mode graphique */
+static bool scrolling=0x1,graphic;/* Activation du défilement, Flag du mode graphique */
 static u8  font;	      /* n° font active */
 
 /*******************************************************************************/
@@ -56,8 +58,6 @@ void enablecursor (void)
 	outb(ccrt, 10);
 	curs = inb(ccrt+1)&~32;
 	outb(ccrt+1, curs);	
-	/* fixe la position du curseur hardware */
-	gotoscr(cursX,cursY);	
 }
 
 /*******************************************************************************/
@@ -67,7 +67,7 @@ void enablecursor (void)
 void disablecursor (void)
 {
 	u8 curs;
-	/* desactive le curseur hardware */
+	/* Desactive le curseur hardware */
 	outb(ccrt, 10);
 	curs = inb(ccrt+1)|32;
 	outb(ccrt+1, curs);		
@@ -78,6 +78,7 @@ void disablecursor (void)
 /* Active le scrolling en cas de débordement d'écran */
 
 void enablescroll (void)
+
 {
 	scrolling=true;
 }
@@ -139,28 +140,30 @@ u32 getbase(void)
 
 /* efface l'écran */
 
-void (*cls)(void);
+void (*fill)(u8 attrib);
 
-void cls_text (void)
+
+void fill_text (u8 attrib)
 {
 	gotoscr(0,0);
-	memset((u8 *)(basemem+activepage*pagesize),0,pagesize,1);
+	memset((u8 *)(basemem+activepage*pagesize),' ',pagesize/2,2);
+	memset((u8 *)(basemem+activepage*pagesize+1),attrib,pagesize/2,2);
 }
 
-void cls_chain (void)
+void fill_chain (u8 attrib)
 {
 	gotoscr(0,0);
-	memset((u8 *)(basemem+activepage*pagesize),0,pagesize,1);
+	memset((u8 *)(basemem+activepage*pagesize),attrib&0x0F,pagesize,1);
 }
 
-void cls_unchain (void)
+void fill_unchain (u8 attrib)
 {
 	gotoscr(0,0);
 	int i;
 	for(i=0;i<4;i++)
 	{
 		useplane(i);
-		memset((u8 *)(basemem+activepage*pagesize),0,pagesize,1);
+		memset((u8 *)(basemem+activepage*pagesize),attrib&0x0F,pagesize,1);
 	}
 }
 
@@ -171,12 +174,10 @@ void cls_unchain (void)
 void gotoscr(u16 x,u16 y)
 {
 	u16 pos;
-	pos=(cursX+cursY*resX)/2;
-	cursX=x;
-	cursY=y;
-	outb(ccrt,0x0E);
+	pos=(x+y*resX);
+	outb(ccrt,0x0F);
 	outb(ccrt+1,(u8)(pos&0x00FF));	
-	outb(ccrt,0x0D);
+	outb(ccrt,0x0E);
 	outb(ccrt+1,(u8)((pos&0xFF00)>>8));				
 }
 
@@ -184,77 +185,76 @@ void gotoscr(u16 x,u16 y)
 
 /* Fait defiler l'ecran de n lignes vers le haut */
 
-void (*scroll)(u8 lines);
+void (*scroll)(u8 lines,u8 attrib);
 
-void scroll_unchain(u8 lines)
+void scroll_unchain(u8 lines,u8 attrib)
+{
+if (scrolling)
 {
 	u8 i;
 	for(i=0;i<4;i++)
 	{
 		useplane(i);
 		memcpy((u8*)(basemem+linesize*8*lines),(u8*)basemem,pagesize-linesize*8*lines,1);
-		memset((u8*)(basemem+pagesize-linesize*8*lines),0,linesize*8*lines,1);
+		memset((u8*)(basemem+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
+	}
 	}
 }
 
-void scroll_chain(u8 lines)
+void scroll_chain(u8 lines,u8 attrib)
+{
+if (scrolling)
 {
 	memcpy((u8*)basemem+linesize*8*lines,(u8*)basemem,pagesize-linesize*8*lines,1);
-	memset((u8*)(basemem+pagesize-linesize*8*lines),0,linesize*8*lines,1);
+	memset((u8*)(basemem+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
+}
 }
 
-void scroll_text(u8 lines)
+void scroll_text(u8 lines,u8 attrib)
+{
+if (scrolling)
 {
 	memcpy((u8*)basemem+linesize*lines,(u8*)basemem,pagesize-linesize*lines,1);
-	memset((u8*)(basemem+pagesize-linesize*lines),0,linesize*lines,1);
+	memset((u8*)(basemem+pagesize-linesize*lines-2),' ',(linesize*lines)/2,2);
+	memset((u8*)(basemem+pagesize-linesize*lines-1),attrib,(linesize*lines)/2,2);
+}
 }
 
 /*******************************************************************************/
 
 /* Affiche le caractère a l'écran */
 
-void (*showchar)(u8 thechar);
+void (*showchar)(u16 coordx,u16 coordy,u8 thechar,u8 attrib);
 
-void showchar_graphic(u8 thechar)
+void showchar_graphic(u16 coordx,u16 coordy,u8 thechar,u8 attrib)
 {
-	u8 x,y,pattern,color;
+	u8 x,y,pattern,set;
 	for(y=0;y<8;y++)
 	{
 		pattern=font8x8[thechar*8+y];
 		for(x=0;x<8;x++)
 		{
-			color=((pattern>>(7-x))&0x1);   /* mettre un ROL importé depuis asm */
-			writepxl(cursX*8+x,cursY*8+y,color*7);
-		}
-	}
-	if (++cursX>=resX)
-	{
-		cursX=0;
-		if (++cursY>=resY)
-		{
-			scroll(1);
-			cursY=resY-1;
+			set=((pattern>>(7-x))&0x1);   /* mettre un ROL importé depuis asm */
+			if (set==0)
+			writepxl(coordx*8+x,coordy*8+y,((attrib&0xF0)>>8)*set);
+			else
+			writepxl(coordx*8+x,coordy*8+y,(attrib&0x0F)*set);			
 		}
 	}
 }
 
-void showchar_text(u8 thechar)
+
+
+void showchar_text(u16 coordx,u16 coordy,u8 thechar,u8 attrib)
+
 {
 	u8 *screen;		
-	screen = (u8 *)basemem+activepage*pagesize+2*(cursX+cursY*resX);
+	screen = (u8 *)basemem+activepage*pagesize+2*(coordx+coordy*resX);
 	*screen = thechar;
-	*(++screen) = 0x07;
-	if (++cursX>=resX)
-	{
-		cursX=0;
-		if (++cursY>=resY)
-		{
-			scroll(1);
-			cursY=resY-1;
-		}
-	}
-	gotoscr(cursX,cursY);
+	*(++screen) =attrib;
 }
+
+
 
 /*******************************************************************************/
 
@@ -367,9 +367,6 @@ profondeur (en bits) */
 	resX=def[61];
 	resY=def[62];
 	color=def[63];	
-	/* Remet la position du curseur logiciel a 0,0 */
-	cursX=0;
-	cursY=0;
 	/* Initialise l'adresse des procedures de gestion graphique et les differentes
 variables en fonction de la profondeur et du mode*/
 	if (!graphic)
@@ -379,7 +376,7 @@ variables en fonction de la profondeur et du mode*/
 		writepxl=NULL;           /* pas d'affichage de pixels */
 		showchar=showchar_text;
 		scroll=scroll_text;
-		cls=cls_text;
+		fill=fill_text;
 		pagesize=resY*linesize;
 	}
 	else
@@ -390,21 +387,21 @@ variables en fonction de la profondeur et du mode*/
 			/* mode N&B */
 			linesize=resX;
 			writepxl=writepxl_1bit;
-			cls=cls_chain;
+			fill=fill_chain;
 			scroll=scroll_chain;
 			break;
 		case 2:
 			/* mode 4 couleurs */
 			linesize=(resX<<1);
 			writepxl=writepxl_2bits;
-			cls=cls_chain;
+			fill=fill_chain;
 			scroll=scroll_chain;
 			break;
 		case 4:
 			/* mode 16 couleurs */
 			linesize=resX;
 			writepxl=writepxl_4bits;
-			cls=cls_unchain;
+			fill=fill_unchain;
 			scroll=scroll_unchain;
 			break;
 		case 8:
@@ -415,7 +412,7 @@ variables en fonction de la profondeur et du mode*/
 				linesize=(resX<<3);
 				writepxl=writepxl_8bits;
 				scroll=scroll_chain;
-				cls=cls_chain;
+				fill=fill_chain;
 			}
 			else
 			{
@@ -423,7 +420,7 @@ variables en fonction de la profondeur et du mode*/
 				linesize=(resX<<1);
 				writepxl=writepxl_8bitsunchain;
 				scroll=scroll_unchain;
-				cls=cls_unchain;
+				fill=fill_unchain;
 			}
 			break;
 		default:
@@ -454,6 +451,7 @@ u8 getvmode(void)
 /* Charge une nouvelle police de caractère */
 
 u32 loadfont(u8* def,u8 size,u8 font)
+
 {
 	if (graphics==1) return 1;
 	u8 oldregs[5]={0,0,0,0,0};
@@ -467,20 +465,16 @@ u32 loadfont(u8* def,u8 size,u8 font)
 	/* sauve les anciens registres */
 	outb(sequencer,2);
 	oldregs[0]=inb(sequencer+1);
-	
 	outb(sequencer,4);
 	oldregs[1]=inb(sequencer+1);
 	/* Adressage paire/impair desactivé (lineaire) */
 	outb(sequencer+1, oldregs[1]|0x04);
-	
 	outb(graphics,4);
 	oldregs[2]=inb(graphics+1);
-	
 	outb(graphics,5);
 	oldregs[3]=inb(graphics+1);
 	/* Adressage paire/impair desactivé (lineaire) */
 	outb(graphics+1, oldregs[3]&~0x10);
-	
 	outb(graphics,6);
 	oldregs[4]=inb(graphics+1);
 	/* Adressage paire/impair desactivé (lineaire) */
@@ -492,7 +486,6 @@ u32 loadfont(u8* def,u8 size,u8 font)
 		memcpy(def,base+i*32,size,1);
 		def += size;
 	}
-
 	outb(sequencer,2);
 	outb(sequencer+1,oldregs[0]);
 	outb(sequencer,4);
@@ -527,5 +520,8 @@ void setfont(u8 num)
 }
 
 /*******************************************************************************/
+
+
+
 
 
