@@ -13,10 +13,15 @@ static u8 curspos=0;
 
 void timer()
  {
-  cli();
+cli();
+pushf();
+pushad();
 	showchar(0,0,curs[curspos],7);
 	curspos=(curspos+1)&0x3;	
-	irqendmaster();
+irqendmaster();
+ popad();
+    popf();
 	sti();
-  asm("addl $0x1C,%esp;iret;");
+    asm("addl  $0x0C, %esp;");
+    iret();
   }

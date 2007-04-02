@@ -1,37 +1,16 @@
-FREEC=gcc -O2 -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -I ../Include -c 
-PARTIAL=ld -r -o
-OBJS=	memory.o vga.o port.o video.o idt.o timer.o keyboard.o types.o
+CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -w -m32 -F pe-i386 -I ../include
+LINK=ld -m elf_i386 -r -o
+OBJS=memory.o vga.o port.o video.o mouse.o idt.o timer.o keyboard.o types.o string.o graph.o 3d.o math.o cpu.o
 
 all: makeall
 
 makeall: libs.o
 
 libs.o:$(OBJS)
-	$(PARTIAL) libs.o $(OBJS)
+	$(LINK) libs.o $(OBJS)
 
-vga.o:vga.c 
-	$(FREEC) $^
-	
-types.o:types.c 
-	$(FREEC) $^
-
-idt.o:idt.c 
-	$(FREEC) $^
-	
-keyboard.o:keyboard.c 
-	$(FREEC) $^
-	
-timer.o:timer.c 
-	$(FREEC) $^
-
-video.o:video.c 
-	$(FREEC) $^
-
-port.o:port.c
-	$(FREEC) $^
-
-memory.o:memory.c 
-	$(FREEC) $^
+.o: .c 
+	$(CC) $^
 clean:
 	rm -f *.o
 

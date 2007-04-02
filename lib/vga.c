@@ -20,14 +20,130 @@
 
 #define planesize 0x10000
 
-u16 resX,resY;        /* resolution x,y en caractères*/	
+static u16 resX,resY,color,splitY;        /* resolution x,y en caractères et profondeur */	
 
-static u8  pages,activepage; /* nombre de pages disponibles N° de la page active*/
+static u8  pages,activepage,showedpage; /* nombre de pages disponibles N° de la page active*/
 static u32 linesize,pagesize;/* Taille d'une ligne et d'une page */
-static u8  vmode=0xFF,color; /* mode en cours d'utilisation et profondeur */
+static u8  vmode=0xFF; /* mode en cours d'utilisation */
 static u32 basemem; 	     /* Adresse de la mémoire vidéo */
-static bool scrolling=0x1,graphic;/* Activation du défilement, Flag du mode graphique */
-static u8  font;	      /* n° font active */
+static bool scrolling,graphic,blink;/* Activation du défilement, Flag du mode graphique */
+
+/*******************************************************************************/
+
+/* Donne la resolution max horizontale */
+
+u16 getxres()
+{
+return resX;
+}
+
+/*******************************************************************************/
+
+/* Donne la profondeur en bit */
+
+u8 getdepth()
+{
+return color;
+}
+
+/*******************************************************************************/
+
+/* Donne la resolution max verticale */
+
+u16 getyres()
+{
+return resY-splitY;
+}
+
+/*******************************************************************************/
+
+/* Donne le nombre max de page ecran dispo */
+
+u16 getnbpages()
+{
+return pages;
+}
+
+/*******************************************************************************/
+
+/* Fixe la page ecran de travail */
+
+void setpage(u8 page)
+{
+if (page<pages) activepage=page;
+}
+
+/*******************************************************************************/
+
+/* Recupere la page ecran de travail */
+
+u8 getpage()
+{
+return activepage;
+}
+
+/*******************************************************************************/
+
+/* Affiche la page ecran specifié */
+
+void showpage(u8 page)
+{
+if (page<pages) 
+{
+u16 addr;
+  addr=page*pagesize/2;
+	outb(ccrt,  0x0C);
+	outb(ccrt+1,(addr>>8));
+	outb(ccrt,  0x0D);
+	outb(ccrt+1,(addr&0xFF));	
+	showedpage=page;
+}
+}
+/*******************************************************************************/
+
+/* Sépare l'écran en 2 a partir de la ligne Y */
+
+void split(u16 y)
+{
+u16 addr;
+if (graphic==0)
+  addr=(y<<3);
+else
+  addr=y; 
+  /* line compare pour ligne atteinte */
+	outb(ccrt,  0x18);
+	outb(ccrt+1,(addr&0xFF));
+  /* overflow pour le bit 8 */
+  
+	outb(ccrt,  0x07);
+	outb(ccrt+1,(inb(ccrt+1) & ~16)|((addr>>4)&16));
+
+ /*  Maximum Scan Line pour le bit 9 */ 	
+	
+	outb(ccrt,  0x09);
+	outb(ccrt+1,(inb(ccrt+1) & ~64)|((addr>>3)&64));
+	splitY=y;
+}
+/*******************************************************************************/
+
+/* Sépare l'écran en 2 a partir de la ligne Y */
+
+void unsplit()
+{
+  /* line compare pour ligne atteinte */
+	outb(ccrt,  0x18);
+	outb(ccrt+1,0);
+  /* overflow pour le bit 8 */
+  
+	outb(ccrt,  0x07);
+	outb(ccrt+1,inb(ccrt+1) & ~16);
+
+ /*  Maximum Scan Line pour le bit 9 */ 	
+	
+	outb(ccrt,  0x09);
+	outb(ccrt+1,inb(ccrt+1) & ~64);
+	splitY=0;
+}
 
 /*******************************************************************************/
 
@@ -145,20 +261,17 @@ void (*fill)(u8 attrib);
 
 void fill_text (u8 attrib)
 {
-	gotoscr(0,0);
 	memset((u8 *)(basemem+activepage*pagesize),' ',pagesize/2,2);
 	memset((u8 *)(basemem+activepage*pagesize+1),attrib,pagesize/2,2);
 }
 
 void fill_chain (u8 attrib)
 {
-	gotoscr(0,0);
 	memset((u8 *)(basemem+activepage*pagesize),attrib&0x0F,pagesize,1);
 }
 
 void fill_unchain (u8 attrib)
 {
-	gotoscr(0,0);
 	int i;
 	for(i=0;i<4;i++)
 	{
@@ -174,8 +287,11 @@ void fill_unchain (u8 attrib)
 void gotoscr(u16 x,u16 y)
 {
 	u16 pos;
-	pos=(x+y*resX);
-	outb(ccrt,0x0F);
+	if (splitY==0)
+ pos=(showedpage*pagesize/2+x+y*resX);
+ else
+ pos=(x+y*resX);
+  outb(ccrt,0x0F);
 	outb(ccrt+1,(u8)(pos&0x00FF));	
 	outb(ccrt,0x0E);
 	outb(ccrt+1,(u8)((pos&0xFF00)>>8));				
@@ -195,8 +311,8 @@ if (scrolling)
 	for(i=0;i<4;i++)
 	{
 		useplane(i);
-		memcpy((u8*)(basemem+linesize*8*lines),(u8*)basemem,pagesize-linesize*8*lines,1);
-		memset((u8*)(basemem+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
+		memcpy((u8*)(basemem+activepage*pagesize+linesize*8*lines),(u8*)basemem,pagesize-linesize*8*lines,1);
+		memset((u8*)(basemem+activepage*pagesize+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
 	}
 	}
 }
@@ -205,8 +321,8 @@ void scroll_chain(u8 lines,u8 attrib)
 {
 if (scrolling)
 {
-	memcpy((u8*)basemem+linesize*8*lines,(u8*)basemem,pagesize-linesize*8*lines,1);
-	memset((u8*)(basemem+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
+	memcpy((u8*)basemem+activepage*pagesize+linesize*8*lines,(u8*)basemem+activepage*pagesize,pagesize-linesize*8*lines,1);
+	memset((u8*)(basemem+activepage*pagesize+pagesize-linesize*8*lines),attrib&0x0F,linesize*8*lines,1);
 }
 }
 
@@ -214,9 +330,9 @@ void scroll_text(u8 lines,u8 attrib)
 {
 if (scrolling)
 {
-	memcpy((u8*)basemem+linesize*lines,(u8*)basemem,pagesize-linesize*lines,1);
-	memset((u8*)(basemem+pagesize-linesize*lines-2),' ',(linesize*lines)/2,2);
-	memset((u8*)(basemem+pagesize-linesize*lines-1),attrib,(linesize*lines)/2,2);
+	memcpy((u8*)basemem+activepage*pagesize+linesize*lines,(u8*)basemem+activepage*pagesize,pagesize-linesize*lines,1);
+	memset((u8*)(basemem+activepage*pagesize+pagesize-linesize*lines-2),' ',(linesize*lines)/2,2);
+	memset((u8*)(basemem+activepage*pagesize+pagesize-linesize*lines-1),attrib,(linesize*lines)/2,2);
 }
 }
 
@@ -254,6 +370,33 @@ void showchar_text(u16 coordx,u16 coordy,u8 thechar,u8 attrib)
 	*(++screen) =attrib;
 }
 
+/*******************************************************************************/
+
+/* Recupere le caractère a l'écran */
+
+u8 (*getchar)(u16 coordx,u16 coordy);
+
+u8 getchar_text(u16 coordx,u16 coordy)
+
+{
+	u8 *screen;		
+	screen = (u8 *)basemem+activepage*pagesize+2*(coordx+coordy*resX);
+	return *screen;
+}
+
+/*******************************************************************************/
+
+/* Recupere les attributs a l'écran */
+
+u8 (*getattrib)(u16 coordx,u16 coordy);
+
+u8 getattrib_text(u16 coordx,u16 coordy)
+
+{
+	u8 *screen;		
+	screen = (u8 *)basemem+activepage*pagesize+2*(coordx+coordy*resX)+1;
+	return *screen;
+}
 
 
 /*******************************************************************************/
@@ -324,7 +467,7 @@ void writepxl_8bitsunchain(u16 x, u16 y, u32 c)
 
 u32 setvmode(u8 mode)
 {
-	u8 *def,i,gmode;
+	u8 *def,gmode;
 	/* Récupere la definition des registres VGA en fonction du mode
 graphique : >0x80
 text      : 0x00 - 0x7F
@@ -378,6 +521,8 @@ variables en fonction de la profondeur et du mode*/
 		scroll=scroll_text;
 		fill=fill_text;
 		pagesize=resY*linesize;
+		getchar=getchar_text;
+		getattrib=getattrib_text;
 	}
 	else
 	{
@@ -431,7 +576,10 @@ variables en fonction de la profondeur et du mode*/
 	}
 	/* calcul des variables d'état video */
 	activepage=0;
+	showedpage=0;
+	splitY=0;
 	vmode=mode;
+	scrolling=1;
 	pages=(planesize/pagesize);
 	basemem=(def[20]<<8)+def[21]+getbase();		
 	return 0;
@@ -503,10 +651,28 @@ u32 loadfont(u8* def,u8 size,u8 font)
 
 /* Récupere le N° de la police de caractère en cours d'utilisation */
 
-u8 getfont(u8 num)
+u8 getfont()
 {
-	return font;	
+ u8 num,tmp;
+  outb(sequencer,3);
+  tmp=inb(sequencer+1);
+  num=(tmp&0x03)|((tmp&0x10)>>2);
+	return num;	
 }
+
+/*******************************************************************************/
+
+/* Récupere le N° de la police de caractère en cours d'utilisation */
+
+u8 getfont2()
+{
+ u8 num,tmp;
+  outb(sequencer,3);
+  tmp=inb(sequencer+1);
+  num=((tmp&0x0C)>>2)|((tmp&0x20)>>3);
+	return num;	
+}
+
 
 /*******************************************************************************/
 
@@ -514,14 +680,41 @@ u8 getfont(u8 num)
 
 void setfont(u8 num)
 {
-	font=num&0x07;
+	num&=0x07;
 	outb(sequencer,3);
-	outb(sequencer+1,(num&0x03)+((num&0x04)<<2));	
+	outb(sequencer+1,(inb(sequencer+1)&0xEC)|((num&0x03)+((num&0x04)<<2)));	
 }
 
 /*******************************************************************************/
 
+/* Fixe le N° de la police de caractère a utiliser */
 
+void setfont2(u8 num)
+{
+	num&=0x07;
+	outb(sequencer,3);
+	outb(sequencer+1,(inb(sequencer+1)&0xD3)|(((num&0x03)<<2)+((num&0x04)<<3)));	
+}
 
+/*******************************************************************************/
 
+/* Fixe le N° de la police de caractère a utiliser */
+
+void enableblink()
+{
+	outb(ccrt,0x10);
+	outb(ccrt+1,(inb(sequencer+1)|0x04));	
+}
+
+/*******************************************************************************/
+
+/* Fixe le N° de la police de caractère a utiliser */
+
+void disableblink()
+{
+	outb(ccrt,0x10);
+	outb(ccrt+1,(inb(sequencer+1)&~0x04));	
+}
+
+/*******************************************************************************/
 

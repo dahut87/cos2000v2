@@ -4,8 +4,15 @@
 typedef unsigned char	u8;
 typedef unsigned short	u16;
 typedef unsigned int	u32;
-typedef unsigned char uchar;
+typedef char	s8;
+typedef short	s16;
+typedef int	s32;
 typedef int bool; 
+
+
+#define true -1;
+#define false 0;
+#define NULL 0x0000;
 
 struct dtr {
 
@@ -14,10 +21,6 @@ struct dtr {
 	u32 base;
 
 }  __attribute__ ((packed));
-
-#define true 1;
-#define false 0;
-#define NULL 0x0000;
 
 #ifdef __cplusplus
 extern "C"

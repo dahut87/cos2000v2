@@ -8,8 +8,15 @@
 
 #define nop() asm("nop"::)
 
-#define iret() asm("addl  $0x0C, %esp; \
-                          iret;")
+#define pushad() asm("pushal"::)
+
+#define popad() asm("popal"::)
+
+#define pushf() asm("pushf"::)
+
+#define popf() asm("popf"::)
+
+#define iret() asm("iret"::)
 
 #define irqendmaster() asm("movb $0x20,%al; \
                        outb %al,$0x20;")

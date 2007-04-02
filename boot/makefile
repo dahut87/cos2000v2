@@ -1,20 +1,18 @@
+CC=nasm -f bin -o 
+
 all:	makall
 
-makall: boot12.bin boot16.bin boottest.bin bootcp.com
-	sync
+makall: boot12.bin boot16.bin loader.sys
 
-boot12.bin:
-	nasm -f bin -o boot12.bin boot12.asm
-	
-boot16.bin:
-	nasm -f bin -o boot16.bin boot16.asm
+boot12.bin: boot12.asm
+	$(CC) $@ $^	
 
-boottest.bin:
-	nasm -f bin -o boottest.bin boottest.asm
+boot16.bin: boot16.asm
+	$(CC) $@ $^	
 
-bootcp.com:
-	nasm -f bin -o bootcp.com bootcp.asm
-	
+loader.sys: loader.asm
+	$(CC) $@ $^	
+
 clean:
 	rm -f *.o
 	rm -f *.bin
