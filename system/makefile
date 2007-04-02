@@ -6,9 +6,6 @@ LINK=ld -Ttext 0x100000 -e __main -o
 all: system.sys
 	sync
 
-copy: 
-	(cp system.sys /cygdrive/a)
-
 system.sys:
 	nasm -f bin -o loader.bin loader.asm
 	nasm -f elf -o system.o system.asm
