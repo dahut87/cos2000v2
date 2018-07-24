@@ -124,7 +124,10 @@ irqendmaster();
 irqendslave();
 sti();
 //asm("movl 0x2C(%esp), %ebx;movl 0x30(%esp), %esi;movl 0x34(%esp), %edi;movl 0x38(%esp), %ebp;addl  $0x3C, %esp;iret;");
-asm("addl  $0x18, %esp;popl %ebx;iret;");
+asm(
+"addl  $0x18,%esp;\
+popl %bx;\
+iret;");
 }
 
 

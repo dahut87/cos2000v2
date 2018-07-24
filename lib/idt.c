@@ -97,125 +97,136 @@ makeidtdes(offset,select,type,&temp);
 idt[index]=temp;
 }
 
+void cpuerror(const u8 *src)
+{
+ print("\033[31m***** ERREUR CPU ****\r\n -");
+ print(src);
+ dump_regs();
+ while(1)
+ {
+    nop();
+ }
+}
+
 void interruption()
 {
   cli();
-	print("Appel d'une interruption");
+	print("Appel d'une interruption\r\n");
   sti();
 	iret();
 }
 
 void exception0() 
 {
-	print("divide error");
+	print("divide error\r\n");
   iret();
  }
 
 void exception1() 
 {
-	print("debug exception");
+	cpuerror("debug exception\r\n");
   iret();
   }
 
 void exception2()
  {
-	print("non-maskable hardware interrupt");
+	cpuerror("non-maskable hardware interrupt\r\n");
   iret();
   }
 
 void exception3() 
 {
-	print("INT3 instruction");
+	cpuerror("INT3 instruction\r\n");
   iret();
   }
 
 void exception4()
  {
-	print("INTO instruction detected overflow");
+	cpuerror("INTO instruction detected overflow\r\n");
   iret();
   }
 
 void exception5()
  {
-	print("BOUND instruction detected overrange");
+	print("BOUND instruction detected overrange\r\n");
   iret();
   }
 
 void exception6() 
 {
-	print("invalid instruction opcode");
+	cpuerror("invalid instruction opcode\r\n");
   iret();
   }
 
 void exception7()
  {
-	print("no coprocessor");
+	cpuerror("no coprocessor\r\n");
   iret();
   }
 
 void exception8() 
 {
-	print("double fault");
+	cpuerror("double fault\r\n");
   iret();
   }
 
 void exception9()
  {
-	print("coprocessor segment overrun");
+	cpuerror("coprocessor segment overrun\r\n");
   iret();
   }
 
 void exception10() 
 {
-	print("invalid task state segment (TSS)");
+	cpuerror("invalid task state segment (TSS)\r\n");
   iret();
   }
 
 void exception11()
  {
-	print("segment not present");
+	cpuerror("segment not present\r\n");
   iret();
   }
 
 void exception12() 
 {
-	print("stack fault");
+	cpuerror("stack fault");
   iret();
   }
 
 void exception13()
  {
-	print("general protection fault (GPF)");
+	cpuerror("general protection fault (GPF)\r\n");
   iret();
   }
 
 void exception14()
  {
-	print("page fault");
+	cpuerror("page fault\r\n");
   iret();
   }
 
 void exception15() 
 {
-	print("(reserved)");
+	cpuerror("(reserved)\r\n");
   iret();
   }
   
 void exception16()
  {
-	print("coprocessor error");
+	cpuerror("coprocessor error\r\n");
   iret();
   }
 
 void exception17() 
 {
-	print("alignment check");
+	cpuerror("alignment check\r\n");
   iret();
   }
 
 void exception18()
  {
-	print("machine check");
+	cpuerror("machine check");
   iret();
   }
 

@@ -285,6 +285,7 @@ if ((bufferscan[lastscan]==0xE0)||((kbdstatus & STATUS_NUM)&&(key>=0x47)&&(key<=
 
 void keyboard()
 {
+printf("test");
 u8 scancode,ascii;
 cli();
 while ((inb(0x64)&1)==0);

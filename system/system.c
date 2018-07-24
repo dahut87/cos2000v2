@@ -12,18 +12,19 @@
 
 static cpuinfo cpu;   
 static u8 noproc[]="\033[31mInconnu\033[0m\000";   
+static u8 okmsg[]="\033[99C\033[8D\033[37m\033[1m[  \033[32mOK\033[37m  ]\033[0m\000";
+static u8 key=0;
 
 void ok()
 {
-static u8 okmsg[]="\033[99C\033[8D\033[37m\033[1m[  \033[32mOK\033[37m  ]\033[0m\000";
-print(okmsg);
-return;
+    print(okmsg);
+    return;
 }
 
-int _main(void) {
+int main(void) {
                  
         cli();   
-	      setvmode(0x02);
+	    setvmode(0x02);
 	    /*  Efface l'ecran   */
         print("\033[2J\000");    
         printf(ansilogo);
@@ -44,7 +45,7 @@ int _main(void) {
         ok();
         
         print("Activation de l'IRQ 0\000"); 
-        enableirq(0); 
+        //enableirq(0); 
         ok();
         
         print("Installation du handler clavier\000");
@@ -79,11 +80,10 @@ int _main(void) {
         
         printf("Processeur detecte\r Revision \t:%d\r Modele \t:%d\r Famille \t:%d\r Nom cpuid\t:%s\rJeux\t:%s\000",cpu.stepping,cpu.models,cpu.family,&cpu.detectedname,&cpu.techs);
         ok();
-        u8 key=0;
         while(1)   
         {    
-        key=waitascii();
-        putchar(key);
+            key=waitascii();
+            putchar(key);
         }
 
 }
