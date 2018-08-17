@@ -4,11 +4,11 @@
 
 /* Compare 2 chaines de caractère et renvoie la premiere distance (diff) */
 
-s8 strcmp(const u8 * src, const u8 * des)
+s8 strcmp(const u8 * src, const u8 * dest)
 {
 	register s8 result;
 	do {
-		if ((result = *src - *des++) != 0)
+		if ((result = *src - *dest++) != 0)
 			break;
 	}
 	while (*src++ != 0);
@@ -42,10 +42,10 @@ u32 strlen(const u8 * src)
 /******************************************************************************/
 
 /* copie une chaine dans une autre */
-u8 *strcpy(const u8 * src, u8 * des)
+u8 *strcpy(const u8 * src, u8 * dest)
 {
-	u8 *temp = des;
-	while ((*des++ = *src++) != 0) ;
+	u8 *temp = dest;
+	while ((*dest++ = *src++) != 0) ;
 	return temp;
 }
 
@@ -53,28 +53,28 @@ u8 *strcpy(const u8 * src, u8 * des)
 
 /* copie une portion limité d'une chaine asciiZ*/
 
-u8 *strncpy(const u8 * src, u8 * des, u32 count)
+u8 *strncpy(const u8 * src, u8 * dest, u32 count)
 {
-	u8 *temp = des;
+	u8 *temp = dest;
 	while (count) {
 		if ((*temp = *src) != 0)
 			src++;
 		temp++;
 		count--;
 	}
-	return des;
+	return dest;
 }
 
 /******************************************************************************/
 
 /* concatene 2 chaines de caractère */
 
-u8 *strcat(const u8 * src, u8 * des)
+u8 *strcat(const u8 * src, u8 * dest)
 {
-	u8 *temp = des;
-	while (*des != 0)
-		des++;
-	while ((*des++ = *src++) != 0) ;
+	u8 *temp = dest;
+	while (*dest != 0)
+		dest++;
+	while ((*dest++ = *src++) != 0) ;
 	return temp;
 }
 
@@ -138,7 +138,7 @@ void stronecase(u8 * src)
 
 /* Fixe la taille de la chaine */
 
-void strsetlen(u8 * src, u8 size)
+void strsetlen(u8 * src, u32 size)
 {
     *(src+size)='\000';
 }
@@ -174,4 +174,80 @@ void strreplace(u8 *src, u8 search, u8 replaced)
     }
 }
 
+/******************************************************************************/
 
+/* Rempli de caractère */
+
+u8 *strfill(u8 *dst, u8 pattern, u32 size)
+{
+   u32 i;
+   for (i=0; i <= size; i++)
+        *(dst+i)=pattern;
+   *(dst+i+1)='\000';
+   return dst;
+}
+
+/******************************************************************************/
+
+/* Renvoie la partie gauche d'une chaine */
+
+void strright(u8 *src, u8 *dest, u32 size) {
+    u32 i;
+    for (i = 0; (*(src + i) != 0) && (i<size); i++)
+        *dest++=*(src + i);
+    *dest++='\000';
+}
+
+/******************************************************************************/
+
+/* Renvoie la partie droite d'une chaine */
+
+void strleft(u8 *src, u8 *dest, u32 size) {
+    u32 i;
+    u32 begin=strlen(src)-size;
+    for (i = 0; (*(src + i + begin) != 0) && (i<size); i++)
+        *dest++=*(src + i + begin);
+    *dest++='\000';
+}
+
+/******************************************************************************/
+
+/* Supprime une portion de chaine */
+
+void strdelete(u8 *src, u32 index, u32 size) {
+    u32 i;
+    u32 realsize=strlen(src)-index-size;
+    for (i = 0; (*(src+index+size+i) != 0) && (i<realsize); i++)
+        *(src+index+i)=*(src+index+size+i);
+    *(src+index+i)='\000';
+}
+
+/******************************************************************************/
+
+/* Insert une portion dans la chaine */
+
+void strinsert(u8 *src, u8 *dest, u32 index) {
+    u32 i;
+    u32 realsize=strlen(src);
+    u32 copysize=strlen(dest)-index;
+    for (i = 0; i<=copysize; i++)
+        *(dest+index+realsize+copysize-i)=*(dest+index+copysize-i);
+    for (i = 0; (*(src+i) != 0) ; i++)
+        *(dest+index+i)=*(src+i);
+}
+
+/******************************************************************************/
+
+/* Supprime les délimiteurs consécutifs */
+
+void strcompressdelimiter(u8 *src, u8 delim) {
+    u8 *pos=strchr(src, delim);
+    while (pos!=0)
+    {   
+        u8 i;
+        for (i = 0; (*(pos+i) != 0) && (*(pos+i) == delim); i++);
+        if (i>1)
+            strdelete(pos,1,i-1);
+        pos=strchr(pos+1, delim);
+    }
+}

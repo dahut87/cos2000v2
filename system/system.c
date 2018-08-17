@@ -75,20 +75,21 @@ int main(void)
 	strcpy(&noproc, &cpu.detectedname);
 	getcpuinfos(&cpu);
 
+
 	printf
 	    (" -Detection du processeur\r\033[1m Revision \t:%d\r Modele \t:%d\r Famille \t:%d\r Nom cpuid\t:%s\rJeux d'instruction\t:%s\033[0m\000",
 	     cpu.stepping, cpu.models, cpu.family, &cpu.detectedname,
+
 	     &cpu.techs);
 	ok();
 
-    u8 test[]="ceCI est UN(une) tes1\000";
-    u8 test2[]="ceCI est UN(une) tes2!\000";
-    printf(&test);
-    strreplace(&test, 'e', 'q');
-    strreplace(&test2, '(', '[');
-    printf(&test);
-    printf(&test2);
-
+    u8 dest[]="Ceci est un test pour voir si cela fonctionne correctement\000                                                                                ";
+    printf(&dest);
+    u8 src[]="POPPOPPOP\000";
+    printf(&src);
+    printf("\r\n");
+    strinsert(&src, &dest, 14);
+    printf(&dest);    
 	while (1) {
 		key = waitascii();
 		putchar(key);
