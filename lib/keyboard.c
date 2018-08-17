@@ -284,8 +284,10 @@ if ((bufferscan[lastscan]==0xE0)||((kbdstatus & STATUS_NUM)&&(key>=0x47)&&(key<=
 /******************************************************************************/
 
 void keyboard()
-{
-printf("test");
+{   
+cli();
+pushf();
+pushad();
 u8 scancode,ascii;
 cli();
 while ((inb(0x64)&1)==0);
@@ -293,14 +295,16 @@ scancode=inb(0x60);
 ascii = convert(scancode);
 if(ascii != 0) 
 {
-putchar(ascii);
 ptrascii++;
 if (ptrascii==255) ptrascii==0;
 bufferascii[ptrascii]=ascii;
 }
 irqendmaster();
-sti();
-iret();
+ popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
 }
 
 /******************************************************************************/

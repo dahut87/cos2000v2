@@ -110,270 +110,330 @@ void cpuerror(const u8 *src)
 
 void interruption()
 {
-  cli();
+    cli();
+    pushf();
+    pushad();
 	print("Appel d'une interruption\r\n");
-  sti();
+    popad();
+    popf();
+    sti();
 	iret();
 }
 
 void exception0() 
 {
 	print("divide error\r\n");
-  iret();
  }
 
 void exception1() 
 {
 	cpuerror("debug exception\r\n");
-  iret();
   }
 
 void exception2()
  {
 	cpuerror("non-maskable hardware interrupt\r\n");
-  iret();
   }
 
 void exception3() 
 {
 	cpuerror("INT3 instruction\r\n");
-  iret();
   }
 
 void exception4()
  {
 	cpuerror("INTO instruction detected overflow\r\n");
-  iret();
   }
 
 void exception5()
  {
 	print("BOUND instruction detected overrange\r\n");
-  iret();
   }
 
 void exception6() 
 {
 	cpuerror("invalid instruction opcode\r\n");
-  iret();
   }
 
 void exception7()
  {
 	cpuerror("no coprocessor\r\n");
-  iret();
   }
 
 void exception8() 
 {
 	cpuerror("double fault\r\n");
-  iret();
   }
 
 void exception9()
  {
 	cpuerror("coprocessor segment overrun\r\n");
-  iret();
   }
 
 void exception10() 
 {
 	cpuerror("invalid task state segment (TSS)\r\n");
-  iret();
   }
 
 void exception11()
  {
 	cpuerror("segment not present\r\n");
-  iret();
   }
 
 void exception12() 
 {
 	cpuerror("stack fault");
-  iret();
   }
 
 void exception13()
  {
-	cpuerror("general protection fault (GPF)\r\n");
-  iret();
+    cpuerror("general protection fault (GPF)\r\n");
   }
 
 void exception14()
  {
 	cpuerror("page fault\r\n");
-  iret();
   }
 
 void exception15() 
 {
 	cpuerror("(reserved)\r\n");
-  iret();
   }
   
 void exception16()
  {
 	cpuerror("coprocessor error\r\n");
-  iret();
   }
 
 void exception17() 
 {
 	cpuerror("alignment check\r\n");
-  iret();
   }
 
 void exception18()
  {
 	cpuerror("machine check");
-  iret();
   }
 
 void irq0()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 0");
 	irqendmaster();
+    popad();
+    popf();
 	sti();
-  iret();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
   void irq1()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 1");
 	while ((inb(0x64)&1)==0);
- inb(0x60);
+    inb(0x60);
 	irqendmaster();
+    popad();
+    popf();
 	sti();
-  iret();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
   void irq2()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 2");
 	irqendmaster();
-  	sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
   void irq3()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 3");
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
   void irq4()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 4");
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
   void irq5()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 5");
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
   void irq6()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 6");
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
 void irq7()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 7");
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
 void irq8()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 8");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
 void irq9()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 9");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
 void irq10()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 10");
 	irqendslave();
-		irqendmaster();
-		sti();
-  iret();
+	irqendmaster();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
 void irq11()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 11");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
 void irq12()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 12");
 	while ((inb(0x64)&1)==0);
- inb(0x60);
+        inb(0x60);
  	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
   void irq13()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 13");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
   
 void irq14()
  {
-   cli();
+    cli();
+    pushf();
+    pushad();
 	print("irq 14");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }
 
 void irq15()
@@ -382,8 +442,11 @@ void irq15()
 	print("irq 15");
 	irqendslave();
 	irqendmaster();
-		sti();
-  iret();
+    popad();
+    popf();
+	sti();
+    asm("addl  $0x01C, %esp;");
+    iret();
   }  
 
  void initidt(void)
