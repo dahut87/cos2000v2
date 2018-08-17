@@ -49,100 +49,107 @@ Boot_Ok:
 Boot:
     push	cs
     push	cs
-    pop	es
-    pop	ds
-	mov	[Boot_Drive],dl
+    pop	    es
+    pop	    ds
+	mov	    [Boot_Drive],dl
     cli        
-    mov	ax,0x9000
-    mov	ss,ax
-    mov	sp,0xFFFF
+    mov	    ax,0x9000
+    mov	    ss,ax
+    mov	    sp,0xFFFF
     sti
-    mov si,Boot_Message
-    call ShowString	
-    xor	ax,ax
-    int	0x13
-    jc	Boot_Error
-	mov	cx,[Reserved_Sectors]
-    add	cx,[Sectors_Hidden]
-    adc	cx,[Sectors_Hidden+2]
-    mov	bx,[Sectors_Per_Fat]
-    mov di,Fat_Buffer
-    push bx
-    push cx
+    mov     si,Boot_Message
+    call    ShowString	
+; Initialisation du lecteur de disquette
+    xor	    ax,ax
+    int	    0x13
+    jc	    Boot_Error
+; Calcul de la position de la FAT12
+	mov	    cx,[Reserved_Sectors]
+    add	    cx,[Sectors_Hidden]
+    adc	    cx,[Sectors_Hidden+2]
+    mov	    bx,[Sectors_Per_Fat]
+    mov     di,Fat_Buffer
+    push    bx
+    push    cx
+; Lecture de la FAT en mémoire
 readfat:
     call    ReadSector
-    jc  Boot_Error
-	inc cx
-	add di,[Sectors_Size]
-	dec bx
-	jnz readfat          
-    pop cx
-    pop bx
-    xor	ax,ax
-    mov	al,[Fats_Number]
-    mul	bx
-    add	cx,ax
-    mov	ax,32
-    mul	word [Fits_Number]
-    div	word [Sectors_Size]
-    add	ax,cx
-    sub	ax,2
-    mov	word [Serial_Number],ax
-    xor	dx,dx
+    jc      Boot_Error
+	inc     cx
+	add     di,[Sectors_Size]
+	dec     bx
+	jnz     readfat          
+    pop     cx
+    pop     bx
+    xor	    ax,ax
+    mov	    al,[Fats_Number]
+    mul	    bx
+    add	    cx,ax
+    mov	    ax,32
+    mul	    word [Fits_Number]
+    div	    word [Sectors_Size]
+    add	    ax,cx
+    sub	    ax,2
+    mov	    word [Serial_Number],ax
+    xor	    dx,dx
 	call	Boot_Ok
-    mov si,Loading_Message
-    call ShowString	
+    mov     si,Loading_Message
+    call    ShowString	
+; Recherche du système dans les entrèes de répertoire
 Find_System:
-    mov	di,Buffer
+    mov	    di,Buffer
     call	ReadSector
-    jc	Near Boot_Error
-    xor	bx,bx
+    jc	    Near Boot_Error
+    xor	    bx,bx
 Next_Root_Entrie:
-    cmp	byte [di],0
-    je	near Boot_Error
+    cmp	    byte [di],0
+    je	    near Boot_Error
     push	di
     push	cx
-    mov	si,System_File
-    mov	cx,32
-    rep	cmpsb
-    pop	cx
-    pop	di
-    je	System_Found
-    add	di,32
-    add	bx,32
-    inc	dx
-    cmp	dx,[Fits_Number]
-    ja	near Boot_Error
-    cmp	bx,[Sectors_Size]
-    jb	Next_Root_Entrie
-    inc	cx
-    jmp	Find_System
+    mov	    si,System_File
+    mov	    cx,32
+    rep	    cmpsb
+    pop	    cx
+    pop	    di
+    je	    System_Found
+    add	    di,32
+    add	    bx,32
+    inc	    dx
+    cmp	    dx,[Fits_Number]
+    ja	    near Boot_Error
+    cmp	    bx,[Sectors_Size]
+    jb	    Next_Root_Entrie
+    inc	    cx
+    jmp	    Find_System
 System_Found:
-    call Boot_Ok
-    mov si,Entre_Message
-    call ShowString	
-    mov	cx,[di+26+32]
-    mov	ax,0x0080
-    mov	es,ax
+; Système trouvé
+    call    Boot_Ok
+    mov     si,Entre_Message
+    call    ShowString	
+    mov	    cx,[di+26+32]
+    mov	    ax,0x0080
+    mov	    es,ax
     push	es
-    mov	di,0x0
+    mov	    di,0x0
     push	di
-	mov	si,The_Dot
+	mov	    si,The_Dot
 Resume_Loading:
-    cmp	cx,0x0FF0
-    jae	Finish_Loading
+; Chargement des secteur en mémoire à l'adresse 0080:0000
+    cmp	    cx,0x0FF0
+    jae	    Finish_Loading
     push	cx
-    add	cx,word [Serial_Number]
+    add	    cx,word [Serial_Number]
     call	ReadSector
-    pop	cx
-    jc  near Boot_Error
+    pop	    cx
+    jc      near Boot_Error
 	call    ShowString
     add	    di,[Sectors_Size]
     call	NextFatGroup
-    jc	near Boot_Error
-    jmp	Resume_Loading
+    jc	    near Boot_Error
+    jmp	    Resume_Loading
 Finish_Loading:
 	call	Boot_Ok
+; Exécution du chargeur ELF
     retf
 
 ;====================READSECTOR=======================
@@ -152,28 +159,28 @@ Finish_Loading:
 ;=====================================================
 ReadSector:
 	pusha
-	mov ax,cx
-	xor	dx,dx
-	div	word [Sectors_Per_Track]
-	inc	dl
-	mov	bl,dl
-	xor	dx,dx
-	div word [Heads_Number]
-	mov dh, [Boot_Drive]
+	mov     ax,cx
+	xor	    dx,dx
+	div	    word [Sectors_Per_Track]
+	inc	    dl
+	mov	    bl,dl
+	xor	    dx,dx
+	div     word [Heads_Number]
+	mov     dh, [Boot_Drive]
 	xchg    dl,dh
-	mov	cx,ax
+	mov	    cx,ax
 	xchg	cl,ch
-	shl	cl,6
-	or	cl, bl
-	mov	bx,di
-	mov	si, 4
-	mov	al, 1
+	shl	    cl,6
+	or	    cl, bl
+	mov	    bx,di
+	mov	    si, 4
+	mov	    al, 1
 Read_Again:
-  	mov	ah, 2
-  	int	0x13
-  	jnc	Read_Done
-  	dec	si
-  	jnz	Read_Again
+  	mov	    ah, 2
+  	int	    0x13
+  	jnc	    Read_Done
+  	dec	    si
+  	jnz	    Read_Again
 Read_Done:
   	popa
 	ret
@@ -219,18 +226,18 @@ Next_Group_Found:
 ;<- Flag Carry si erreur
 ;=====================================================
 ShowString:
-	    pusha
+	pusha
 Next_Char:
-        lodsb
-        or	al,al
-        jz	End_Show
-        mov	ah,0x0E
-        mov	bx,0x07
-        int	0x10
-        jmp	Next_Char
+	lodsb
+	or	    al,al
+	jz	    End_Show
+	mov	    ah,0x0E
+	mov	    bx,0x07
+	int	    0x10
+	jmp	    Next_Char
 End_Show:
-	    popa
-        ret
+	popa
+	ret
 
 times 510-($-$$) db ' '
 

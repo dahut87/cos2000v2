@@ -1,112 +1,113 @@
 [BITS 16]
 [ORG 0x0]
 
-	SECTION .text
-		push 	cs
-		push 	cs
-		pop 	ds
-		pop 	es
-		mov   si,msg0
-		call showstr
-        		
-		mov   si,msg1
-		call showstr
-		call    initfat
-        call ok	
-		
-		mov   si,msg2
-		call showstr	
-        mov si,System_File	
-		call    search
-        call ok	
-		
-		mov   si,msg3
-		call showstr		
-        call    EnableA20
-        call ok	
-        	
-		mov   si,msg4
-		call showstr		
-		mov eax,cs		
-		shl eax,4
-		mov [GDT.Entry1+2],ax
-		mov [GDT.Entry2+2],ax
-		shr eax,16
-		mov [GDT.Entry1+4],al
-		mov [GDT.Entry2+4],al
-		mov eax,cs		
-		shl eax,4
-		add eax,gdt0
-		mov [GDTR.Address],eax
-		lgdt [GDTR]		
-call ok	
-        
-	    mov   si,msg5
-		call showstr
-		cli
-       mov eax,cr0
-           or al,1
-           mov cr0,eax
-           jmp short $+2
-           mov bx,SYS_DATA_SEL
-           mov fs,bx              
-           mov ds,bx
-           mov es,bx
-           mov gs,bx
-           and al,0FEh
-           mov cr0,eax
-           jmp short $+2
-           mov bx,cs
-           mov fs,bx              
-           mov ds,bx
-           mov es,bx
-           mov gs,bx           
-           sti
-call ok	
-        
-        
-        		
-		mov   si,msg6
-		call showstr		
-        mov  ebx,0x300000
-		call    load
-call ok		
-        		
-		mov   si,msg7
-		call showstr	
-		call    initpe
-call ok	
-		suite:
-		;mov cx,suite
-        ;call debug
-		mov   si,msg8
-		call showstr
-		cli
-		mov al,0x80	
-		out 0x70,al
-		mov eax,cr0	
-		or al,1
-		mov cr0,eax
-		jmp SYS_CODE_SEL:GoPMode32
+SECTION .text
+	push 	cs
+	push 	cs
+	pop 	ds
+	pop 	es
+	mov     si,msg0
+	call    showstr
+;Projection de la FAT12 en mémoire
+	mov     si,msg1
+	call    showstr
+	call    initfat
+    call    ok	
+;Recherche du système
+    mov     si,msg2
+    call    showstr	
+    mov     si,System_File	
+	call    search
+    call    ok	
+;Activation du BUS A20
+	mov     si,msg3
+	call    showstr		
+    call    EnableA20
+    call    ok	
+;Chargement d'une GDT pour le mode FLAT REAL
+	mov     si,msg4
+	call    showstr		
+	mov     eax,cs		
+	shl     eax,4
+	mov     [GDT.Entry1+2],ax
+	mov     [GDT.Entry2+2],ax
+	shr     eax,16
+	mov     [GDT.Entry1+4],al
+	mov     [GDT.Entry2+4],al
+	mov     eax,cs		
+	shl     eax,4
+	add     eax,gdt0
+	mov     [GDTR.Address],eax
+	lgdt    [GDTR]		
+    call    ok	
+;Passage en mode FLAT REAL
+	mov     si,msg5
+    call    showstr
+	cli
+    mov     eax,cr0
+    or      al,1
+    mov     cr0,eax
+    jmp     short $+2
+    mov     bx,SYS_DATA_SEL
+    mov     fs,bx              
+    mov     ds,bx
+    mov     es,bx
+    mov     gs,bx
+    and     al,0FEh
+    mov     cr0,eax
+    jmp     short $+2
+    mov     bx,cs
+    mov     fs,bx              
+    mov     ds,bx
+    mov     es,bx
+    mov     gs,bx           
+    sti
+    call    ok	    
+;Chargement du noyau en 0x30000
+	mov     si,msg6
+	call    showstr		
+    mov     ebx,0x300000
+	call    load
+    call    ok		
+;Chargement du fichier PE
+	mov     si,msg7
+	call    showstr	
+	call    initpe
+    call    ok	
+	
+    ;suite:
+	;mov    cx,suite
+    ;call   debug
+	mov     si,msg8
+	call    showstr
+	cli
+;Passage en mode protégé
+	mov     al,0x80	
+	out     0x70,al
+	mov     eax,cr0	
+	or      al,1
+	mov     cr0,eax
+;Exécution du code 32 bits
+	jmp     SYS_CODE_SEL:GoPMode32
 		
 		
 Boot_Error:
-		mov   si,error
-		call showstr 
-        xor ax,ax
-        int 16h
-        jmp 0xFFFF:0x0 	
+	mov     si,error
+	call    showstr 
+    xor     ax,ax
+    int     16h
+    jmp     0xFFFF:0x0 	
         
 ok:
-        push si 
-        push cx
-        mov cl,67
-        call eol
-		mov   si,okay
-		call showstr
-		pop cx 
-        pop si
-        ret	
+    push    si 
+    push    cx
+    mov     cl,67
+    call    eol
+    mov     si,okay
+	call    showstr
+	pop     cx 
+    pop     si
+    ret	
         
 ;======================INITPE========================
 ;Initialise le PE de l'adresse EBX 
@@ -114,143 +115,143 @@ ok:
 ;<- Flag Carry si erreur
 ;=====================================================              
 initpe:
-     pusha
-     push es
-     xor ax,ax
-     mov es,ax
-     mov [begin],ebx
-     cmp word [es:ebx+ELFheader.Magic],0x457F  ; bien l'entete .elf ?
-     jne near errorelf
-     cmp word [es:ebx+ELFheader.Magic+2],"LF"  ; bien l'entete .elf ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.Computertype],0x1  ; type ok ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.Endianness],0x1  ; type ok ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.Original],0x1  ; type ok ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.OS],0x0  ; type ok ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.ABI],0x0  ; type ok ?
-     jne near errorelf
-     cmp byte [es:ebx+ELFheader.Dummy],0x0  ; type ok ?
-     jne near errorelf
-     mov si,info1
-     call showstr
-     mov esi,[es:ebx+ELFheader.Entrypoint]
-     mov [entriepoint],esi    
-     mov esi,[es:ebx+ELFheader.Offsetprogram]
-     add esi,ebx
-     mov [offsetheader],esi
-     mov esi,[es:ebx+ELFheader.Offsetsection]
-     add esi,ebx
-     mov [offsetsection],esi  
-     mov cx,[es:ebx+ELFheader.Nbprogram]
-     mov [cs:nbprogram],cx
-     mov cx,[es:ebx+ELFheader.Nbsection]
-     mov [cs:nbsection],cx 
-     xor eax,eax
-     mov ax,[es:ebx+ELFheader.Index]
-     xor edx,edx
-     mov dx,[es:ebx+ELFheader.Sizesection]
-     mul edx
-     add eax,esi
-     mov eax,[es:eax+Sections.Offset]
-     add eax,ebx
-     mov [cs:symbol],eax
-     xor eax,eax
-     add ax,[es:ebx+ELFheader.Sizesection]
-     add esi,eax
+    pusha
+    push   es
+    xor    ax,ax
+    mov    es,ax
+    mov    [begin],ebx
+    cmp    word [es:ebx+ELFheader.Magic],0x457F  ; bien l'entete .elf ?
+    jne    near errorelf
+    cmp    word [es:ebx+ELFheader.Magic+2],"LF"  ; bien l'entete .elf ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.Computertype],0x1  ; type ok ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.Endianness],0x1  ; type ok ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.Original],0x1  ; type ok ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.OS],0x0  ; type ok ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.ABI],0x0  ; type ok ?
+    jne    near errorelf
+    cmp    byte [es:ebx+ELFheader.Dummy],0x0  ; type ok ?
+    jne    near errorelf
+    mov    si,info1
+    call   showstr
+    mov    esi,[es:ebx+ELFheader.Entrypoint]
+    mov    [entriepoint],esi    
+    mov    esi,[es:ebx+ELFheader.Offsetprogram]
+    add    esi,ebx
+    mov    [offsetheader],esi
+    mov    esi,[es:ebx+ELFheader.Offsetsection]
+    add    esi,ebx
+    mov    [offsetsection],esi  
+    mov    cx,[es:ebx+ELFheader.Nbprogram]
+    mov    [cs:nbprogram],cx
+    mov    cx,[es:ebx+ELFheader.Nbsection]
+    mov    [cs:nbsection],cx 
+    xor    eax,eax
+    mov    ax,[es:ebx+ELFheader.Index]
+    xor    edx,edx
+    mov    dx,[es:ebx+ELFheader.Sizesection]
+    mul    edx
+    add    eax,esi
+    mov    eax,[es:eax+Sections.Offset]
+    add    eax,ebx
+    mov    [cs:symbol],eax
+    xor    eax,eax
+    add    ax,[es:ebx+ELFheader.Sizesection]
+    add    esi,eax
 sections:
-     mov edi,esi
-     cmp dword [es:edi+Sections.Type],0x00
-     jz nothing
-     mov esi,info2
-     call showstr
-     push ds
-     push es
-     pop ds
-     mov esi,[es:edi+Sections.Name]
-     add esi,[cs:symbol]
-     call showstr
-     pop ds
-     mov esi,info3
-     call showstr 
-     mov edx,[es:edi+Sections.Offset]
-     push cx
-     mov cx,32
-     call ShowHex
-     pop cx
-     mov esi,info4
-     call showstr 
-     mov edx,[es:edi+Sections.Size]
-     push cx
-     mov cx,32
-     call ShowHex
-     pop cx
-     mov esi,info5
-     call showstr 
-     mov edx,[es:edi+Sections.Vadress]
-     push cx
-     mov cx,32
-     call ShowHex
-     pop cx
-     and dword [es:edi+Sections.Flags],SF_ALLOC
-     jne itsok
-     mov esi,info6
-     call showstr 
-     jmp itsok2
+    mov    edi,esi
+    cmp    dword [es:edi+Sections.Type],0x00
+    jz     nothing
+    mov    esi,info2
+    call   showstr
+    push   ds
+    push   es
+    pop    ds
+    mov    esi,[es:edi+Sections.Name]
+    add    esi,[cs:symbol]
+    call   showstr
+    pop    ds
+    mov    esi,info3
+    call   showstr 
+    mov    edx,[es:edi+Sections.Offset]
+    push   cx
+    mov    cx,32
+    call   ShowHex
+    pop    cx
+    mov    esi,info4
+    call   showstr 
+    mov    edx,[es:edi+Sections.Size]
+    push   cx
+    mov    cx,32
+    call   ShowHex
+    pop    cx
+    mov    esi,info5
+    call   showstr 
+    mov    edx,[es:edi+Sections.Vadress]
+    push   cx
+    mov    cx,32
+    call   ShowHex
+    pop    cx
+    and    dword [es:edi+Sections.Flags],SF_ALLOC
+    jne    itsok
+    mov    esi,info6
+    call   showstr 
+    jmp    itsok2
 itsok:
-     mov esi,info10
-     call showstr 
-call copy2mem
-     cmp dword [es:edi+Sections.Type],ST_NOBITS
-     jne itsok2
-     mov esi,info9
-     call showstr 
-     mov esi,info10
-     call showstr 
-call zero2mem
+    mov    esi,info10
+    call   showstr 
+    call   copy2mem
+    cmp    dword [es:edi+Sections.Type],ST_NOBITS
+    jne    itsok2
+    mov    esi,info9
+    call   showstr 
+    mov    esi,info10
+    call   showstr 
+    call   zero2mem
 itsok2:   
-     push cx
-     xor cx,cx
-     mov edx,[es:edi+Sections.Align]
-     mov esi,info8
-     call showstr 
+    push   cx
+    xor    cx,cx
+    mov    edx,[es:edi+Sections.Align]
+    mov    esi,info8
+    call   showstr 
 nextpower:
-     cmp edx,0
-     je powerok
-     cmp edx,1
-     je powerok
-     cmp cx,32
-     je powerok
-     inc cx
-     shr edx,1
-     jnc nextpower
+    cmp    edx,0
+    je     powerok
+    cmp    edx,1
+    je     powerok
+    cmp    cx,32
+    je     powerok
+    inc    cx
+    shr    edx,1
+    jnc    nextpower
 powerok:
-     mov edx,ecx
-     mov cx,4
-     call ShowHex
-     pop cx
-     call showrtn
-     mov esi,edi
+    mov    edx,ecx
+    mov    cx,4
+    call   ShowHex
+    pop    cx
+    call   showrtn
+    mov    esi,edi
 nothing:
-     add esi,eax
-     dec cx
-     jnz sections
-     mov esi,info7
-     call showstr 
-     mov edx,[cs:entriepoint]
-     mov cx,32
-     call ShowHex
-     clc
-     pop es
-     popa
-     ret     
+    add    esi,eax
+    dec    cx
+    jnz    sections
+    mov    esi,info7
+    call   showstr 
+    mov    edx,[cs:entriepoint]
+    mov    cx,32
+    call   ShowHex
+    clc
+    pop    es
+    popa
+    ret     
 
 errorelf:
     stc
-    pop es
+    pop     es
     popa
     ret
 
@@ -258,76 +259,75 @@ errorelf:
 ;CX adresse
 ;->CX
 ;<- 
-;===========================================
+;==========================
 debug:
-    mov esi,info11
-    call showstr 
-    xor edx,edx
-    mov dx,cs
-    shl edx,4     
-    add edx,ecx
-     mov cx,32
-     call ShowHex     
+    mov     esi,info11
+    call    showstr 
+    xor     edx,edx
+    mov     dx,cs
+    shl     edx,4     
+    add     edx,ecx
+    mov     cx,32
+    call    ShowHex     
 infini:
-    jmp infini
-
+    jmp     infini
 
 ;==========COPY2MEM===========
 ;Copie de es:esi vers es:edi
 ;->ES:ESI ES:EDI CX
 ;<- Flag
-;===========================================
+;=============================
 copy2mem:
- push eax
- push esi
- push edi
-push ecx
-mov esi,[es:edi+Sections.Offset]
-add esi,[cs:begin]
-mov ecx,[es:edi+Sections.Size]
-shr ecx,2
-inc ecx
-mov edi,[es:edi+Sections.Vadress]
+    push    eax
+    push    esi
+    push    edi
+    push    ecx
+    mov     esi,[es:edi+Sections.Offset]
+    add     esi,[cs:begin]
+    mov     ecx,[es:edi+Sections.Size]
+    shr     ecx,2
+    inc     ecx
+    mov     edi,[es:edi+Sections.Vadress]
 copietomem:
-       mov eax,[es:esi]
-       mov [es:edi],eax
-       add edi,4
-       add esi,4       
-       dec ecx
-       jnz copietomem       
-pop ecx
-pop edi
-pop esi
-pop eax
-ret
+    mov     eax,[es:esi]
+    mov     [es:edi],eax
+    add     edi,4
+    add     esi,4       
+    dec     ecx
+    jnz     copietomem       
+    pop     ecx
+    pop     edi
+    pop     esi
+    pop     eax
+    ret
 
 ;==========ZERO2MEM===========
 ;Remise à zero de es:edi
 ;->ES:EDI CX
 ;<- Flag
-;===========================================
+;=============================
 zero2mem:
- push eax
- push esi
- push edi
-push ecx
-mov esi,[es:edi+Sections.Offset]
-add esi,[cs:begin]
-mov ecx,[es:edi+Sections.Size]
-shr ecx,2
-inc ecx
-mov edi,[es:edi+Sections.Vadress]
-      mov eax,0
+    push    eax
+    push    esi
+    push    edi
+    push    ecx
+    mov     esi,[es:edi+Sections.Offset]
+    add     esi,[cs:begin]
+    mov     ecx,[es:edi+Sections.Size]
+    shr     ecx,2
+    inc     ecx
+    mov     edi,[es:edi+Sections.Vadress]
+    mov     eax,0
 zerotomem:
-      mov [es:edi],eax
-      add edi,4
-       dec ecx
-       jnz zerotomem  
-pop ecx
-pop edi
-pop esi
-pop eax
-ret
+    mov     [es:edi],eax
+    add     edi,4
+    dec     ecx
+    jnz     zerotomem  
+    pop     ecx
+    pop     edi
+    pop     esi
+    pop     eax
+    ret
 
 begin dd 0
 entriepoint dd 0
@@ -341,399 +341,402 @@ symbol dd 0
 ;Affiche un nombre hexadécimal EDX de taille CX aprés le curseur
 ;-> EDX un entier, CX la taille
 ;<- 
-;===========================================
+;============================
 ShowHex:
-       push  ax
-       push bx 
-       push cx 
-       push edx
-       push si
-       mov   ax,cx
-	 shr   ax,2
-       sub   cx,32
-       neg   cx
-       shl   edx,cl
-       xor cx,cx
-       inc cx
+    push    ax
+    push    bx 
+    push    cx 
+    push    edx
+    push    si
+    mov     ax,cx
+	shr     ax,2
+    sub     cx,32
+    neg     cx
+    shl     edx,cl
+    xor     cx,cx
+    inc     cx
 Hexaize:
-       rol   edx,4
-       mov   bx,dx
-       and   bx,0fh
-       mov   si,ax
-       mov   al,[cs:bx+Tab]
-       xor  bx,bx  
-        mov	ah,0x09
-        mov	bl,[cs:thecolor]
-        int	0x10
-        mov	ah,0x0E
-        int	0x10 
-       mov ax,si
-       dec   al
-       jnz   Hexaize
-       pop si
-       pop   edx 
-       pop cx 
-       pop bx 
-       pop ax
-       ret
+    rol     edx,4
+    mov     bx,dx
+    and     bx,0fh
+    mov     si,ax
+    mov     al,[cs:bx+Tab]
+    xor     bx,bx  
+    mov	    ah,0x09
+    mov	    bl,[cs:thecolor]
+    int	    0x10
+    mov	    ah,0x0E
+    int	    0x10 
+    mov     ax,si
+    dec     al
+    jnz     Hexaize
+    pop     si
+    pop     edx 
+    pop     cx 
+    pop     bx 
+    pop     ax
+    ret
 Tab db '0123456789ABCDEF'
 
-;======================EOL========================
+;============EOL=============
 ;Va en colonne CX
 ;-> 
 ;<- Flag Carry si erreur
-;=====================================================              
+;============================   
 eol:
-  pusha
-  mov bp,cx
-    mov ah,03
-    xor bx,bx
-    int 10h
-    mov ah,02
-    mov cx,bp
-    mov dl,cl
-    int 10h
+    pusha
+    mov     bp,cx
+    mov     ah,03
+    xor     bx,bx
+    int     10h
+    mov     ah,02
+    mov     cx,bp
+    mov     dl,cl
+    int     10h
     popa
     ret
 
-
-;======================LOAD========================
-;Charge le groupe en mémoire en ebx
-;-> 
+;============LOAD==============
+;Charge le groupe en mémoire en EBX pour le groupe CX
+;-> CX
 ;<- Flag Carry si erreur
-;=====================================================              
+;==============================      
 load:
-     push ax
-     push ebx
-     push ecx 
-     push edx
-     push esi 
-     push edi
-     push fs
-      xor edx,edx
-      xor ax,ax
-      mov fs,ax
-       mov	si,The_Dot
-	   mov dx,[Sectors_Size]
+    push    ax
+    push    ebx
+    push    ecx 
+    push    edx
+    push    esi 
+    push    edi
+    push    fs
+    xor     edx,edx
+    xor     ax,ax
+    mov     fs,ax
+    mov	    si,The_Dot
+	mov     dx,[Sectors_Size]
 Resume_Loading:
-        cmp	cx,0x0FF0
-        jae	Finish_Loading
-        push	cx
-        add	cx,word [data]
-        mov edi,Buffer
-        call	ReadSector
-        pop	cx
-        jc	near Boot_Error
-	    call	showstr
-        push esi 
-        push ebx
-        push cx
-        mov esi,Buffer
-        mov cx,dx
-        shr cx,2
+    cmp	    cx,0x0FF0
+    jae	    Finish_Loading
+    push	cx
+    add	    cx,word [data]
+    mov     edi,Buffer
+    call	ReadSector
+    pop	    cx
+    jc	    near Boot_Error
+	call	showstr
+    push    esi 
+    push    ebx
+    push    cx
+    mov     esi,Buffer
+    mov     cx,dx
+    shr     cx,2
 copie:
-       mov eax,[ds:esi]
-       mov [fs:ebx],eax
-       add ebx,4
-       add esi,4       
-       dec cx
-       jnz copie
-        pop  cx
-        pop  ebx
-        pop  esi 
-        add	ebx,edx 
-        call	NextFatGroup
-        jc	near Boot_Error
-        jmp	Resume_Loading
+    mov     eax,[ds:esi]
+    mov     [fs:ebx],eax
+    add     ebx,4
+    add     esi,4       
+    dec     cx
+    jnz     copie
+    pop     cx
+    pop     ebx
+    pop     esi 
+    add	    ebx,edx 
+    call	NextFatGroup
+    jc	    near Boot_Error
+    jmp	    Resume_Loading
 Finish_Loading:
-   pop fs
-   pop edi
-   pop esi
-   pop edx
-   pop ecx
-   pop ebx
-   pop ax
-   ret
+    pop     fs
+    pop     edi
+    pop     esi
+    pop     edx
+    pop     ecx
+    pop     ebx
+    pop     ax
+    ret
 
-;======================INITFAT========================
+;===========INITFAT=============
 ;Initialise les variables de la fat
 ;-> 
 ;<- Flag Carry si erreur
-;=====================================================
+;===============================
 initfat:
-        pusha
-        push ds
-        xor ax,ax
-        mov ds,ax
-        mov si,0x7C0B
-        mov di,bootsector
-        mov cx, 512
-        rep movsb
-        pop ds
-	    mov	cx,[Reserved_Sectors]
-        add	cx,[Sectors_Hidden]
-        adc	cx,[Sectors_Hidden+2]
-        mov	bx,[Sectors_Per_Fat]
-        mov di,Fat_Buffer
-        push bx
-        push cx
+    pusha
+    push    ds
+    xor     ax,ax
+    mov     ds,ax
+    mov     si,0x7C0B
+    mov     di,bootsector
+    mov     cx, 512
+    rep     movsb
+    pop     ds
+	mov	    cx,[Reserved_Sectors]
+    add	    cx,[Sectors_Hidden]
+    adc	    cx,[Sectors_Hidden+2]
+    mov	    bx,[Sectors_Per_Fat]
+    mov     di,Fat_Buffer
+    push    bx
+    push    cx
 readfat:
-	    call     ReadSector
-        jc       Boot_Error
-	    inc      cx
-	    add      di,[Sectors_Size]
-	    dec      bx
-	   jnz      readfat          
-        pop cx
-        pop bx
-        xor	ax,ax
-        mov	al,[Fats_Number]
-        mul	bx
-        add	cx,ax
-        mov [entries],cx
-        mov	ax,32
-        mul	word [Fits_Number]
-        div	word [Sectors_Size]
-        add	cx,ax
-        sub	cx,2
-        mov	word [data],cx    
-        popa
-        ret
+	call    ReadSector
+    jc      Boot_Error
+	inc     cx
+	add     di,[Sectors_Size]
+	dec     bx
+	jnz     readfat          
+    pop     cx
+    pop     bx
+    xor	    ax,ax
+    mov	    al,[Fats_Number]
+    mul	    bx
+    add	    cx,ax
+    mov     [entries],cx
+    mov	    ax,32
+    mul	    word [Fits_Number]
+    div	    word [Sectors_Size]
+    add	    cx,ax
+    sub	    cx,2
+    mov	    word [data],cx    
+    popa
+    ret
         
-;======================SEARCH========================
+;===========SEARCH============
 ;Recherche le groupe d'un fichier
 ;-> si nom du fichier
 ;<- Flag Carry si erreur CX
-;=====================================================
+;=============================
 search:
-        push bx
-        push dx 
-        push di
-        mov cx,[entries]
-        mov	di,Buffer
-        call ReadSector
-        jc Boot_Error
-        xor	bx,bx
+    push    bx
+    push    dx 
+    push    di
+    mov     cx,[entries]
+    mov	    di,Buffer
+    call    ReadSector
+    jc      Boot_Error
+    xor	    bx,bx
 Next_Root_Entrie:
-        cmp	byte [di],0
-        je	Boot_Error
-        push    si
-        push	di
-        push	cx
-        mov	cx,32
-        rep	cmpsb
-        pop	cx
-        pop	di
-        pop si
-        je	Found
-        add	di,32
-        add	bx,32
-        inc	dx
-        cmp	dx,[Fits_Number]
-        ja	Boot_Error
-        cmp	bx,[Sectors_Size]
-        jb	Next_Root_Entrie
-        inc	cx
+    cmp	    byte [di],0
+    je	    Boot_Error
+    push    si
+    push	di
+    push	cx
+    mov	    cx,32
+    rep	    cmpsb
+    pop	    cx
+    pop	    di
+    pop     si
+    je	    Found
+    add	    di,32
+    add	    bx,32
+    inc	    dx
+    cmp	    dx,[Fits_Number]
+    ja	    Boot_Error
+    cmp	    bx,[Sectors_Size]
+    jb	    Next_Root_Entrie
+    inc	    cx
 Found:
-        mov	cx,[di+26+32]
-       pop di 
-       pop dx 
-       pop bx
-       ret
+    mov	    cx,[di+26+32]
+    pop     di 
+    pop     dx 
+    pop     bx
+    ret
     
-;======================SHOWRTN========================
+;============SHOWRTN============
 ;Affiche la chaine de caractère return
 ;-> 
 ;<- Flag Carry si erreur
-;=====================================================
+;===============================
 showrtn:
-    push ds
-    push ax
-    push esi
-    mov esi,return
-    mov ax,cs
-    mov ds,ax
-    call showstr
-    pop esi
-    pop ax
-    pop ds
+    push    ds
+    push    ax
+    push    esi
+    mov     esi,return
+    mov     ax,cs
+    mov     ds,ax
+    call    showstr
+    pop     esi
+    pop     ax
+    pop     ds
     ret
 
-;======================SHOWSTR========================
+;==============SHOWSTR=============
 ;Affiche la chaine de caractère pointé par ds:esi à l'écran
-;-> DS, SI
+;-> DS, ESI
 ;<- Flag Carry si erreur
-;=====================================================
+;==================================
 showstr:
-        pushad
-        xor  bh,bh
+    pushad
+    xor  bh,bh
 nextchar:
-        mov al,[ds:esi]
-        inc esi
-        or	al,al
-        jz	endshow
-        cmp al,' '
-        jb justchar       
-        cmp al,'#'
-        jne nocolor
-        mov al,[ds:esi]
-        inc esi
-        sub al,'0'
-        shl al,3
-        mov [cs:thecolor],al
-        shr al,2
-        add [cs:thecolor],al
-        mov al,[ds:esi]
-        inc esi
-        sub al,'0'
-        add [cs:thecolor],al
-        jmp	nextchar
+    mov     al,[ds:esi]
+    inc     esi
+    or	    al,al
+    jz	    endshow
+    cmp     al,' '
+    jb      justchar       
+    cmp     al,'#'
+    jne     nocolor
+    mov     al,[ds:esi]
+    inc     esi
+    sub     al,'0'
+    shl     al,3
+    mov     [cs:thecolor],al
+    shr     al,2
+    add     [cs:thecolor],al
+    mov     al,[ds:esi]
+    inc         esi
+    sub     al,'0'
+    add     [cs:thecolor],al
+    jmp	    nextchar
 nocolor:
-        cmp al,'@'
-        jne nocolor2
-        mov al,[ds:esi]
-        inc esi
-        sub al,'0'
-        shl al,3
-        mov cl,al
-        shr al,2
-        add cl,al
-        mov al,[ds:esi]
-        inc esi
-        sub cl,'0'
-        add cl,al
-        call eol
-        jmp	nextchar
+    cmp     al,'@'
+    jne     nocolor2
+    mov     al,[ds:esi]
+    inc     esi
+    sub     al,'0'
+    shl     al,3
+    mov     cl,al
+    shr     al,2
+    add     cl,al
+    mov     al,[ds:esi]
+    inc     esi
+    sub     cl,'0'
+    add     cl,al
+    call    eol
+    jmp	    nextchar
 nocolor2:
-        xor  bx,bx  
-        mov	ah,0x09
-        mov	bl,[cs:thecolor]
-        xor  cx,cx
-        inc  cx
-        int	0x10
+    xor     bx,bx  
+    mov	    ah,0x09
+    mov	    bl,[cs:thecolor]
+    xor     cx,cx
+    inc     cx
+    int	    0x10
 justchar:
-        mov	ah,0x0E
-        int	0x10 
-        jmp	nextchar
+    mov	    ah,0x0E
+    int	    0x10 
+    jmp	    nextchar
 endshow:
-        popad
-	    ret
-	    
+    popad
+	ret  
 
-;====================READSECTOR=======================
+;==========READSECTOR============
 ;Lit le secteur logique LBA CX et le met en es:di
 ;-> CX (limité à 65536 secteurs, soit 32 Mo avec secteur 512 octets)
 ;<- Flag Carry si erreur
-;=====================================================
+;================================
 ReadSector:
 	pusha
-	mov	ax,cx
-	xor	dx,dx
-	div	word [Sectors_Per_Track]
-	inc	dl
-	mov	bl,dl
-	xor	dx,dx
-	div	word [Heads_Number]
-	mov	dh, [Boot_Drive]
+	mov	    ax,cx
+	xor	    dx,dx
+	div	    word [Sectors_Per_Track]
+	inc	    dl
+	mov	    bl,dl
+	xor	    dx,dx
+	div	    word [Heads_Number]
+	mov	    dh, [Boot_Drive]
 	xchg	dl,dh
-	mov	cx,ax
+	mov	    cx,ax
 	xchg	cl,ch
-	shl	cl,6
-	or	cl, bl
-	mov	bx,di
-	mov	si, 4
-	mov	al, 1
+	shl	    cl,6
+	or	    cl, bl
+	mov	    bx,di
+	mov	    si, 4
+	mov	    al, 1
 Read_Again:
-  	mov	ah, 2
-  	int	0x13
-  	jnc	Read_Done
-  	dec	si
-  	jnz	Read_Again
+  	mov	    ah, 2
+  	int	    0x13
+  	jnc	    Read_Done
+  	dec	    si
+  	jnz	    Read_Again
 Read_Done:
   	popa
 	ret
 	
-;===================NEXTFATGROUP======================
+;============NEXTFATGROUP===========
 ;Renvoie en CX le groupe qui succède dans la FAT le groupe CX
 ;-> CX
-;<-
-;=====================================================
+;<- CX
+;===================================
 NextFatGroup:
 	push	bx
 	push	dx
 	push	di
-	mov	ax,cx
-	mov	bx,ax
-	and	bx,0000000000000001b
-	shr	ax,1
-	mov	cx,3
-	mul	cx
-	mov	di,Fat_Buffer
-	add	di,ax
-	cmp	bx,0
-	jnz	Even_Group
+	mov	    ax,cx
+	mov	    bx,ax
+	and	    bx,0000000000000001b
+	shr	    ax,1
+	mov	    cx,3
+	mul	    cx
+	mov	    di,Fat_Buffer
+	add	    di,ax
+	cmp	    bx,0
+	jnz	    Even_Group
 Odd_Group:
-	mov	dx,[di]
-	and	dx,0x0FFF
-	mov	cx,dx
-	jmp	Next_Group_Found
+	mov	    dx,[di]
+	and	    dx,0x0FFF
+	mov	    cx,dx
+	jmp	    Next_Group_Found
 Even_Group:
-	mov	dx,[di+1]
-	and	dx,0xFFF0
-	shr	dx,4
-	mov	cx,dx
+	mov	    dx,[di+1]
+	and	    dx,0xFFF0
+	shr	    dx,4
+	mov	    cx,dx
 Next_Group_Found:
-	pop	di
-	pop	dx
-	pop	bx
+	pop	    di
+	pop	    dx
+	pop	    bx
 	ret
 
-;***********************EnableA20*******************************
+;============EnableA20============
 ;-> 
 ;<-
 ;Ouvre l'autoroute A20	
-;***************************************************************
+;=================================
 EnableA20:
-		cli
-		call ClearKeybBuffer
-		call WaitKeybCommand
-		mov al,0xd1
-		out 0x64,al
-		call WaitKeybCommand
-		mov al,0xdf
-		out 0x60,al
-		call WaitKeybCommand
-		jmp A20Enabled
+	cli
+	call    ClearKeybBuffer
+	call    WaitKeybCommand
+	mov     al,0xd1
+	out     0x64,al
+	call    WaitKeybCommand
+	mov     al,0xdf
+	out     0x60,al
+	call    WaitKeybCommand
+	jmp     A20Enabled
 WaitKeybCommand:
-		in al,0x64
-		test al,0x02
-		jnz WaitKeybCommand
-		ret
+	in      al,0x64
+	test    al,0x02
+	jnz     WaitKeybCommand
+	ret
 ClearKeybBuffer:
-		in al,0x64
-		test al,0x01
-		jnz ReadKeyb
-		ret
+	in      al,0x64
+	test    al,0x01
+	jnz     ReadKeyb
+	ret
 ReadKeyb:	
-		in al,0x60
-		jmp ClearKeybBuffer
+	in      al,0x60
+	jmp     ClearKeybBuffer
 A20Enabled:
-		sti
-		ret		
+	sti
+	ret		
 			
 
+;=================================
+;CODE 32 bits mode protégé
+;=================================
 GoPMode32:
 [BITS 32]
-        mov ax,ALL_DATA_SEL
-        mov es,ax
-		mov gs,ax
-		mov fs,ax
-		mov ss,ax
-		mov ds,ax
-		mov esp,0x3fffff
-		push KERNEL_SEL
-		push dword [cs:entriepoint]
-		retf
+;Initialisation des selecteurs
+    mov     ax,ALL_DATA_SEL
+    mov     es,ax
+    mov     gs,ax
+	mov     fs,ax
+	mov     ss,ax
+	mov     ds,ax
+	mov     esp,0x3fffff
+	push    KERNEL_SEL
+	push    dword [cs:entriepoint]
+;Execution du système
+	retf
 		
 section .data
 
