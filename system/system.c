@@ -80,6 +80,15 @@ int main(void)
 	     cpu.stepping, cpu.models, cpu.family, &cpu.detectedname,
 	     &cpu.techs);
 	ok();
+
+    u8 test[]="ceCI est UN(une) tes1\000";
+    u8 test2[]="ceCI est UN(une) tes2!\000";
+    printf(&test);
+    strreplace(&test, 'e', 'q');
+    strreplace(&test2, '(', '[');
+    printf(&test);
+    printf(&test2);
+
 	while (1) {
 		key = waitascii();
 		putchar(key);
