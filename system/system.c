@@ -82,14 +82,23 @@ int main(void)
 
 	     &cpu.techs);
 	ok();
-
-    u8 dest[]="Ceci est un test pour voir si cela fonctionne correctement\000                                                                                ";
-    printf(&dest);
-    u8 src[]="POPPOPPOP\000";
+u8 test[]="0101011101b\000";
+u8 test2[]="12106567h\000";
+u8 test3[]="11A1baA7d\000";
+u8 test4[]="11454589d\000";
+u8 test5[]="0x11A1b7\000";
+u8 test6[]="0x11A1B7h\000";
+u8 test7[]="129220\000";
+    u8 dest[]="                                                                                       \000";
+    u8 src[]="Ceci est un  test pour voir si cela fonctionne correctement\000                                                                                ";
     printf(&src);
-    printf("\r\n");
-    strinsert(&src, &dest, 14);
-    printf(&dest);    
+    strtoint(&test);
+    strtoint(&test2);
+    strtoint(&test3);
+    strtoint(&test4);
+    strtoint(&test5);
+    strtoint(&test6);
+    strtoint(&test7);
 	while (1) {
 		key = waitascii();
 		putchar(key);

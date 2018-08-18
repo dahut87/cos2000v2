@@ -17,7 +17,7 @@ s8 strcmp(const u8 * src, const u8 * dest)
 
 /******************************************************************************/
 
-/* Trouve la premiere occurence d'un caractère dans une chaine */
+/* Trouve la premiere occurence d'un caractère dans une chaine et renvoie un pointeur */
 
 u8 *strchr(const u8 * src, u8 achar)
 {
@@ -25,6 +25,19 @@ u8 *strchr(const u8 * src, u8 achar)
 		if (*src == 0)
 			return 0;
 	return (u8 *) src;
+}
+
+/******************************************************************************/
+
+/* Trouve la premiere occurence d'un caractère dans une chaine  */
+
+u32 strchrpos(const u8 * src, u8 achar)
+{
+    u32 i;
+	for (i=0; *(src+i) != achar; ++i)
+		if (*(src+i) == 0)
+			return 0;
+	return i;
 }
 
 /******************************************************************************/
@@ -191,7 +204,7 @@ u8 *strfill(u8 *dst, u8 pattern, u32 size)
 
 /* Renvoie la partie gauche d'une chaine */
 
-void strright(u8 *src, u8 *dest, u32 size) {
+void strleft(u8 *src, u8 *dest, u32 size) {
     u32 i;
     for (i = 0; (*(src + i) != 0) && (i<size); i++)
         *dest++=*(src + i);
@@ -202,7 +215,7 @@ void strright(u8 *src, u8 *dest, u32 size) {
 
 /* Renvoie la partie droite d'une chaine */
 
-void strleft(u8 *src, u8 *dest, u32 size) {
+void strright(u8 *src, u8 *dest, u32 size) {
     u32 i;
     u32 begin=strlen(src)-size;
     for (i = 0; (*(src + i + begin) != 0) && (i<size); i++)
@@ -250,4 +263,139 @@ void strcompressdelimiter(u8 *src, u8 delim) {
             strdelete(pos,1,i-1);
         pos=strchr(pos+1, delim);
     }
+}
+
+/******************************************************************************/
+
+/* Récupérère l'élément N d'une liste utilisant un délimiteur */
+
+u8* strgetitem(u8 *src, u8 *dest, u8 delim, u32 index) {
+    u32 i;
+    u8* pos=strgetpointeritem(src,delim,index);
+    for (i = 0; (*(pos+i) != 0) && (*(pos+i) != delim); i++)
+        *(dest+i)=*(pos+i);
+    *(dest+i)='\000';
+    return dest;
+}
+
+/******************************************************************************/
+
+/* Récupérère un pointeur sur l'élément N d'une liste utilisant un délimiteur */
+
+u8* strgetpointeritem(u8 *src, u8 delim, u32 index) {
+    u32 i;
+    u8* pos=src; 
+    for (i = 0; i<index; i++)
+        pos=strchr(pos+1, delim);
+    if (*pos == delim) pos++;
+    return pos;
+}
+
+/******************************************************************************/
+
+/* Récupérère le nombre d'éléments d'une liste utilisant un délimiteur */
+
+u32 strgetnbitems(u8 *src, u8 delim) {
+    u32 number=0;
+    if (*src==0) return 0;
+    number++;
+    u8 *pos=strchr(src, delim);
+    while (pos!=0)
+    {
+        pos=strchr(pos+1, delim);
+        number++;
+    }
+    return number;
+}
+
+/******************************************************************************/
+
+/* Renvoie la base minimum du nombre */
+
+u8 base[]=" 0123456789ABCDEF\000";
+
+u8 strgetminbase(u8 *src) {
+    u8 temp[]="                                           \000";
+    u8 *dst=&temp;
+    strtoupper(strcpy(src, &temp));
+    u8 max=0;
+    while (*dst!=0) {
+        u32 result=strchrpos(&base,*dst++);
+        if (result==0)
+            return 0;
+        if (result>max)
+            max=result;
+    }
+    if (max>10)
+        return 16;
+    else if (max>8)
+        return 10;
+    else if (max>2)
+        return 8;
+    else
+        return 2;
+}
+
+/******************************************************************************/
+
+/* Renvoie la base du nombre */
+
+u8 hexa[]="0x\000";
+u8 bases[]=" bodh\000";
+u8 basesnum[]={0,2,8,10,16};
+u8 declaredbase=10;
+u8 minbase=0;
+u8 strgetbase(u8 *src) {
+    u8 temp[]="                               \000";
+    strleft(src,&temp,2);
+    if (strcmp(&temp,&hexa)==0) {
+        declaredbase=16;
+        u8 size=strlen(src);
+        strright(src,&temp,size-2);
+        minbase=strgetminbase(&temp);
+    }
+    else {
+        strright(src,&temp,1);
+        declaredbase=basesnum[strchrpos(&bases,temp[0])];
+        if (declaredbase>0) {
+            u8 size=strlen(src);
+            strleft(src,&temp,size-1);
+            minbase=strgetminbase(&temp);
+        }
+        else
+        {
+            minbase=strgetminbase(src);
+            declaredbase=minbase;
+        }
+    }
+    if (declaredbase>=minbase && minbase!=0)
+        return declaredbase;
+    else
+        return 0;
+}
+
+/******************************************************************************/
+
+/* Renvoie la base du nombre */
+
+u32 strtoint(u8 *src) {
+    u8* temp=src;
+    u32 result=0;
+    u8 thebase=strgetbase(src);
+    u32 multi=1;
+    u8 shorter=0;
+
+    if (thebase==0) return 0;
+    if (*(src+1)=='x') shorter=2;
+    while (*++temp!=0);
+    while (*temp==0 || *temp=='b' || *temp=='o' || *temp=='d' || *temp=='h')
+        temp--;
+    while (src+shorter<=temp) {
+        u8 achar=*temp--;
+        if ((achar >= 'a') && (achar <= 'z'))
+            achar=achar-('a'-'A');
+        result=result+multi*(strchrpos(&base,achar)-1);
+        multi=multi*thebase;
+    }
+    return result;
 }
