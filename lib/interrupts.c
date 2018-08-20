@@ -263,7 +263,7 @@ void irq0()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -293,7 +293,7 @@ void irq2()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -307,7 +307,7 @@ void irq3()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -321,7 +321,7 @@ void irq4()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -335,7 +335,7 @@ void irq5()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -349,7 +349,7 @@ void irq6()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -363,7 +363,7 @@ void irq7()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -378,7 +378,7 @@ void irq8()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -393,7 +393,7 @@ void irq9()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -408,7 +408,7 @@ void irq10()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -423,7 +423,7 @@ void irq11()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -440,7 +440,7 @@ void irq12()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x1C, %esp;");
 	iret();
 }
 
@@ -455,7 +455,7 @@ void irq13()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -470,7 +470,7 @@ void irq14()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
@@ -483,7 +483,7 @@ void irq15()
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x0C, %esp;");
 	iret();
 }
 
