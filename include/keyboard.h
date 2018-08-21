@@ -29,5 +29,7 @@
 #define	STATUS_SCRL	0x4000	
 
 void keyboard();
+void reboot();
 void outkbd(u8 port, u8 data);
 u8 waitascii();
+u8* getstring(u8* temp);

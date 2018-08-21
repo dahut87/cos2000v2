@@ -94,11 +94,33 @@ static const u8 set1_ctrl[] = {
 
 /******************************************************************************/
 
+/* Attend une chaine de caractère de taille max */
+
+u8* getstring(u8* temp) {
+    u8 maxwidth=strlen(temp);
+    u8 *pointer=temp;
+    u8 ascii=0;
+    while(ascii!='\r') {
+        ascii=waitascii();
+        if (ascii=='\b' && pointer>temp) {
+            pointer--;
+            putchar(ascii);
+        }
+        else if (ascii>31 && pointer<=&temp+80) {
+            *pointer++=ascii;
+            putchar(ascii);
+        }
+    }
+    *pointer='\000';
+    return temp;
+}
+    
+/******************************************************************************/
+
 /* Fonction qui attend l'appuie d'une touche générant un code ASCII puis le retourne */
 
 u8 waitascii()
 {
-	u8 oldptrscan = ptrscan;
 	u8 oldptrascii = ptrascii;
 	while ((oldptrascii == ptrascii)) ;
 	return bufferascii[ptrascii];
@@ -128,7 +150,7 @@ void outkbd(u8 port, u8 data)
 
 /* Redemarre l'ordinateur */
 
-static void reboot(void)
+void reboot()
 {
 	u8 temp;
 	cli();

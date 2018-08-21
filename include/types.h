@@ -10,9 +10,9 @@ typedef int	s32;
 typedef int bool; 
 
 
-#define true -1;
-#define false 0;
-#define NULL 0x0000;
+#define true 1
+#define false 0
+#define NULL 0x0000
 
 struct dtr {
 

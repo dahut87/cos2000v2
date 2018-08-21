@@ -376,7 +376,7 @@ u8 strgetbase(u8 *src) {
 
 /******************************************************************************/
 
-/* Renvoie la base du nombre */
+/* Transforme une chaine en nombre */
 
 u32 strtoint(u8 *src) {
     u8* temp=src;
