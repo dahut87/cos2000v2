@@ -68,29 +68,24 @@ void hline(u32 x1, u32 x2, u32 y, u8 color) {
             writepxl(x2, y, color);
 }
 
+
 /******************************************************************************/
 
 /* Affiche un triangle rempli entre les points spécifiés */
 
 void trianglefilled(vertex2d *AA, vertex2d *BB, vertex2d *CC, u8 color) {
-    vertex2d *A,*B,*C;
+    vertex2d *A,*B,*C,*TEMP;
  	u32 a, b, y, last;
     int dx1, dx2, dx3, dy1, dy2, dy3 , sa, sb;
     A=AA;
     B=BB;
     C=CC;
-    if (AA->y > BB->y) {
-        A=BB;
-        B=AA;
-    }
-    if (BB->y > CC->y) {
-        C=BB;
-        B=CC;
-    }
-    if (AA->y > CC->y) {
-        C=AA;
-        A=CC;
-    }
+    if (A->y > B->y) 
+        swapvertex(A,B);
+    if (B->y > C->y) 
+        swapvertex(B,C);
+    if (A->y > C->y) 
+        swapvertex(A,C);
     if(A->y == C->y) { //meme ligne
     	a = b = A->x;
     	if(B->x < a)      a = B->x;
@@ -131,6 +126,12 @@ void trianglefilled(vertex2d *AA, vertex2d *BB, vertex2d *CC, u8 color) {
         sb += dx2;
         hline(a, b, y, color);
     }
+}
+
+void swapvertex(vertex2d* A, vertex2d* B){
+  vertex2d temp = *A;
+  *A = *B;
+  *B = temp;    
 }
 
 /******************************************************************************/
