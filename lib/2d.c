@@ -8,6 +8,11 @@
 
 /* Affiche une ligne entre les points spécifiés */
 
+void linev(vertex2d *A, vertex2d *B, u8 color)
+{
+    line(A->x,A->y,B->x,B->y,color);
+}
+
 void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
 {
 	s32 dx, dy, sdx, sdy;
@@ -48,4 +53,92 @@ void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
 			writepxl(px, py, color);
 		}
 	}
+}
+
+/******************************************************************************/
+
+/* Affiche une ligne horizontale entre les points spécifiés */
+
+void hline(u32 x1, u32 x2, u32 y, u8 color) {
+    if (x2>x1)
+        for(;x1<=x2;x1++)
+            writepxl(x1, y, color);
+    else
+        for(;x2<=x1;x2++)
+            writepxl(x2, y, color);
+}
+
+/******************************************************************************/
+
+/* Affiche un triangle rempli entre les points spécifiés */
+
+void trianglefilled(vertex2d *AA, vertex2d *BB, vertex2d *CC, u8 color) {
+    vertex2d *A,*B,*C;
+ 	u32 a, b, y, last;
+    int dx1, dx2, dx3, dy1, dy2, dy3 , sa, sb;
+    A=AA;
+    B=BB;
+    C=CC;
+    if (AA->y > BB->y) {
+        A=BB;
+        B=AA;
+    }
+    if (BB->y > CC->y) {
+        C=BB;
+        B=CC;
+    }
+    if (AA->y > CC->y) {
+        C=AA;
+        A=CC;
+    }
+    if(A->y == C->y) { //meme ligne
+    	a = b = A->x;
+    	if(B->x < a)      a = B->x;
+    	else if(B->x > b) b = B->x;
+    	if(C->x < a)      a = C->x;
+    	else if(C->x > b) b = C->x;
+        hline(a, b, A->y, color);
+        return;
+    }
+    dx1 = B->x - A->x;
+    dy1 = B->y - A->y;
+    dx2 = C->x - A->x;
+    dy2 = C->y - A->y;
+    dx3 = C->x - B->x;
+    dy3 = C->y - B->y;
+    sa = 0;
+    sb = 0;
+
+    if(B->y == C->y) 
+        last = B->y;   
+    else         
+        last = B->y-1;
+
+    for(y=A->y; y<=last; y++) {
+        a   = A->x + sa / dy1;
+        b   = A->x + sb / dy2;
+        sa += dx1;
+        sb += dx2;
+        hline(a, b, y, color);
+    }
+
+    sa = dx3 * (y - B->y);
+    sb = dx2 * (y - A->y);
+    for(; y<=C->y; y++) {
+        a   = B->x + sa / dy3;
+        b   = A->x + sb / dy2;
+        sa += dx3;
+        sb += dx2;
+        hline(a, b, y, color);
+    }
+}
+
+/******************************************************************************/
+
+/* Affiche un triangle  entre les points spécifiés */
+
+void triangle(vertex2d *AA, vertex2d *BB, vertex2d *CC, u8 color) {
+    line(AA->x,AA->y,BB->x,BB->y,color);
+    line(BB->x,BB->y,CC->x,CC->y,color);
+    line(CC->x,CC->y,AA->x,AA->y,color);
 }

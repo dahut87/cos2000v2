@@ -9,6 +9,16 @@ static u8 curs[4] = { "-\\|/" };
 
 static u8 curspos = 0;
 
+static u32 time = 0;
+
+/******************************************************************************/
+
+/* Récupère la valeur du timer */
+
+u32 gettimer() {
+    return time;
+}
+
 /******************************************************************************/
 
 /* Handler d'interruption de la souris IRQ 0 */
@@ -20,6 +30,7 @@ void timer()
 	pushad();
 	showchar(0, 0, curs[curspos], 7);
 	curspos = (curspos + 1) & 0x3;
+    time++;
 	irqendmaster();
 	popad();
 	popf();

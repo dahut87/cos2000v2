@@ -7,11 +7,9 @@
 #include "asm.h"
 #include "cpu.h"
 #include "string.h"
-
+#include "2d.h"
 #include "ansi.c"
 
-static cpuinfo cpu;
-static u8 noproc[] = "\033[31mInconnu\033[0m\000";
 static u8 warnmsg[] =
     "\033[99C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m\000";
 static u8 okmsg[] =
@@ -71,20 +69,13 @@ int main(void)
 		warning();
 	else
 		ok();
-
-	strcpy(&noproc, &cpu.detectedname);
-	getcpuinfos(&cpu);
-
-
-	printf
-	    (" -Detection du processeur\r\033[1m Revision \t:%d\r Modele \t:%d\r Famille \t:%d\r Nom cpuid\t:%s\rJeux d'instruction\t:%s\033[0m\000",
-	     cpu.stepping, cpu.models, cpu.family, &cpu.detectedname,
-
-	     &cpu.techs);
-	ok();
-	static u8 field[]="                                                                                \000";
+    static u8 field[]="                                                                                \000";
     static u8 item[]="                       \000";
     static u8 cmd_reboot[]="REBOOT\000";
+    static u8 cmd_mode[]="MODE\000";
+    static u8 cmd_clear[]="CLEAR\000";
+    static u8 cmd_detectcpu[]="DETECTCPU\000";
+    static u8 cmd_test2d[]="TEST2D\000";
 	while (true) {
         print("\r\n# ");
         getstring(&field);
@@ -92,6 +83,36 @@ int main(void)
             strgetitem(&field, &item, ' ', 0);
         strtoupper(&item);
         if (strcmp(&item,&cmd_reboot)==0) reboot();
+        if (strcmp(&item,&cmd_mode)==0) setvmode(0x84);
+        if (strcmp(&item,&cmd_clear)==0) fill(0x00);
+        if (strcmp(&item,&cmd_detectcpu)==0) detectcpu();
+        if (strcmp(&item,&cmd_test2d)==0) test2d();
 	}
+}
 
+void test2d() {
+    setvmode(0x84);
+    fill(0x00);
+    struct vertex2d a,b,c;
+    randomize();
+    for(int i=0;i<100;i++)
+    {
+        a.x=random(0, 800);
+        a.y=random(0, 600);
+        b.x=random(0, 800);
+        b.y=random(0, 600);
+        c.x=random(0, 800);
+        c.y=random(0, 600);
+        trianglefilled(&a,&b,&c,random(0, 16));
+        triangle(&a,&b,&c,2);
+    }
+}
+
+void detectcpu()
+{
+    cpuinfo cpu;
+    u8 noproc[] = "\033[31mInconnu\033[0m\000";
+    strcpy(&noproc, &cpu.detectedname);
+	getcpuinfos(&cpu);
+	printf("\r\nDetection du processeur\r\033[1m Revision \t:%d\r Modele \t:%d\r Famille \t:%d\r Nom cpuid\t:%s\rJeux d'instruction\t:%s\033[0m\r\n\000",cpu.stepping, cpu.models, cpu.family, &cpu.detectedname,&cpu.techs); 
 }
