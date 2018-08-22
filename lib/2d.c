@@ -80,12 +80,14 @@ void trianglefilled(vertex2d *AA, vertex2d *BB, vertex2d *CC, u8 color) {
     A=AA;
     B=BB;
     C=CC;
-    if (A->y > B->y) 
-        swapvertex(A,B);
-    if (B->y > C->y) 
-        swapvertex(B,C);
-    if (A->y > C->y) 
-        swapvertex(A,C);
+    while(A->y > B->y || B->y > C->y || A->y == C->y) {
+        if (A->y > B->y) 
+            swapvertex(A,B);
+        if (B->y > C->y) 
+            swapvertex(B,C);
+        if (A->y > C->y) 
+            swapvertex(A,C);
+    }
     if(A->y == C->y) { //meme ligne
     	a = b = A->x;
     	if(B->x < a)      a = B->x;

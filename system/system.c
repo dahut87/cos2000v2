@@ -94,14 +94,6 @@ void test2d() {
     setvmode(0x84);
     fill(0x00);
     struct vertex2d a,b,c;
-        a.x=230;
-        a.y=157;
-        b.x=375;
-        b.y=29;
-        c.x=278;
-        c.y=276;
-        trianglefilled(&a,&b,&c,random(0, 16));
-        triangle(&a,&b,&c,2);
     randomize();
     for(int i=0;i<3200;i++)
     {
@@ -113,8 +105,6 @@ void test2d() {
         c.y=random(0, 600);
         trianglefilled(&a,&b,&c,random(0, 16));
         triangle(&a,&b,&c,2);
-        printf("\r\nA:%d,%d B:%d,%d C:%d,%d",a.x,a.y,b.x,b.y,c.x,c.y); 
-       waitascii();
     }
 }
 
