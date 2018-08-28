@@ -1,5 +1,26 @@
-#ifndef I386_TYPE
-#define I386_TYPE
+#ifndef ALLTYPES
+# define ALLTYPES
+
+
+typedef char            	int8;
+typedef short           	int16;
+typedef int             	int32;
+typedef long long       	int64;
+
+typedef char	      	        BYTE;
+typedef short	      	        WORD;
+typedef long	      	        DWORD;
+typedef long long       	QWORD;
+
+typedef signed char		SBYTE;
+typedef signed short		SWORD;
+typedef signed long		SDWORD;
+typedef signed long long	SQWORD;
+
+typedef unsigned char		UBYTE;
+typedef unsigned short		UWORD;
+typedef unsigned long		UDWORD;
+typedef unsigned long long	UQWORD;
 
 typedef unsigned char	u8;
 typedef unsigned short	u16;
@@ -9,25 +30,11 @@ typedef short	s16;
 typedef int	s32;
 typedef int bool; 
 
+extern char ctype[];
 
 #define true 1
 #define false 0
 #define NULL 0x0000
-
-struct dtr {
-
-	u16 limite;
-
-	u32 base;
-
-}  __attribute__ ((packed));
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-extern char ctype[];
 
 #define CT_UP	0x01	/* upper case */
 #define CT_LOW	0x02	/* lower case */
@@ -56,11 +63,4 @@ extern char ctype[];
 #define tolower(c)	(isupper(c) ? c + 'a' - 'A' : c)
 #define toupper(c)	(islower(c) ? c + 'A' - 'a' : c)
 
-#ifdef __cplusplus
-}
 #endif
-
-#endif
-
-
-

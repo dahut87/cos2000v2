@@ -18,38 +18,38 @@ void initpic(void)
 {
 	/* MASTER */
 	/* Initialisation de ICW1 */
-	outb(0x20, 0x11);
+	outb(PIC1_CMD, ICW1_INIT + ICW1_ICW4);
 	nop();
 	/* Initialisation de ICW2 - vecteur de depart = 32 */
-	outb(0x21, 0x20);
+	outb(PIC1_DATA, 0x20);
 	nop();
 	/* Initialisation de ICW3 */
-	outb(0x21, 0x04);
+	outb(PIC1_DATA, 0x04);
 	nop();
 	/* Initialisation de ICW4 */
-	outb(0x21, 0x01);
+	outb(PIC1_DATA, ICW4_8086);
 	nop();
 	/* masquage des interruptions */
-	outb(0x21, 0xFF);
+	outb(PIC1_DATA, 0xFF);
 	nop();
 	/* SLAVE */
 	/* Initialisation de ICW1 */
-	outb(0xA0, 0x11);
+	outb(PIC2_CMD, ICW1_INIT + ICW1_ICW4);
 	nop();
 	/* Initialisation de ICW2 - vecteur de depart = 96 */
-	outb(0xA1, 0x60);
+	outb(PIC2_DATA, 0x60);
 	nop();
 	/* Initialisation de ICW3 */
-	outb(0xA1, 0x02);
+	outb(PIC2_DATA, 0x02);
 	nop();
 	/* Initialisation de ICW4 */
-	outb(0xA1, 0x01);
+	outb(PIC2_DATA, ICW4_8086);
 	nop();
 	/* masquage des interruptions */
-	outb(0xA1, 0xFF);
+	outb(PIC2_DATA, 0xFF);
 	nop();
 	/* Demasquage des irqs sauf clavier
-	   outb(0x21,0xFD);
+	   outb(PIC1_DATA,0xFD);
 	   nop();
 	 */
 }
@@ -62,7 +62,7 @@ void enableirq(u8 irq)
 {
 	u16 port;
 	cli();
-	port = (((irq & 0x08) << 4) + 0x21);
+	port = (((irq & 0x08) << 4) + PIC1_DATA);
 	outb(port, inb(port) & ~(1 << (irq & 7)));
 	sti();
 }
@@ -75,7 +75,7 @@ void disableirq(u8 irq)
 {
 	u16 port;
 	cli();
-	port = (((irq & 0x08) << 4) + 0x21);
+	port = (((irq & 0x08) << 4) + PIC1_DATA);
 	outb(port, inb(port) | (1 << (irq & 7)));
 	sti();
 }
@@ -129,7 +129,7 @@ void cpuerror(const u8 * src)
 	print("\033[31m***** ERREUR CPU ****\r\n -");
 	print(src);
 	dump_regs();
-	while (1) {
+	while (true) {
 		nop();
 	}
 }
@@ -514,7 +514,7 @@ void initidt(void)
 	putidt((u32) exception17, 0x20, INTGATE, 17);
 	putidt((u32) exception18, 0x20, INTGATE, 18);
 	for (i = 19; i < 32; i++) {
-		putidt((u32) interruption, 0x20, INTGATE, i);
+		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	putidt((u32) irq0, 0x20, INTGATE, 32);
 	putidt((u32) irq1, 0x20, INTGATE, 33);
@@ -525,7 +525,7 @@ void initidt(void)
 	putidt((u32) irq6, 0x20, INTGATE, 38);
 	putidt((u32) irq7, 0x20, INTGATE, 39);
 	for (i = 40; i < 96; i++) {
-		putidt((u32) interruption, 0x20, INTGATE, i);
+		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	putidt((u32) irq8, 0x20, INTGATE, 96);
 	putidt((u32) irq9, 0x20, INTGATE, 97);
@@ -536,7 +536,7 @@ void initidt(void)
 	putidt((u32) irq14, 0x20, INTGATE, 102);
 	putidt((u32) irq15, 0x20, INTGATE, 103);
 	for (i = 104; i < 255; i++) {
-		putidt((u32) interruption, 0x20, INTGATE, i);
+		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	/* initialise le registre idt */
 	idtreg.limite = 256 * 8;
@@ -547,3 +547,15 @@ void initidt(void)
 	lidt(&idtreg);
 
 }
+
+/******************************************************************************/
+
+/* 8253/8254 PIT (Programmable Interval Timer) Timer ajustable */
+
+void inittimer()
+{
+    outb(TIMER_MODE, RATE_GENERATOR);
+    outb(TIMER0, (u8) (TIMER_FREQ/HZ) );
+    outb(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
+}
+

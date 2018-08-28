@@ -91,7 +91,7 @@ int main(void)
 }
 
 void test2d() {
-    setvmode(0x84);
+    setvmode(0x89);
     fill(0x00);
     struct vertex2d a,b,c;
     randomize();
