@@ -288,96 +288,208 @@ void putchar(u8 thechar)
 
 /* affiche une chaine de caractère a l'écran */
 
-void print(u8 * string)
+u32 print(u8 * string)
 {
 	u8 *source;
+    u32 i=0;
 	source = string;
 	while (*source != 0) {
 		putchar(*source++);
+        i++;
 	}
+    return i;
 }
 
 /*******************************************************************************/
+
+# define buffersize 1024
 
 /* affiche une chaine de caractère formaté a l'ecran */
 
-void printf(const u8 * string, ...)
+u32 printf(const u8 *string, ...)
 {
-	va_list ap;
-	u8 buffer[50];
-	u8 *pointer;
+	va_list args;
+	u8 achar,temp;
+    u32 sizes[]={0xFF,0xFFFF,0xFFFFFFFF};
+    u8 asize,charadd;
+	u8 strbase2 = "b\000";
+	u8 strbase8 = "o\000";
+	u8 strbase16 = "h\000";
+    u8 hexadecimal[]="*0x\000";
+    u8 buffer[buffersize];
+	u8 *str = string;
+    u8 *strtemp;
+	u32 i = 0, counter = 0;
+	u32 num;
+    bool flag=false;
 
-	u8 radix;
-	bool signe;
-	long num;
-
-	va_start(ap, string);
-	while (*string != 0) {
-		if (*string != '%')
-			putchar(*string);
-		else {
-			switch (*++string) {
+	va_start(args, string);
+	for (achar = *str; achar != '\000'; i++, achar = *(str + i))
+	{
+		if (achar != '%' && !flag)
+		{
+			putchar(achar);
+			counter++;
+            asize=2;
+            charadd=0;
+		}
+		else if (achar == '%' || flag)
+		{
+			++i;
+			achar = *(str + i);
+			switch(achar)
+			{
+            case '0':
+                charadd='0';
+                flag=true;
+            case ' ':
+                charadd=' ';
+                flag=true;
+            case 'h':
+                asize--;
+                flag=true;
+            case 'l':
+                asize++;
+                flag=true;
+            case 'u':
+				num = (u32)va_arg(args, int);
+                num&=sizes[asize];
+				itoa(num, buffer, 10, charadd);
+				counter += print(buffer);
+                flag=false;
+				break;
+            case 'o':
+                num = (u32)va_arg(args, int);
+                num&=sizes[asize];
+				itoa(num, buffer, 8, charadd);
+				counter += print(buffer)+1;
+                print(strbase8);
+                flag=false;
+				break;
 			case 'c':
-				putchar(va_arg(ap, int));
+				temp = (u8)va_arg(args, int);
+				putchar(temp);
+				counter++;
+                flag=false;
 				break;
-			case 'u':
-				radix = 10;
-				signe = 0;
- showstring:
-				num = va_arg(ap, int);
-				pointer = buffer + 50 - 1;
-				*pointer = '\0';
-				if ((signe == 1) && (num < 0)) {
-					num = -num;
-					signe++;
-				}
-				do {
-					unsigned long temp;
-					temp = (unsigned long)num % radix;
-					pointer--;
-					if (temp < 10)
-						*pointer = temp + '0';
-					else
-						*pointer = temp - 10 + 'a';
-					num = (unsigned long)num / radix;
-				}
-				while (num != 0);
-				if (signe > 1)
-					*(--pointer) = '-';
-				while (*pointer != 0)
-					putchar(*pointer++);
-				break;
-			case 'o':
-				radix = 8;
-				signe = 0;
-				goto showstring;
 			case 'd':
-			case 'i':
-				radix = 10;
-				signe = 1;
-				goto showstring;
-			case 'x':
-				radix = 16;
-				signe = 0;
-				goto showstring;
+            case 'i':
+				num = (int)va_arg(args, int);
+                num&=sizes[asize];
+				sitoa(num, buffer);
+				counter += print(buffer);
+                flag=false;
+				break;
 			case 's':
-				pointer = va_arg(ap, u8 *);
-				if (!pointer)
-					pointer = "(null)";
-				while (*pointer != 0)
-					putchar(*pointer++);
+				strtemp = (u8 *)va_arg(args, u8 *);
+				counter += print(strtemp);
+                flag=false;
 				break;
-			case '%':
-				putchar('%');
+			case 'p':
+				num = (u32)va_arg(args, int);
+                num&=sizes[asize];
+				print(hexadecimal);
+                itoa(num, buffer, 16, '0');
+				counter += print(buffer)+2;
+                flag=false;
 				break;
+			case 'x':
+			case 'X':
+                num = (u32)va_arg(args, int);
+                num&=sizes[asize];
+				itoa(num, buffer, 16, charadd);
+				counter += print(buffer)+1;
+                if (achar=='X')
+                    strtoupper(buffer);
+                print(strbase16);
+                flag=false;
+				break;
+			case 'b':
+                num = (u32)va_arg(args, int);
+                num&=sizes[asize];
+				itoa(num, buffer, 2, charadd);
+				counter += print(buffer)+1;
+                print(strbase2);
+                flag=false;
+				break;  
 			default:
-				putchar(va_arg(ap, int));
 				break;
 			}
 		}
-		string++;
 	}
-	va_end(ap);
+	va_end(args);
+	return counter;
 }
 
 /*******************************************************************************/
+
+/* converti un entier non signé en chaine de caractère */
+
+u8* itoa(u32 num, u8* str, u8 base, u8 achar)
+{
+    u32 pointer = 0, i=0, size=0;
+    if (num == 0)
+    {
+        str[pointer++] = '0';
+        str[pointer] = '\0';
+        return str;
+    }
+    switch (base)
+    {
+    case 2:
+        size=log2(num);
+        break;
+    case 8:
+        size=log2(num)/4;
+        break;
+    case 10:
+        size=log10(num);
+        break;
+    case 16:
+        size=log2(num)/2;
+        break;
+    }
+    for(i=0;i<size;size++)
+    {
+        u32 result = num % (u32)base;
+        str[pointer++] = (result > 9)? (result-10) + 'a' : result + '0';
+        num = num / (u32)base;
+        if ((num==0) && (achar==0))
+            break;
+    }
+    str[pointer] = '\0';
+    strinvert(str);
+    return str;
+}
+
+/*******************************************************************************/
+
+/* converti un entier en chaine de caractère */
+
+u8* sitoa(int num, u8* str)
+{
+    u32 i = 0;
+    bool isNegative = false;
+    if (num == 0)
+    {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+    if (num < 0)
+    {
+        isNegative = true;
+        num = -num;
+    }
+    while (num != 0)
+    {
+        u32 result = num % 10;
+        str[i++] = (result > 9)? (result-10) + 'a' : result + '0';
+        num = num/ 10;
+    }
+    if (isNegative)
+        str[i++] = '-';
+    str[i] = '\0'; 
+    strinvert(str);
+    return str;
+}

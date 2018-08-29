@@ -13,7 +13,9 @@ typedef struct console {
 
 void showhex(u8 src);
 void putchar(u8 thechar);
-void print(u8* string);
-void printf (const u8 *string, ...);
+u32 print(u8* string);
+u32 printf (const u8 *string, ...);
 void changevc(u8 vc);
+u8* itoa(u32 num, u8* str, u8 base, u8 achar);
+u8* sitoa(int num, u8* str);
 
