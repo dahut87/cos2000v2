@@ -309,13 +309,13 @@ u32 print(u8 * string)
 u32 printf(const u8 *string, ...)
 {
 	va_list args;
-	u8 achar,temp;
     u32 sizes[]={0xFF,0xFFFF,0xFFFFFFFF};
-    u8 asize,charadd;
-	u8 strbase2 = "b\000";
-	u8 strbase8 = "o\000";
-	u8 strbase16 = "h\000";
+    u8 strbase2[] = "b\000";
+    u8 strbase8[] = "o\000";
+    u8 strbase16[] = "h\000";
     u8 hexadecimal[]="*0x\000";
+	u8 achar,temp;
+    u8 asize,charadd;
     u8 buffer[buffersize];
 	u8 *str = string;
     u8 *strtemp;
@@ -331,39 +331,45 @@ u32 printf(const u8 *string, ...)
 			putchar(achar);
 			counter++;
             asize=2;
-            charadd=0;
+            charadd=0xFF;
 		}
 		else if (achar == '%' || flag)
 		{
-			++i;
+			if (!flag) ++i;
 			achar = *(str + i);
 			switch(achar)
 			{
             case '0':
                 charadd='0';
                 flag=true;
+				break; 
             case ' ':
                 charadd=' ';
                 flag=true;
+				break; 
             case 'h':
                 asize--;
                 flag=true;
+				break; 
             case 'l':
                 asize++;
                 flag=true;
+				break; 
             case 'u':
 				num = (u32)va_arg(args, int);
-                num&=sizes[asize];
-				itoa(num, buffer, 10, charadd);
-				counter += print(buffer);
+                if (charadd==0xFF)
+                    charadd='0';
+				itoa(num, &buffer, 10, sizes[asize], charadd);
+				counter += print(&buffer);
                 flag=false;
-				break;
+				break; 
             case 'o':
                 num = (u32)va_arg(args, int);
-                num&=sizes[asize];
-				itoa(num, buffer, 8, charadd);
-				counter += print(buffer)+1;
-                print(strbase8);
+                if (charadd==0xFF)
+                    charadd='0';
+				itoa(num, &buffer, 8, sizes[asize], charadd);
+				counter += print(&buffer)+1;
+                print(&strbase8);
                 flag=false;
 				break;
 			case 'c':
@@ -375,9 +381,10 @@ u32 printf(const u8 *string, ...)
 			case 'd':
             case 'i':
 				num = (int)va_arg(args, int);
-                num&=sizes[asize];
-				sitoa(num, buffer);
-				counter += print(buffer);
+                if (charadd==0xFF)
+                    charadd=' ';
+				sitoa(num, &buffer, sizes[asize]);
+				counter += print(&buffer);
                 flag=false;
 				break;
 			case 's':
@@ -387,29 +394,32 @@ u32 printf(const u8 *string, ...)
 				break;
 			case 'p':
 				num = (u32)va_arg(args, int);
-                num&=sizes[asize];
-				print(hexadecimal);
-                itoa(num, buffer, 16, '0');
-				counter += print(buffer)+2;
+                if (charadd==0xFF)
+                    charadd='0';
+				print(&hexadecimal);
+                itoa(num, buffer, 16, sizes[asize], '0');
+				counter += print(&buffer)+2;
                 flag=false;
 				break;
 			case 'x':
 			case 'X':
                 num = (u32)va_arg(args, int);
-                num&=sizes[asize];
-				itoa(num, buffer, 16, charadd);
-				counter += print(buffer)+1;
+                if (charadd==0xFF)
+                    charadd='0';
+				itoa(num, &buffer, 16, sizes[asize], charadd);
                 if (achar=='X')
-                    strtoupper(buffer);
-                print(strbase16);
+                    strtoupper(&buffer);
+				counter += print(&buffer)+1;
+                print(&strbase16);
                 flag=false;
 				break;
 			case 'b':
                 num = (u32)va_arg(args, int);
-                num&=sizes[asize];
-				itoa(num, buffer, 2, charadd);
-				counter += print(buffer)+1;
-                print(strbase2);
+                if (charadd==0xFF)
+                    charadd='0';
+				itoa(num, &buffer, 2, sizes[asize], charadd);
+				counter += print(&buffer)+1;
+                print(&strbase2);
                 flag=false;
 				break;  
 			default:
@@ -425,39 +435,42 @@ u32 printf(const u8 *string, ...)
 
 /* converti un entier non signé en chaine de caractère */
 
-u8* itoa(u32 num, u8* str, u8 base, u8 achar)
+u8* itoa(u32 orignum, u8* str, u8 base, u32 dim, u8 achar)
 {
-    u32 pointer = 0, i=0, size=0;
-    if (num == 0)
+    u32 sizes[]={0xFF,0xFFFF,0xFFFFFFFF};
+    u8 *pointer = str, i, size=0;
+    u32 num=orignum;
+    num&=dim;
+    if (num == 0 && (achar==0))
     {
-        str[pointer++] = '0';
-        str[pointer] = '\0';
+        *(pointer++) = '0';
+        *pointer = '\000';
         return str;
     }
     switch (base)
     {
     case 2:
-        size=log2(num);
+        size=log2(dim);
         break;
     case 8:
-        size=log2(num)/4;
+        size=log2(dim)/2;
         break;
     case 10:
-        size=log10(num);
+        size=log10(dim);
         break;
     case 16:
-        size=log2(num)/2;
+        size=log2(dim)/4;
         break;
     }
-    for(i=0;i<size;size++)
+    for(i=0;i<size;i++)
     {
         u32 result = num % (u32)base;
-        str[pointer++] = (result > 9)? (result-10) + 'a' : result + '0';
+        *(pointer++) = (result > 9)? (result-10) + 'a' : result + '0';
         num = num / (u32)base;
         if ((num==0) && (achar==0))
             break;
     }
-    str[pointer] = '\0';
+    *pointer = '\000';
     strinvert(str);
     return str;
 }
@@ -466,14 +479,15 @@ u8* itoa(u32 num, u8* str, u8 base, u8 achar)
 
 /* converti un entier en chaine de caractère */
 
-u8* sitoa(int num, u8* str)
+u8* sitoa(int num, u8* str, u32 dim)
 {
-    u32 i = 0;
+    u8 *pointer = str;
     bool isNegative = false;
+    num&=dim;
     if (num == 0)
     {
-        str[i++] = '0';
-        str[i] = '\0';
+        *pointer++ = '0';
+        *pointer = '\000';
         return str;
     }
     if (num < 0)
@@ -484,12 +498,12 @@ u8* sitoa(int num, u8* str)
     while (num != 0)
     {
         u32 result = num % 10;
-        str[i++] = (result > 9)? (result-10) + 'a' : result + '0';
+        *(pointer++) = (result > 9)? (result-10) + 'a' : result + '0';
         num = num/ 10;
     }
     if (isNegative)
-        str[i++] = '-';
-    str[i] = '\0'; 
+        *(pointer++) = '-';
+    *pointer = '\000'; 
     strinvert(str);
     return str;
 }

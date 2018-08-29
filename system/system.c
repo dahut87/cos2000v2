@@ -76,17 +76,23 @@ int main(void)
     static u8 cmd_clear[]="CLEAR\000";
     static u8 cmd_detectcpu[]="DETECTCPU\000";
     static u8 cmd_test2d[]="TEST2D\000";
+    static u8 cmd_regs[]="REGS\000";
 	while (true) {
         print("\r\n# ");
         getstring(&field);
+        print("\r\n");
         if (strgetnbitems(&field,' ')<1) continue;
             strgetitem(&field, &item, ' ', 0);
         strtoupper(&item);
+
         if (strcmp(&item,&cmd_reboot)==0) reboot();
-        if (strcmp(&item,&cmd_mode)==0) setvmode(0x84);
-        if (strcmp(&item,&cmd_clear)==0) fill(0x00);
-        if (strcmp(&item,&cmd_detectcpu)==0) detectcpu();
-        if (strcmp(&item,&cmd_test2d)==0) test2d();
+        else if (strcmp(&item,&cmd_mode)==0) setvmode(0x84);
+        else if (strcmp(&item,&cmd_clear)==0) fill(0x00);
+        else if (strcmp(&item,&cmd_detectcpu)==0) detectcpu();
+        else if (strcmp(&item,&cmd_test2d)==0) test2d();
+        else if (strcmp(&item,&cmd_regs)==0) dump_regs();
+        else
+            printf("Commande inconnue !\r\n\000");
 	}
 }
 

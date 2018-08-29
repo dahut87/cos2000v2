@@ -141,56 +141,59 @@ void dump_regs()
 	u16 fs = 0;
 	u16 gs = 0;
 	u16 ss = 0;
-	u32 flags = 0;
- asm("movl %%eax, %[a1] ;" "movl %%ebx, %[b1] ;" "movl %%ecx, %[c1] ;" "movl %%edx, %[d1] ;" "movl %%esi, %[e1] ;" "movl %%edi, %[f1] ;" "movl %%esp, %[g1] ;" "movl %%ebp, %[h1] ;" "movw %%cs, %[i1] ;" "movw %%ds, %[j1] ;" "movw %%es, %[k1] ;" "movw %%fs, %[l1] ;" "movw %%gs, %[m1] ;" "movw %%ss, %[n1] ;":
+	u32 cr0 = 0;
+	u32 cr1 = 0;
+	u32 cr2 = 0;
+	u32 cr3 = 0;
+	u32 cr4 = 0;
+	u32 eflags = 0;
+ asm("movl %%eax, %[a1] ;" "movl %%ebx, %[b1] ;" "movl %%ecx, %[c1] ;" "movl %%edx, %[d1] ;" "movl %%esi, %[e1] ;" "movl %%edi, %[f1] ;" "movl %%esp, %[g1] ;" "movl %%ebp, %[h1] ;" "movw %%cs, %[i1] ;" "movw %%ds, %[j1] ;" "movw %%es, %[k1] ;" "movw %%fs, %[l1] ;" "movw %%gs, %[m1] ;" "movw %%ss, %[n1] ;" "mov %%cr0, %%eax ;" "mov %%eax, %[o1] ;" "mov %%cr2, %%eax ;" "mov %%eax, %[p1] ;" "mov %%cr3, %%eax ;" "mov %%eax, %[q1] ;" "mov %%cr4, %%eax ;" "mov %%eax,%[r1] ;":
 [a1] "=m"(eax),[b1] "=m"(ebx),[c1] "=m"(ecx),[d1] "=m"(edx),[e1] "=m"(esi),
 [f1] "=m"(edi),[g1] "=m"(ebp),[h1] "=m"(esp),[i1] "=m"(cs),[j1] "=m"(ds),
-[k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss));
+[k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss), [o1] "=m"(cr0),[p1] "=m"(cr2),[q1] "=m"(cr3), [r1] "=m"(cr4));
 
-	printf("eax=%x      ebx=%x         ecx=%x        eax=%x\r\n", eax, ebx,
-	       ecx, edx);
-	printf("esi=%x      edi=%x\r\n", esi, edi);
-	printf("cs=%x       ds=%x          es=%x         fs=%x       gs=%x\r\n",
-	       cs, ds, es, fs, gs);
-	printf("ss=%x       esp=%x         ebp=%x\r\n", ss, esp, ebp);
+	printf("EAX=%X EBX=%X ECX=%x EDX=%X\r\n",eax,ebx,ecx,edx);
+	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n",esi,edi,esp,ebp);
+	printf(" CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\r\n",cs,ds,es,fs,gs,ss);
+	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n",cr0,cr2,cr3,cr4);
 
  asm("pushf      ;" "pop %[f1] ;":
-[f1] "=m"(flags));
+[f1] "=m"(eflags));
 
-	printf("FLAGS");
+	printf("EFLAGS=%X",eflags);
 
-	if (flags & (1 << 0))	// Carry
+	if (eflags & (1 << 0))	// Carry
 		printf(" (C1");
 	else
 		printf(" (C0");
 
-	if (flags & (1 << 2))	// Parity
+	if (eflags & (1 << 2))	// Parity
 		printf(" P1");
 	else
 		printf(" P0");
 
-	if (flags & (1 << 4))	// Adjust
+	if (eflags & (1 << 4))	// Adjust
 		printf(" A1");
 	else
 		printf(" A0");
 
-	if (flags & (1 << 6))	// Zero
+	if (eflags & (1 << 6))	// Zero
 		printf(" Z1");
 	else
 		printf(" Z0");
 
-	if (flags & (1 << 7))	// Sign
+	if (eflags & (1 << 7))	// Sign
 		printf(" S1");
 	else
 		printf(" S0");
 
-	if (flags & (1 << 11))	// Overflow
+	if (eflags & (1 << 11))	// Overflow
 		printf(" O1)\n");
 	else
 		printf(" O0)\n");
 
 	printf("STACK\r\n");
 	for (u8 i = 0; i < 25; i++)
-		printf("+%d\t\t%x\r\n", i, viewstack(i * 4));
+		printf("+%d\t\t%X\r\n", i, viewstack(i * 4));
 
 }

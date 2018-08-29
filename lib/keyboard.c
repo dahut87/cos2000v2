@@ -3,7 +3,7 @@
 #include "asm.h"
 #include "memory.h"
 #include "keyboard.h"
-
+#include "vga.h"
 #include "video.h"
 
 static u8 bufferscan[256] = { 0 };
@@ -208,29 +208,37 @@ unsigned convert(u32 keypressed)
 			kbdstatus |= STATUS_CTRL;
 		return 0;
 	}
-	if (key == SCAN_CTRL) {
+	else if (key == SCAN_CTRL) {
 		kbdstatus |= STATUS_CTRL;
 		return 0;
 	}
-	if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT) {
+	else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT) {
 		kbdstatus |= STATUS_SHIFT;
 		return 0;
 	}
 
-	if ((key >= SCAN_F1) && (key <= SCAN_F8)) {
+	else if ((key >= SCAN_F1) && (key <= SCAN_F8)) {
 		changevc(key - SCAN_F1);
 	}
 
+	else if (key == SCAN_F9) {
+		dump_regs();
+	}
+
+	else if (key == SCAN_F10) {
+		nextvmode();
+	}
+
 /* Scroll Lock, Num Lock, and Caps Lock mise a jour des leds */
-	if (key == SCAN_SCROLLLOCK) {
+	else if (key == SCAN_SCROLLLOCK) {
 		kbdstatus ^= STATUS_SCRL;
 		goto LEDS;
 	}
-	if (key == SCAN_NUMLOCK) {
+	else if (key == SCAN_NUMLOCK) {
 		kbdstatus ^= STATUS_NUM;
 		goto LEDS;
 	}
-	if (key == SCAN_CAPSLOCK) {
+	else if (key == SCAN_CAPSLOCK) {
 		kbdstatus ^= STATUS_CAPS;
  LEDS:
 		outkbd(0x60, 0xED);	/* "mise a jour des LEDS */

@@ -150,7 +150,7 @@ void unsplit()
 
 /* Attend la retrace verticale */
 
-void waitvretrace(void)
+void waitvretrace()
 {
 	while ((inb(state) & 8) == 0) ;
 }
@@ -159,7 +159,7 @@ void waitvretrace(void)
 
 /* Attend la retrace horizontale */
 
-void waithretrace(void)
+void waithretrace()
 {
 	while ((inb(state) & 1) == 0) ;
 }
@@ -168,7 +168,7 @@ void waithretrace(void)
 
 /* Active l'affichage du curseur de texte */
 
-void enablecursor(void)
+void enablecursor()
 {
 	u8 curs;
 	/* active le curseur hardware */
@@ -181,7 +181,7 @@ void enablecursor(void)
 
 /* Desactive l'affichage du curseur de texte */
 
-void disablecursor(void)
+void disablecursor()
 {
 	u8 curs;
 	/* Desactive le curseur hardware */
@@ -194,7 +194,7 @@ void disablecursor(void)
 
 /* Active le scrolling en cas de débordement d'écran */
 
-void enablescroll(void)
+void enablescroll()
 {
 	scrolling = true;
 }
@@ -203,7 +203,7 @@ void enablescroll(void)
 
 /* Desactive le scrolling en cas de débordement d'écran */
 
-void disablescroll(void)
+void disablescroll()
 {
 	scrolling = false;
 }
@@ -473,6 +473,28 @@ void writepxl_8bitsunchain(u16 x, u16 y, u32 c)
 
 /*******************************************************************************/
 
+/* Met le mode video suivant */
+
+u8 nextvmode()
+{
+    u8 mode=getvmode();
+    mode++;
+    if (mode>=0x80) {
+        if (mode>maxgraphmode)
+            mode=0x0;
+    }
+    else {
+        if (mode>maxtextmode)
+            mode=0x80;
+    }   
+    setvmode(mode);
+    return mode;
+}
+
+
+
+/*******************************************************************************/
+
 /* Change le mode video courant */
 
 u32 setvmode(u8 mode)
@@ -591,7 +613,7 @@ u32 setvmode(u8 mode)
 
 /* Récupère le mode vidéo en cours */
 
-u8 getvmode(void)
+u8 getvmode()
 {
 	return vmode;
 }
