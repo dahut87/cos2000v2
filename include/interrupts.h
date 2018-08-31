@@ -41,7 +41,7 @@ typedef struct idtdes {
 } idtdes  __attribute__ ((packed));
 
 
-struct dtr {
+struct idtr {
 	u16 limite;
 	u32 base;
 } __attribute__ ((packed));

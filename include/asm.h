@@ -24,7 +24,13 @@
 #define irqendslave() asm("movb $0x20,%al; \
                        outb %al,$0xA0;")
 
-#define lidt(dtr) asm ("lidtl %0"::"m" (*dtr))
+#define lidt(idtr) asm ("lidtl %0"::"m" (*idtr))
+
+#define lgdt(gdtr) asm ("lgdtl %0"::"m" (*gdtr))
+
+#define sidt(idtr) asm ("sidtl %0"::"m" (*idtr))
+
+#define sgdt(gdtr) asm ("sgdtl %0"::"m" (*gdtr))
 
 /******************************************************************************/
 

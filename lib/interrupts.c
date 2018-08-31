@@ -5,7 +5,7 @@
 #include "video.h"
 
  /* registre idt */
-static struct dtr idtreg;
+static struct idtr idtreg;
 
 /* table de IDT */
 static idtdes idt[256];
@@ -535,7 +535,7 @@ void initidt(void)
 	putidt((u32) irq13, 0x20, INTGATE, 101);
 	putidt((u32) irq14, 0x20, INTGATE, 102);
 	putidt((u32) irq15, 0x20, INTGATE, 103);
-	for (i = 104; i < 255; i++) {
+	for (i = 104; i <= 255; i++) {
 		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	/* initialise le registre idt */
@@ -545,7 +545,6 @@ void initidt(void)
 	memcpy(&idt, (u8 *) idtreg.base, idtreg.limite, 1);
 	/* chargement du registre IDTR */
 	lidt(&idtreg);
-
 }
 
 /******************************************************************************/

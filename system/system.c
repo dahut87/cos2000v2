@@ -9,6 +9,7 @@
 #include "string.h"
 #include "2d.h"
 #include "ansi.c"
+#include "gdt.h"
 
 static u8 warnmsg[] =
     "\033[99C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m\000";
@@ -77,6 +78,8 @@ int main(void)
     static u8 cmd_detectcpu[]="DETECTCPU\000";
     static u8 cmd_test2d[]="TEST2D\000";
     static u8 cmd_regs[]="REGS\000";
+    static u8 cmd_gdt[]="GDT\000";
+    static u8 cmd_idt[]="IDT\000";
 	while (true) {
         print("\r\n# ");
         getstring(&field);
@@ -91,10 +94,16 @@ int main(void)
         else if (strcmp(&item,&cmd_detectcpu)==0) detectcpu();
         else if (strcmp(&item,&cmd_test2d)==0) test2d();
         else if (strcmp(&item,&cmd_regs)==0) dump_regs();
+        else if (strcmp(&item,&cmd_gdt)==0) readgdt();
+        else if (strcmp(&item,&cmd_idt)==0) readidt();
         else
             printf("Commande inconnue !\r\n\000");
 	}
 }
+
+/*******************************************************************************/
+
+/* Test les fonctionnalité 2D graphiques */
 
 void test2d() {
     setvmode(0x89);
@@ -113,6 +122,97 @@ void test2d() {
         triangle(&a,&b,&c,2);
     }
 }
+/*******************************************************************************/
+
+/* Lit l'IDT et l'affiche */
+
+void readidt()
+{
+    u32 index,i=0;
+    idtdes* desc;
+    struct idtr idtreg;
+    sidt(&idtreg);
+    printf("Information sur l'IDT\r\nAdresse:%X Limite:%hX",idtreg.base,(u32)idtreg.limite);
+    desc=idtreg.base;
+    for(index=0;index<idtreg.limite/sizeof(idtdes);index++)
+    {
+        u32 select=desc[index].select;
+        u32 offset=desc[index].offset0_15+(desc[index].offset16_31 << 16);
+        u32 type=desc[index].type;
+        printf("\r\nInterruption % d Selecteur %hX: offset:%X type:",i++,select,offset,type);
+        if (type==INTGATE) print("INTGATE");
+        else if (type==TRAPGATE) print("TRAPGATE");
+        else if (type==TASKGATE) print("TASKGATE");
+        else if (type==CALLGATE) print("CALLGATE");
+        else if (type==LDTDES) print("LDTDES");
+        else print("inconnu");
+       if (i%32==0) waitascii();
+    }
+
+}
+/*******************************************************************************/
+
+/* Lit les descripteurs GDT et les affiche */
+
+void readgdt()
+{
+    u32 index;
+    gdtdes* desc;
+    struct gdtr gdtreg;
+    sgdt(&gdtreg);
+    printf("Information sur la LGDT\r\nAdresse:%X Limite:%hX",gdtreg.base,(u32)gdtreg.limite);
+    desc=gdtreg.base;
+    for(index=0;index<=gdtreg.limite/sizeof(gdtdes);index++)
+    {
+        u32 acces=desc[index].acces;
+        if (acces >> 7 == 1) {
+            u32 flags=desc[index].flags; 
+            u32 limit=desc[index].lim0_15+(desc[index].lim16_19 << 16);
+            u32 base=desc[index].base0_15+(desc[index].base16_23 << 16)+(desc[index].base24_31 << 24) ;
+            printf("\r\nSelecteur %hX: base:%X limit:%X access:%hX flags:%hX\r\n  -> ",index*sizeof(gdtdes),base,limit,acces,flags);
+                if ((acces >> 4) & 1 == 1) 
+                    print("Systeme ");
+                else {
+                    if (acces & 1 == 1)
+                        print("Acces ");
+                }
+                if ((acces >> 3) & 1 == 1) {
+                    print("Code.");
+                    if ((acces >> 1) & 1 == 1)
+                        print("Readable ");
+                    if ((acces >> 2) & 1 == 1)
+                        print("Conforming ");
+                    else
+                        print("Normal ");
+                }
+                else {
+                    print("Data.");
+                    if ((acces >> 3) & 1 == 1) 
+                        print("Down ");
+                    else
+                        print("up ");
+                    if ((acces >> 1) & 1 == 1)
+                        print("writeable ");
+                }   
+                if (flags & 1 == 1)
+                    print("Dispo");
+                if ((flags >> 2) & 1 == 1)
+                    print("32 bits ");
+                else
+                    print("16 bits "); 
+                if ((flags >> 3) & 1 == 1)
+                    print("4k ");
+                else
+                    print("1b ");
+                u8 dpl=(acces>>5) & 0b11;  
+                printf("DPL:%d",dpl);            
+        }           
+    }
+}
+
+/*******************************************************************************/
+
+/* Detecte et affiche les information sur le CPU */
 
 void detectcpu()
 {
