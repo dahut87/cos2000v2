@@ -3,6 +3,7 @@
 #include "cpuid.h"
 #include "memory.h"
 #include "string.h"
+#include "asm.h"
 
 /* Technologies supportées */
 
@@ -114,10 +115,10 @@ u8 getcpuinfos(cpuinfo * proc)
 
 /* Retourne un élément de la pile */
 
-u32 viewstack(u32 number)
+u32 viewstack(u32 pointer)
 {
 	u32 stack = 0;
- asm("movl %[a1],%%esi;" "addl %%esp,%%esi;" "movl (%%esi), %[a1] ;": [result] "=r"(stack): [a1] "r"(number):"%esi");
+ asm("movl %[a1],%%ebp;" "movl (%%ebp), %[a1] ;": [result] "=r"(stack): [a1] "r"(pointer):"%ebp");
 	return stack;
 }
 
@@ -127,6 +128,7 @@ u32 viewstack(u32 number)
 
 void dump_regs()
 {
+    cli();
 	u32 eax = 0;
 	u32 ebx = 0;
 	u32 ecx = 0;
@@ -149,12 +151,12 @@ void dump_regs()
 	u32 eflags = 0;
  asm("movl %%eax, %[a1] ;" "movl %%ebx, %[b1] ;" "movl %%ecx, %[c1] ;" "movl %%edx, %[d1] ;" "movl %%esi, %[e1] ;" "movl %%edi, %[f1] ;" "movl %%esp, %[g1] ;" "movl %%ebp, %[h1] ;" "movw %%cs, %[i1] ;" "movw %%ds, %[j1] ;" "movw %%es, %[k1] ;" "movw %%fs, %[l1] ;" "movw %%gs, %[m1] ;" "movw %%ss, %[n1] ;" "mov %%cr0, %%eax ;" "mov %%eax, %[o1] ;" "mov %%cr2, %%eax ;" "mov %%eax, %[p1] ;" "mov %%cr3, %%eax ;" "mov %%eax, %[q1] ;" "mov %%cr4, %%eax ;" "mov %%eax,%[r1] ;":
 [a1] "=m"(eax),[b1] "=m"(ebx),[c1] "=m"(ecx),[d1] "=m"(edx),[e1] "=m"(esi),
-[f1] "=m"(edi),[g1] "=m"(ebp),[h1] "=m"(esp),[i1] "=m"(cs),[j1] "=m"(ds),
+[f1] "=m"(edi),[g1] "=m"(esp),[h1] "=m"(ebp),[i1] "=m"(cs),[j1] "=m"(ds),
 [k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss), [o1] "=m"(cr0),[p1] "=m"(cr2),[q1] "=m"(cr3), [r1] "=m"(cr4));
 
-	printf("EAX=%X EBX=%X ECX=%x EDX=%X\r\n",eax,ebx,ecx,edx);
+	printf("EAX=%X EBX=%X ECX=%X EDX=%X\r\n",eax,ebx,ecx,edx);
 	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n",esi,edi,esp,ebp);
-	printf(" CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\r\n",cs,ds,es,fs,gs,ss);
+	printf("\033[1m CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\033[0m\r\n",(u32)cs,(u32)ds,(u32)es,(u32)fs,(u32)gs,(u32)ss);
 	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n",cr0,cr2,cr3,cr4);
 
  asm("pushf      ;" "pop %[f1] ;":
@@ -188,12 +190,19 @@ void dump_regs()
 		printf(" S0");
 
 	if (eflags & (1 << 11))	// Overflow
-		printf(" O1)\n");
+		printf(" O1)\r\n");
 	else
-		printf(" O0)\n");
+		printf(" O0)\r\n");
 
 	printf("STACK\r\n");
-	for (u8 i = 0; i < 25; i++)
-		printf("+%d\t\t%X\r\n", i, viewstack(i * 4));
-
+    u32 i=0;
+	for (u32 pointer = esp; pointer < 0x400000; pointer+=4) {
+        if (pointer==ebp) print("\033[1m\033[31m");
+		printf("+%d:%X\t\t%X\033[0m\033[37m\r\n", i++, pointer,viewstack(pointer));
+        if (i>25) {
+            print("...\r\n");
+            break;
+        }
+    }
+    sti();
 }
