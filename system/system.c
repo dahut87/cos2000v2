@@ -46,7 +46,14 @@ int main(void)
 	print("\033[2J\000");
 	printf(ansilogo);
 
-	print("\033[37m\033[0m -Initilisation des interruptions\000");
+	print("\033[37m\033[0m -Chargement noyaux\000");
+    ok();
+
+	print("\033[37m\033[0m -Initilisation de la memoire (GDT)\000");
+    initgdt();
+	ok();
+
+	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)\000");
 	initidt();
 	initpic();
 	sti();

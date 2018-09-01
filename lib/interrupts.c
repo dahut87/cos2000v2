@@ -4,6 +4,10 @@
 #include "memory.h"
 #include "video.h"
 
+#define SIZEIDT		256	/* nombre de descripteurs */
+
+#define BASEIDT		0x00000000	/* addr de la IDT */
+
  /* registre idt */
 static struct idtr idtreg;
 
@@ -535,12 +539,12 @@ void initidt(void)
 	putidt((u32) irq13, 0x20, INTGATE, 101);
 	putidt((u32) irq14, 0x20, INTGATE, 102);
 	putidt((u32) irq15, 0x20, INTGATE, 103);
-	for (i = 104; i <= 255; i++) {
+	for (i = 104; i < SIZEIDT; i++) {
 		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	/* initialise le registre idt */
-	idtreg.limite = 256 * 8;
-	idtreg.base = 0x0000000;
+	idtreg.limite = SIZEIDT * 8;
+	idtreg.base = BASEIDT;
 	/* recopie de la IDT a son adresse */
 	memcpy(&idt, (u8 *) idtreg.base, idtreg.limite, 1);
 	/* chargement du registre IDTR */

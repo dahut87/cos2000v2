@@ -2,13 +2,47 @@
 #include "asm.h"
 #include "types.h"
 
+#define SIZEGDT		0x4	/* nombre de descripteurs */
+
+#define BASEGDT		0x00000800	/* addr de la GDT */
+
+ /* registre gdt */
+static struct gdtr gdtreg;
+
+/* table de GDT */
+static gdtdes gdt[SIZEGDT];
+
 /*******************************************************************************/
 
 /* Initialise la GDT */
 
 void initgdt()
 {
-	
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);
+	makegdtdes(0x0, 0xFFFFF, 0x9B, 0x0D, &gdt[1]);	/* code */
+	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[2]);	/* data */
+	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[3]);   /* pile */
+	/* initialise le registre gdt */
+	gdtreg.limite = SIZEGDT * 8;
+	gdtreg.base = BASEGDT;
+	/* recopie de la GDT a son adresse */
+	memcpy(&gdt, (u8 *) gdtreg.base, gdtreg.limite, 1);
+	/* chargement du registre GDT */
+	lgdt(&gdtreg);
+	/* initialisation des segments */
+	asm("   movw $0x10, %ax	\n \
+            movw %ax, %ds	\n \
+            movw %ax, %es	\n \
+            movw %ax, %fs	\n \
+            movw %ax, %gs   \n \
+            movl 0x0C(%esp), %eax \n \
+            movw $0x18, %ax \n \
+            movw %ax, %ss \n \
+            movl $0x20000, %esp \n \
+            pushl %eax \n \
+            ljmp $0x08, $raz	\n \
+            raz:		\n \
+            ret\n");
 }
 
 /*******************************************************************************/
