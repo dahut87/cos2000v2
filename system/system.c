@@ -60,17 +60,17 @@ int main(void)
 	ok();
 
 	print(" -Installation du handler timer (IRQ 0)\000");
-	setidt((u32) timer, 0x20, INTGATE, 32);
+	setidt((u32) timer, 0x8, INTGATE, 32);
 	enableirq(0);
 	ok();
 
 	print(" -Installation du handler clavier (IRQ 1)\000");
-	setidt((u32) keyboard, 0x20, INTGATE, 33);
+	setidt((u32) keyboard, 0x8, INTGATE, 33);
 	enableirq(1);
 	ok();
 
 	print(" -Installation du handler souris (IRQ12+Cascade IRQ2)\000");
-	setidt((u32) mouse, 0x20, INTGATE, 100);
+	setidt((u32) mouse, 0x8, INTGATE, 100);
 	enableirq(2);
 	enableirq(12);
 	if (initmouse() != 1)

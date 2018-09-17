@@ -35,13 +35,13 @@ void initgdt()
             movw %ax, %es	\n \
             movw %ax, %fs	\n \
             movw %ax, %gs   \n \
-            movl 0x0C(%esp), %eax \n \
+            movl 0x0C(%esp), %ebx \n \
             movw $0x18, %ax \n \
             movw %ax, %ss \n \
             movl $0x20000, %esp \n \
-            pushl %eax \n \
             ljmp $0x08, $raz	\n \
             raz:		\n \
+            pushl %ebx \n \
             ret\n");
 }
 

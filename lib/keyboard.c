@@ -106,7 +106,7 @@ u8* getstring(u8* temp) {
             pointer--;
             putchar(ascii);
         }
-        else if (ascii>31 && pointer<=&temp+80) {
+        else if (ascii>31 && pointer<=temp+80) {
             *pointer++=ascii;
             putchar(ascii);
         }
@@ -252,6 +252,12 @@ unsigned convert(u32 keypressed)
 		outkbd(0x60, temp);	/* 3 bits de poids faible pour les LEDs */
 		return 0;
 	}
+/* Appuie de CRTL + ALT + SUPR ? */
+	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT)
+	    (key == 73)) {
+		print("redemarrage du systeme");
+		reboot();
+	}
 /* est ce un code etendu */
 	if ((bufferscan[lastscan] == 0xE0)
 	    || ((kbdstatus & STATUS_NUM) && (key >= 0x47) && (key <= 0x53)
@@ -311,16 +317,9 @@ unsigned convert(u32 keypressed)
 		else
 			temp = set1_normal[key];
 	}
-
 /* si scancode non reconnu fin de fonction */
 	if (temp == 0)
 		return temp;
-/* Appuie de CRTL + ALT + SUPR ? */
-	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT) &&
-	    (key == 76)) {
-		print("redemarrage du systeme");
-		reboot();
-	}
 /* Renvoie le Code ascii */
 	return temp;
 }
