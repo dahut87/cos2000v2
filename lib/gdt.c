@@ -2,9 +2,6 @@
 #include "asm.h"
 #include "types.h"
 
-#define SIZEGDT		0x4	/* nombre de descripteurs */
-
-#define BASEGDT		0x00000800	/* addr de la GDT */
 
  /* registre gdt */
 static struct gdtr gdtreg;
@@ -16,12 +13,12 @@ static gdtdes gdt[SIZEGDT];
 
 /* Initialise la GDT */
 
-void initgdt()
+void initgdt(u32 offset)
 {
-	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);
-	makegdtdes(0x0, 0xFFFFF, 0x9B, 0x0D, &gdt[1]);	/* code */
-	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[2]);	/* data */
-	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[3]);   /* pile */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);  /* selecteur nulle         */
+	makegdtdes(0x0, 0xFFFFF, 0x9B, 0x0D, &gdt[1]);	/* code -> SEL_KERNEL_CODE */
+	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[2]);	/* data -> SEL_KERNEL_DATA */
+	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[3]);  /* pile -> SEL_KERNEL_STACK */
 	/* initialise le registre gdt */
 	gdtreg.limite = SIZEGDT * 8;
 	gdtreg.base = BASEGDT;
@@ -30,19 +27,28 @@ void initgdt()
 	/* chargement du registre GDT */
 	lgdt(&gdtreg);
 	/* initialisation des segments */
-	asm("   movw $0x10, %ax	\n \
-            movw %ax, %ds	\n \
-            movw %ax, %es	\n \
-            movw %ax, %fs	\n \
-            movw %ax, %gs   \n \
-            movl 0x0C(%esp), %ebx \n \
-            movw $0x18, %ax \n \
-            movw %ax, %ss \n \
-            movl $0x20000, %esp \n \
-            ljmp $0x08, $raz	\n \
+	initselectors(offset);
+}
+
+/*******************************************************************************/
+
+/* Initialise les selecteurs avec la GDT */
+
+void initselectors(u32 executingoffset)
+{
+asm("   movw %[data], %%ax	\n \
+            movw %%ax, %%ds	\n \
+            movw %%ax, %%es	\n \
+            movw %%ax, %%fs	\n \
+            movw %%ax, %%gs   \n \
+            movl %[offset], %%ebx \n \
+            movw %[stack], %%ax \n \
+            movw %%ax, %%ss \n \
+            movl %[stackoff], %%esp \n \
+            ljmp %[code], $raz	\n \
             raz:		\n \
-            pushl %ebx \n \
-            ret\n");
+            pushl %%ebx \n \
+            ret\n"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE), [stack] "i"(SEL_KERNEL_STACK), [stackoff] "i"(STACK_OFFSET), [offset] "m"(executingoffset));
 }
 
 /*******************************************************************************/
