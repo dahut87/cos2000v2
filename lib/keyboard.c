@@ -253,7 +253,7 @@ unsigned convert(u32 keypressed)
 		return 0;
 	}
 /* Appuie de CRTL + ALT + SUPR ? */
-	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT)
+	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT) &&
 	    (key == 73)) {
 		print("redemarrage du systeme");
 		reboot();
