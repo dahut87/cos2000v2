@@ -18,6 +18,14 @@ static u8 *msg[] = {
 	"3dNow Extended!",
 	"HyperThreading",
 	"apic",
+    "64bits",
+    "syscall",
+    "msr",
+    "sse4a",
+    "vmx",
+    "sse41",
+    "sse42",
+    "apic2"
 };
 
 static u8 space[] = " ";
@@ -80,7 +88,10 @@ u8 getcpuinfos(cpuinfo * proc)
 		proc->sse3 = (regecx & 0x00000001);
 		proc->fpu = (regedx & 0x00000001);
 		proc->htt = ((regedx >> 28) & 0x00000001);
-
+		proc->vmx = ((regecx >> 5) & 0x00000001);
+		proc->sse41 = ((regecx >> 19) & 0x00000001);
+		proc->sse42 = ((regecx >> 20) & 0x00000001);
+		proc->apic2 = ((regecx >> 21) & 0x00000001);
 	}
 	if (maxextended >= 1) {
 		cpuid(0x80000001, &regeax, &regebx, &regecx, &regedx);
@@ -88,6 +99,10 @@ u8 getcpuinfos(cpuinfo * proc)
 		proc->apic = ((regedx >> 9) & 0x00000001);
 		proc->now3d = ((regedx >> 30) & 0x00000001);
 		proc->now3d2 = ((regedx >> 31) & 0x00000001);
+        proc->bits64 = ((regedx >> 29) & 0x00000001);
+        proc->syscall = ((regedx >> 11) & 0x00000001);
+        proc->msr = ((regedx >> 5) & 0x00000001);
+        proc->sse4a = ((regecx >> 6) & 0x00000001);
 	}
 	if (maxextended >= 4) {
 		int i;

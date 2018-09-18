@@ -6,7 +6,7 @@ ENTRY(mymain)
 
 SECTIONS
 {
-   . = 0x50000;
+   . = 0x100000;
    .text  ALIGN(16): { 
         *(.text) 
     }

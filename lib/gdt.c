@@ -15,10 +15,14 @@ static gdtdes gdt[SIZEGDT];
 
 void initgdt(u32 offset)
 {
-	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);  /* selecteur nulle         */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);  /* selecteur nul         */
 	makegdtdes(0x0, 0xFFFFF, 0x9B, 0x0D, &gdt[1]);	/* code -> SEL_KERNEL_CODE */
-	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[2]);	/* data -> SEL_KERNEL_DATA */
-	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[3]);  /* pile -> SEL_KERNEL_STACK */
+	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[2]);  /* pile -> SEL_KERNEL_STACK */
+	makegdtdes(0x0, 0xFFFFF, 0xFF, 0x0D, &gdt[3]);	/* code -> SEL_USER_CODE */
+	makegdtdes(0x0, 0x00000, 0xF7, 0x0D, &gdt[4]);  /* pile -> SEL_USER_STACK */
+	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[5]);	/* data -> SEL_KERNEL_DATA */
+	makegdtdes(0x0, 0xFFFFF, 0xF3, 0x0D, &gdt[6]);	/* data -> SEL_USER_DATA */
+
 	/* initialise le registre gdt */
 	gdtreg.limite = SIZEGDT * 8;
 	gdtreg.base = BASEGDT;

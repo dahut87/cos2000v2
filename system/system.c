@@ -11,6 +11,7 @@
 #include "ansi.c"
 #include "gdt.h"
 #include "shell.h"
+#include "syscall.h"
 
 static u8 warnmsg[] =
     "\033[99C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m\000";
@@ -79,5 +80,10 @@ next:
 		warning();
 	else
 		ok();
+
+	print(" -Installation des appels systemes utilisateur\000");
+	initsyscall();
+	ok();
+
     shell();
 }

@@ -32,6 +32,10 @@
 
 #define sgdt(gdtr) asm ("sgdtl %0"::"m" (*gdtr))
 
+#define wrmsr(reg,low,high) asm volatile ("wrmsr" :: "c" (reg), "a" (low), "d" (high))
+
+#define rdmsr(reg,low,high) asm volatile ("rdmsr" :: "=a" (low), "=d" (high) : "c" (reg) )
+
 /******************************************************************************/
 
 #define outb(port,value) \

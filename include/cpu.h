@@ -24,6 +24,14 @@ bool now3d;
 bool now3d2;
 bool htt;
 bool apic;
+bool bits64;
+bool syscall;
+bool msr;
+bool sse4a;
+bool vmx;
+bool sse41;
+bool sse42;
+bool apic2;
 } cpuinfo  __attribute__ ((packed));	
 
 
