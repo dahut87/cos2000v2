@@ -2,6 +2,19 @@
 #include <gdt.h>  
 #include <asm.h>  
 
+ /* 32bit SYSENTER instruction entry.
+ *
+ * Arguments:
+ * %eax System call number.
+ * %ebx Arg1
+ * %ecx Arg2
+ * %edx Arg3
+ * %esi Arg4
+ * %edi Arg5
+ * %ebp user stack
+ * 0(%ebp) Arg6*/
+
+
 /*******************************************************************************/
 
 /* Entrée pour les appels système SYSENTER */

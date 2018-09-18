@@ -56,6 +56,10 @@ int main(void)
 next:
 	ok();
 
+	print("\033[37m\033[0m -Initilisation des taches (TSR)\000");
+    inittr();
+	ok();
+
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)\000");
 	initidt();
 	initpic();

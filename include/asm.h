@@ -36,6 +36,8 @@
 
 #define rdmsr(reg,low,high) asm volatile ("rdmsr" :: "=a" (low), "=d" (high) : "c" (reg) )
 
+#define ltr(tss) asm volatile ("ltr %%ax":: "a" (tss))
+
 /******************************************************************************/
 
 #define outb(port,value) \

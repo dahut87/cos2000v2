@@ -8,11 +8,12 @@
 #define	SEL_KERNEL_DATA 0x28 /* selecteur data du kernel */
 #define	SEL_USER_DATA 0x30 /* selecteur data utilisateur */
 
+#define	SEL_TSS 0x38 /* selecteur TSR */
+
 #define	STACK_OFFSET 0xFFFF /* adresse de la pile du kernel */
 
-#define SIZEGDT		0x7	/* nombre de descripteurs */
+#define SIZEGDT		0x8	/* nombre de descripteurs */
 #define BASEGDT		0x00000800	/* addr de la GDT */
-
 
 typedef struct gdtdes {
     u16 lim0_15;    
@@ -29,22 +30,26 @@ struct gdtr {
 	u32 base;
 } __attribute__ ((packed));
 
-struct tss {
-	u16 previous_task, __previous_task_unused;
+typedef struct tss {
+	u16 prevtask, reserved00;
 	u32 esp0;
-	u16 ss0, __ss0_unused;
+	u16 ss0, reserved0;
 	u32 esp1;
-	u16 ss1, __ss1_unused;
+	u16 ss1, reserved1;
 	u32 esp2;
-	u16 ss2, __ss2_unused;
+	u16 ss2, reserved2;
 	u32 cr3;
 	u32 eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
-	u16 es, __es_unused;
-	u16 cs, __cs_unused;
-	u16 ss, __ss_unused;
-	u16 ds, __ds_unused;
-	u16 fs, __fs_unused;
-	u16 gs, __gs_unused;
-	u16 ldt_selector, __ldt_sel_unused;
-	u16 debug_flag, io_map;
+	u16 es, reserved3;
+	u16 cs, reserved4;
+	u16 ss, reserved5;
+	u16 ds, reserved6;
+	u16 fs, reserved7;
+	u16 gs, reserved8;
+	u16 ldt_selector, reserved9;
+	u16 trapflag, iomap;
 } __attribute__ ((packed));
+
+void inittr(void);
+void initgdt(u32 offset);
+void makegdtdes(u32 base, u32 limite, u8 acces, u8 flags, gdtdes *desc);

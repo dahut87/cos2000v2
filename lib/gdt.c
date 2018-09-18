@@ -9,19 +9,29 @@ static struct gdtr gdtreg;
 /* table de GDT */
 static gdtdes gdt[SIZEGDT];
 
+/* TSS */
+static struct tss tss0;
+
 /*******************************************************************************/
 
 /* Initialise la GDT */
 
 void initgdt(u32 offset)
 {
-	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);  /* selecteur nul         */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);  /* descripteur nul         */
 	makegdtdes(0x0, 0xFFFFF, 0x9B, 0x0D, &gdt[1]);	/* code -> SEL_KERNEL_CODE */
 	makegdtdes(0x0, 0x00000, 0x97, 0x0D, &gdt[2]);  /* pile -> SEL_KERNEL_STACK */
 	makegdtdes(0x0, 0xFFFFF, 0xFF, 0x0D, &gdt[3]);	/* code -> SEL_USER_CODE */
 	makegdtdes(0x0, 0x00000, 0xF7, 0x0D, &gdt[4]);  /* pile -> SEL_USER_STACK */
 	makegdtdes(0x0, 0xFFFFF, 0x93, 0x0D, &gdt[5]);	/* data -> SEL_KERNEL_DATA */
 	makegdtdes(0x0, 0xFFFFF, 0xF3, 0x0D, &gdt[6]);	/* data -> SEL_USER_DATA */
+
+	tss0.trapflag = 0x00;
+	tss0.iomap = 0x00;
+	tss0.esp0 = 0x1FFF0;
+	tss0.ss0 = SEL_TSS;
+
+	makegdtdes(&tss0, 0x67, 0xE9, 0x00, &gdt[7]);	/* descripteur de tss */
 
 	/* initialise le registre gdt */
 	gdtreg.limite = SIZEGDT * 8;
@@ -32,6 +42,15 @@ void initgdt(u32 offset)
 	lgdt(&gdtreg);
 	/* initialisation des segments */
 	initselectors(offset);
+}
+
+/*******************************************************************************/
+
+/* Initialise le registre de tâche (TSR) */
+
+void inittr(void) 
+{
+    ltr(SEL_TSS);
 }
 
 /*******************************************************************************/
