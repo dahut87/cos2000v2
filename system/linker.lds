@@ -7,6 +7,10 @@ ENTRY(mymain)
 SECTIONS
 {
    . = 0x100000;
+    .boot ALIGN(4) :
+    {
+        *(.multiboot)
+    }
    .text  ALIGN(16): { 
         *(.text) 
     }
