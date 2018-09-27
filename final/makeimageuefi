@@ -1,0 +1,24 @@
+#!/bin/bash
+dd if=/dev/zero of=harddiskuefi.img count=10 bs=1048576
+parted -s harddiskuefi.img mklabel gpt
+parted -s -a cylinder harddiskuefi.img mkpart ESP fat16 63s 7M
+parted -s -a cylinder harddiskuefi.img mkpart linux ext2 7M 10M
+parted -s -a cylinder harddiskuefi.img toggle 1 boot
+lo=`losetup -f`
+echo ${lo}
+losetup -P ${lo} harddiskuefi.img
+mkfs.fat -F16 -s1 ${lo}p1
+mkfs.ext2 ${lo}p2
+mount ${lo}p1 /mnt
+mkdir /mnt/grub
+echo -en "(hd0) ${lo}\n(hd0,1) ${lo}p1\n(hd0,2) ${lo}p2" > /mnt/grub/device.map
+grub-install --no-floppy --boot-directory=/mnt/ --efi-directory=/mnt/ ${lo} --install-modules="part_gpt ext2 configfile normal multiboot2" --locales=fr --target=x86_64-efi --no-nvram
+mkdir /mnt/EFI/BOOT
+grub-mkimage -d /usr/lib/grub/x86_64-efi -o /mnt/EFI/BOOT/bootx64.efi -p "(hd0,1)/grub/" -O x86_64-efi fat part_gpt ext2 configfile normal multiboot2
+echo -en "set timeout=4\nset default=0\n\nmenuentry "cos2000" {\nmultiboot2 (hd0,2)/boot/system.sys\nboot\n}" > /mnt/grub/grub.cfg
+umount /mnt
+mount ${lo}p2 /mnt
+mkdir /mnt/boot/
+umount /mnt
+losetup -d ${lo}
+#xz -c harddiskuefi.img > harddiskuefi.img.xz

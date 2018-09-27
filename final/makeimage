@@ -1,15 +1,15 @@
 #!/bin/bash
-dd if=/dev/zero of=cos2000.img count=10 bs=1048576
-parted -s -a cylinder cos2000.img mklabel msdos
-parted -s -a cylinder cos2000.img mkpart primary ext2 63s 10M
-parted -s -a cylinder cos2000.img toggle 1 boot
+dd if=/dev/zero of=harddisk.img count=10 bs=1048576
+parted -s -a cylinder harddisk.img mklabel msdos
+parted -s -a cylinder harddisk.img mkpart primary ext2 63s 10M
+parted -s -a cylinder harddisk.img toggle 1 boot
 lo=`losetup -f`
 echo ${lo}
-losetup -P ${lo} cos2000.img
+losetup -P ${lo} harddisk.img
 mkfs.ext2 ${lo}p1
 mount ${lo}p1 /mnt
 grub-install --no-floppy --install-modules="biosdisk part_msdos ext2 configfile normal multiboot2" --boot-directory=/mnt/boot ${lo} --target=i386-pc
 echo -en "set timeout=4\nset default=0\nmenuentry "cos2000" {\nset root=(hd0,1)\nmultiboot2 /boot/system.sys\nboot\n}" > /mnt/boot/grub/grub.cfg
 umount /mnt
 losetup -d ${lo}
-xz -c cos2000.img > cos2000.img.xz
+xz -c harddisk.img > harddisk.img.xz

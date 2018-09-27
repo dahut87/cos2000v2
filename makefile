@@ -7,6 +7,8 @@ floppy: boot/boot12.bin final/floppy.img.final
 
 harddisk: final/harddisk.img.final
 
+uefi: final/harddiskuefi.img.final
+
 install:
 	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb)
 
@@ -29,7 +31,11 @@ backup: clean
 
 test: all harddisk qemu
 
+test64: all uefi qemu64
+
 retest: littleclean test
+
+retest64: all uefi qemu64
 
 floppytest: floppy qemu-floppy
 
@@ -37,6 +43,8 @@ view:
 	(hexdump  -C ./final/harddisk.img.final|head -c10000)
 
 debug: debug-system
+
+debug64: debug-system64
 
 debug-boot: all harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/boot.txt)
@@ -47,11 +55,20 @@ debug-loader: all harddisk qemu-debug
 debug-system: all harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/system.txt)
 
+debug-system64: all uefi qemu-debug64
+	(sleep 2;cgdb -x ./debug/system.txt)
+
 qemu-debug:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &)
 
+qemu-debug64:
+	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &)
+
 qemu:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &)  
+
+qemu64:
+	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
 
 qemu-floppy:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -fda ./final/floppy.img.final --enable-kvm -cpu host -s &)  
@@ -66,7 +83,10 @@ final/floppy.img.final:
 	(cd final; make floppy.img.final)
 
 final/harddisk.img.final:
-	(cd final; make harddisk.img.final)	  
+	(cd final; make harddisk.img.final)
+
+final/harddiskuefi.img.final:
+	(cd final; make harddiskuefi.img.final)	
 
 lib/libs.o:
 	(cd lib; make)	

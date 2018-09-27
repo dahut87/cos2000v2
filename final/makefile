@@ -1,4 +1,17 @@
-all: harddisk.img.final floppy.img.final
+all: harddisk.img.final floppy.img.final harddiskuefi.img.final
+
+harddiskuefi.img.before:
+	(xz -d -k harddiskuefi.img.xz)
+	(dd if=harddiskuefi.img of=harddiskuefi.img.part1 skip=13672 bs=512)
+	(dd if=harddiskuefi.img of=harddiskuefi.img.before count=13672 bs=512;sync)
+	(mkdir ./mnt -p)
+
+harddiskuefi.img.final: harddiskuefi.img.before
+	(mount.fuse-ext2 -o rw+ harddiskuefi.img.part1 ./mnt)
+	(cp ../system/system.sys ./mnt/boot/;sync)
+	(fusermount ./mnt -u)
+	(cat harddiskuefi.img.before > harddiskuefi.img.final)
+	(cat harddiskuefi.img.part1 >> harddiskuefi.img.final;sync)
 
 harddisk.img.before:
 	(xz -d -k harddisk.img.xz)
