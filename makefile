@@ -1,6 +1,12 @@
-all:	makall
+all: bits32 bits64 floppy harddisk uefi
+	sync
 
-makall: lib/libs.o system/system.sys final/harddisk.img.final
+bits32: ARCH=bits32 
+bits32: lib/libs.o system/system.sys harddisk
+	sync
+
+bits64: ARCH=bits64
+bits64: lib/libs.o system/system.sys uefi
 	sync
 
 floppy: boot/boot12.bin final/floppy.img.final
@@ -26,16 +32,21 @@ littleclean:
 	(cd final;make littleclean)
 	sync
 
+indent:
+	(cd system; make indent)
+	(cd lib;make indent)
+	sync
+
 backup: clean
 	(cd .. ; tar cf - Source\ C | gzip -f - > backup.tar.gz)
 
-test: all harddisk qemu
+test: bits32 harddisk qemu
 
-test64: all uefi qemu64
+test64: bits64 uefi qemu64
 
 retest: littleclean test
 
-retest64: all uefi qemu64
+retest64: littleclean test64
 
 floppytest: floppy qemu-floppy
 
@@ -74,7 +85,7 @@ qemu-floppy:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -fda ./final/floppy.img.final --enable-kvm -cpu host -s &)  
 	
 system/system.sys:
-	(cd system; make)
+	(cd system; make ARCH=$(ARCH))
 	
 boot/boot12.bin:
 	(cd boot; make)	

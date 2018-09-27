@@ -12,8 +12,7 @@
 #include "gdt.h"
 #include "shell.h"
 #include "syscall.h"
-
-static u8 __attribute__((section(".multiboot"))) magicmultiboot[28]={0xD6,0x50,0x52,0xE8,0x00,0x00,0x00,0x00,0x18,0x00,0x00,0x00,0x12,0xaf,0xad,0x17,0x00,0x00,0x00,0x00,0x08,0x00,0x00,0x00};
+#include "multiboot2.h"
 
 static u8 warnmsg[] =
     "\033[99C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m\000";
@@ -41,12 +40,16 @@ void error()
 	return;
 }
 
-int main(void)
+int main(unsigned long magic, unsigned long addr)
 {
-asm("movl $0x0000FFFF, %esp");
 	cli();
 	setvmode(0x02);
 	/*  Efface l'ecran   */
+    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
+         {
+           printf ("Nombre magic inconnu: 0x%x\n", (u32) magic);
+           return;
+         }
 	print("\033[2J\000");
 	printf(ansilogo);
 

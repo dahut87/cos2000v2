@@ -1,13 +1,12 @@
-OUTPUT_FORMAT("elf32-i386", "elf32-i386",
-          "elf32-i386")
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
 OUTPUT_ARCH(i386)
 
-ENTRY(mymain)
+ENTRY(start)
 
 SECTIONS
 {
    . = 0x100000;
-    .boot ALIGN(4) :
+    .boot ALIGN(8) :
     {
         *(.multiboot)
     }

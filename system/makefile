@@ -1,13 +1,18 @@
 GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -w -I ../include -m32 -c -o
-
-LINK=ld -m elf_i386 -T linker.lds -e main -n -o
+ASM=nasm
+LINK=ld -m elf_i386 -T linker.lds -n -o
 
 all: system.sys
 	sync
 
-system.sys:
+system.sys: multiboot.o system.o ../lib/libs.o
+	$(LINK) system.sys multiboot.o system.o ../lib/libs.o
+
+system.o:
 	$(GCC) system.o system.c
-	$(LINK) system.sys system.o ../lib/libs.o
+
+multiboot.o:
+	$(ASM) -f elf -o multiboot.o multiboot.asm -dARCH=$(ARCH)
 
 clean:
 	rm -f *.o
@@ -16,4 +21,5 @@ clean:
 	rm -f *.sys
 	rm -f *.s
 
-
+indent: 
+	indent -linux -i8 -ts8 *.c
