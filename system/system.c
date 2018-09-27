@@ -45,16 +45,19 @@ int main(unsigned long magic, unsigned long addr)
 	cli();
 	setvmode(0x02);
 	/*  Efface l'ecran   */
-    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
-         {
-           printf ("Nombre magic inconnu: 0x%x\n", (u32) magic);
-           return;
-         }
+
 	print("\033[2J\000");
 	printf(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux\000");
     ok();
+
+
+    printf ("\033[37m\033[0m -Nombre magique multiboot2 : %X\000", (u32) magic);
+    if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
+        ok();
+    else
+        error();
 
 	print("\033[37m\033[0m -Initilisation de la memoire (GDT)\000");
     initgdt(&&next);

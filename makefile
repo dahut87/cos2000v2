@@ -2,11 +2,11 @@ all: bits32 bits64 floppy harddisk uefi
 	sync
 
 bits32: ARCH=bits32 
-bits32: lib/libs.o system/system.sys harddisk
+bits32: lib/libs.o system/system.sys
 	sync
 
 bits64: ARCH=bits64
-bits64: lib/libs.o system/system.sys uefi
+bits64: lib/libs.o system/system.sys
 	sync
 
 floppy: boot/boot12.bin final/floppy.img.final
@@ -48,7 +48,7 @@ retest: littleclean test
 
 retest64: littleclean test64
 
-floppytest: floppy qemu-floppy
+floppytest: bits32 floppy qemu-floppy
 
 view:
 	(hexdump  -C ./final/harddisk.img.final|head -c10000)
