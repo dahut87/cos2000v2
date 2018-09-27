@@ -13,12 +13,12 @@ u32 addr=infobloc;
 struct multiboot_tag *tag;
 unsigned size = *(unsigned *) addr;
 if (addr & 7) print("Non aligne...");
-printf(" Taille :%X\r\n", (u32)size);
+printf(" Taille :% 4u\r\n", (u32)size);
 for (tag = (struct multiboot_tag *) (addr + 8);
             tag->type != MULTIBOOT_TAG_TYPE_END;
             tag = (struct multiboot_tag *) ((u8 *) tag + ((tag->size + 7) & ~7)))
          {
-           printf ("Tag 0x%x, Taille 0x%x\r\n", tag->type, tag->size);
+           printf ("--- Tag % 4u, Taille % 4u\r\n", tag->type, tag->size);
            switch (tag->type)
              {
              case MULTIBOOT_TAG_TYPE_CMDLINE:
@@ -30,15 +30,15 @@ for (tag = (struct multiboot_tag *) (addr + 8);
                        ((struct multiboot_tag_string *) tag)->string);
                break;
              case MULTIBOOT_TAG_TYPE_MODULE:
-               printf ("Module %x-%x. Command line %s\r\n",
+               printf ("Module %X-%X. Command line %s\r\n",
                        ((struct multiboot_tag_module *) tag)->mod_start,
                        ((struct multiboot_tag_module *) tag)->mod_end,
                        ((struct multiboot_tag_module *) tag)->cmdline);
                break;
              case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
-               printf ("Memoire basse : %uKB, memoire haute = %uKB\r\n",
-                       ((struct multiboot_tag_basic_meminfo *) tag)->mem_lower,
-                       ((struct multiboot_tag_basic_meminfo *) tag)->mem_upper);
+               printf ("Memoire basse : %H, memoire haute = %lH\r\n",
+                       ((struct multiboot_tag_basic_meminfo *) tag)->mem_lower<<10,
+                       ((u64)((struct multiboot_tag_basic_meminfo *) tag)->mem_upper)<<10);
                break;
              case MULTIBOOT_TAG_TYPE_BOOTDEV:
                printf ("Peripherique de demarrage : %x,%u,%u\r\n\r\n",

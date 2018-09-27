@@ -17,5 +17,5 @@ u32 print(u8* string);
 u32 printf (const u8 *string, ...);
 void changevc(u8 vc);
 u8* itoa(u64 num, u8* str, u8 base, u64 dim, u8 achar);
-u8* sitoa(int num, u8* str, u32 dim);
+u8* sitoa(u64 num, u8 * str, u64 dim);
 
