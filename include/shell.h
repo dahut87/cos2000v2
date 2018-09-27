@@ -13,3 +13,4 @@ int detectcpu();
 int mode();
 int clear();
 int dump_regs();
+int info();

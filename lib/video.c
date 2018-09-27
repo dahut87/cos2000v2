@@ -309,10 +309,10 @@ u32 print(u8 * string)
 u32 printf(const u8 * string, ...)
 {
 	va_list args;
-	u32 sizes[] = { 0xFF, 0xFFFF, 0xFFFFFFFF };
-	u8 strbase2[] = "b\000";
-	u8 strbase8[] = "o\000";
-	u8 strbase16[] = "h\000";
+	u64 sizes[] = { 0xFF, 0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF };
+	u8 strbase2[] = "0xb\000";
+	u8 strbase8[] = "0xo\000";
+	u8 strbase16[] = "0x\000";
 	u8 hexadecimal[] = "*0x\000";
 	u8 achar, temp;
 	u8 asize, charadd;
@@ -320,7 +320,7 @@ u32 printf(const u8 * string, ...)
 	u8 *str = string;
 	u8 *strtemp;
 	u32 i = 0, counter = 0;
-	u32 num;
+	u64 num;
 	bool flag = false;
 
 	va_start(args, string);
@@ -345,14 +345,23 @@ u32 printf(const u8 * string, ...)
 				break;
 			case 'h':
 				asize--;
+                if (asize<0) asize=0;
 				flag = true;
 				break;
 			case 'l':
 				asize++;
+                if (asize>3) asize=3;
 				flag = true;
 				break;
 			case 'u':
-				num = (u32) va_arg(args, int);
+                if (asize==0)
+				    num = (u64) va_arg(args, u8);
+                else if (asize==1)
+                    num = (u64) va_arg(args, u16);
+                else if (asize==2)
+                    num = (u64) va_arg(args, u32);
+                else
+                    num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
 				itoa(num, &buffer, 10, sizes[asize], charadd);
@@ -360,12 +369,19 @@ u32 printf(const u8 * string, ...)
 				flag = false;
 				break;
 			case 'o':
-				num = (u32) va_arg(args, int);
+                if (asize==0)
+				    num = (u64) va_arg(args, u8);
+                else if (asize==1)
+                    num = (u64) va_arg(args, u16);
+                else if (asize==2)
+                    num = (u64) va_arg(args, u32);
+                else
+                    num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
 				itoa(num, &buffer, 8, sizes[asize], charadd);
-				counter += print(&buffer) + 1;
 				print(&strbase8);
+				counter += print(&buffer) + 1;
 				flag = false;
 				break;
 			case 'c':
@@ -376,7 +392,14 @@ u32 printf(const u8 * string, ...)
 				break;
 			case 'd':
 			case 'i':
-				num = (int)va_arg(args, int);
+                if (asize==0)
+				    num = (u64) va_arg(args, u8);
+                else if (asize==1)
+                    num = (u64) va_arg(args, u16);
+                else if (asize==2)
+                    num = (u64) va_arg(args, u32);
+                else
+                    num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = ' ';
 				sitoa(num, &buffer, sizes[asize]);
@@ -399,23 +422,37 @@ u32 printf(const u8 * string, ...)
 				break;
 			case 'x':
 			case 'X':
-				num = (u32) va_arg(args, int);
+                if (asize==0)
+				    num = (u64) va_arg(args, u8);
+                else if (asize==1)
+                    num = (u64) va_arg(args, u16);
+                else if (asize==2)
+                    num = (u64) va_arg(args, u32);
+                else
+                    num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
 				itoa(num, &buffer, 16, sizes[asize], charadd);
 				if (achar == 'X')
 					strtoupper(&buffer);
-				counter += print(&buffer) + 1;
 				print(&strbase16);
+				counter += print(&buffer) + 1;
 				flag = false;
 				break;
 			case 'b':
-				num = (u32) va_arg(args, int);
+                if (asize==0)
+				    num = (u64) va_arg(args, u8);
+                else if (asize==1)
+                    num = (u64) va_arg(args, u16);
+                else if (asize==2)
+                    num = (u64) va_arg(args, u32);
+                else
+                    num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
 				itoa(num, &buffer, 2, sizes[asize], charadd);
-				counter += print(&buffer) + 1;
 				print(&strbase2);
+				counter += print(&buffer) + 1;
 				flag = false;
 				break;
 			default:
@@ -431,11 +468,10 @@ u32 printf(const u8 * string, ...)
 
 /* converti un entier non signé en chaine de caractère */
 
-u8 *itoa(u32 orignum, u8 * str, u8 base, u32 dim, u8 achar)
+u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
 {
-	u32 sizes[] = { 0xFF, 0xFFFF, 0xFFFFFFFF };
 	u8 *pointer = str, i, size = 0;
-	u32 num = orignum;
+	u64 num = orignum;
 	num &= dim;
 	if (num == 0 && (achar == 0)) {
 		*(pointer++) = '0';
@@ -457,7 +493,7 @@ u8 *itoa(u32 orignum, u8 * str, u8 base, u32 dim, u8 achar)
 		break;
 	}
 	for (i = 0; i < size; i++) {
-		u32 result = num % (u32) base;
+		u64 result = num % (u32) base;
 		*(pointer++) =
 		    (result > 9) ? (result - 10) + 'a' : result + '0';
 		num = num / (u32) base;

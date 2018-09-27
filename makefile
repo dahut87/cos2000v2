@@ -50,6 +50,8 @@ retest64: littleclean test64
 
 floppytest: bits32 floppy qemu-floppy
 
+refloppytest: littleclean floppytest
+
 view:
 	(hexdump  -C ./final/harddisk.img.final|head -c10000)
 
@@ -76,7 +78,7 @@ qemu-debug64:
 	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &)
 
 qemu:
-	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &)  
+	(killall qemu-system-i386;qemu-system-i386 -m 5G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &)  
 
 qemu64:
 	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  

@@ -7,6 +7,7 @@
 #include "2d.h"
 #include "gdt.h"
 #include "shell.h"
+#include "multiboot2.h"
 
 static command commands[] = {
 	{"REBOOT", "", &rebootnow},
@@ -17,6 +18,7 @@ static command commands[] = {
 	{"REGS", "", &dump_regs},
 	{"GDT", "", &readgdt},
 	{"IDT", "", &readidt},
+	{"INFO", "", &info}
 };
 
 /*******************************************************************************/
@@ -49,6 +51,16 @@ void shell()
 		if (!found)
 			printf("Commande inconnue !\r\n\000");
 	}
+}
+
+/*******************************************************************************/
+
+/* Information sur le démarrage */
+
+int info()
+{
+    getbootinfo();
+    return 0;
 }
 
 /*******************************************************************************/
@@ -216,7 +228,7 @@ int readgdt()
 				print("4k ");
 			else
 				print("1b ");
-			u8 dpl = (acces >> 5) & 0 b11;
+			u8 dpl = (acces >> 5) & 0b11;
 			printf("DPL:%d", dpl);
 		}
 	}

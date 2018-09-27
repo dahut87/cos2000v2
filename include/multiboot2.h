@@ -382,4 +382,7 @@
        u32 size;
        u32 load_base_addr;
      };
+
+void getbootinfo(void);
+void initmultiboot(const u32 addr);
      
