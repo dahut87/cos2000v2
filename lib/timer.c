@@ -15,8 +15,9 @@ static u32 time = 0;
 
 /* Récupère la valeur du timer */
 
-u32 gettimer() {
-    return time;
+u32 gettimer()
+{
+	return time;
 }
 
 /******************************************************************************/
@@ -30,7 +31,7 @@ void timer()
 	pushad();
 	showchar(0, 0, curs[curspos], 7);
 	curspos = (curspos + 1) & 0x3;
-    time++;
+	time++;
 	irqendmaster();
 	popad();
 	popf();

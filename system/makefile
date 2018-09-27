@@ -20,6 +20,7 @@ clean:
 	rm -f *.bin
 	rm -f *.sys
 	rm -f *.s
+	rm -f *.c~
 
 indent: 
 	indent -linux -i8 -ts8 *.c

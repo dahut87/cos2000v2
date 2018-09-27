@@ -477,21 +477,18 @@ void writepxl_8bitsunchain(u16 x, u16 y, u32 c)
 
 u8 nextvmode()
 {
-    u8 mode=getvmode();
-    mode++;
-    if (mode>=0x80) {
-        if (mode>maxgraphmode)
-            mode=0x0;
-    }
-    else {
-        if (mode>maxtextmode)
-            mode=0x80;
-    }   
-    setvmode(mode);
-    return mode;
+	u8 mode = getvmode();
+	mode++;
+	if (mode >= 0x80) {
+		if (mode > maxgraphmode)
+			mode = 0x0;
+	} else {
+		if (mode > maxtextmode)
+			mode = 0x80;
+	}
+	setvmode(mode);
+	return mode;
 }
-
-
 
 /*******************************************************************************/
 

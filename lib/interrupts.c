@@ -557,8 +557,7 @@ void initidt(void)
 
 void inittimer()
 {
-    outb(TIMER_MODE, RATE_GENERATOR);
-    outb(TIMER0, (u8) (TIMER_FREQ/HZ) );
-    outb(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
+	outb(TIMER_MODE, RATE_GENERATOR);
+	outb(TIMER0, (u8) (TIMER_FREQ / HZ));
+	outb(TIMER0, (u8) ((TIMER_FREQ / HZ) >> 8));
 }
-

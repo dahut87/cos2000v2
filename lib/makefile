@@ -15,6 +15,8 @@ libs.o:$(OBJS)
 
 clean:
 	rm -f *.o
+	rm -f *.c~
+	rm -f ./VGA/*.c~
 
 indent: 
 	indent -linux -i8 -ts8 *.c

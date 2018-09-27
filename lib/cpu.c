@@ -18,14 +18,14 @@ static u8 *msg[] = {
 	"3dNow Extended!",
 	"HyperThreading",
 	"apic",
-    "64bits",
-    "syscall",
-    "msr",
-    "sse4a",
-    "vmx",
-    "sse41",
-    "sse42",
-    "apic2"
+	"64bits",
+	"syscall",
+	"msr",
+	"sse4a",
+	"vmx",
+	"sse41",
+	"sse42",
+	"apic2"
 };
 
 static u8 space[] = " ";
@@ -99,10 +99,10 @@ u8 getcpuinfos(cpuinfo * proc)
 		proc->apic = ((regedx >> 9) & 0x00000001);
 		proc->now3d = ((regedx >> 30) & 0x00000001);
 		proc->now3d2 = ((regedx >> 31) & 0x00000001);
-        proc->bits64 = ((regedx >> 29) & 0x00000001);
-        proc->syscall = ((regedx >> 11) & 0x00000001);
-        proc->msr = ((regedx >> 5) & 0x00000001);
-        proc->sse4a = ((regecx >> 6) & 0x00000001);
+		proc->bits64 = ((regedx >> 29) & 0x00000001);
+		proc->syscall = ((regedx >> 11) & 0x00000001);
+		proc->msr = ((regedx >> 5) & 0x00000001);
+		proc->sse4a = ((regecx >> 6) & 0x00000001);
 	}
 	if (maxextended >= 4) {
 		int i;
@@ -143,7 +143,7 @@ u32 viewstack(u32 pointer)
 
 void dump_regs()
 {
-    cli();
+	cli();
 	u32 eax = 0;
 	u32 ebx = 0;
 	u32 ecx = 0;
@@ -167,17 +167,21 @@ void dump_regs()
  asm("movl %%eax, %[a1] ;" "movl %%ebx, %[b1] ;" "movl %%ecx, %[c1] ;" "movl %%edx, %[d1] ;" "movl %%esi, %[e1] ;" "movl %%edi, %[f1] ;" "movl %%esp, %[g1] ;" "movl %%ebp, %[h1] ;" "movw %%cs, %[i1] ;" "movw %%ds, %[j1] ;" "movw %%es, %[k1] ;" "movw %%fs, %[l1] ;" "movw %%gs, %[m1] ;" "movw %%ss, %[n1] ;" "mov %%cr0, %%eax ;" "mov %%eax, %[o1] ;" "mov %%cr2, %%eax ;" "mov %%eax, %[p1] ;" "mov %%cr3, %%eax ;" "mov %%eax, %[q1] ;" "mov %%cr4, %%eax ;" "mov %%eax,%[r1] ;":
 [a1] "=m"(eax),[b1] "=m"(ebx),[c1] "=m"(ecx),[d1] "=m"(edx),[e1] "=m"(esi),
 [f1] "=m"(edi),[g1] "=m"(esp),[h1] "=m"(ebp),[i1] "=m"(cs),[j1] "=m"(ds),
-[k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss), [o1] "=m"(cr0),[p1] "=m"(cr2),[q1] "=m"(cr3), [r1] "=m"(cr4));
+[k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss),[o1] "=m"(cr0),
+[p1] "=m"(cr2),[q1] "=m"(cr3),[r1] "=m"(cr4));
 
-	printf("EAX=%X EBX=%X ECX=%X EDX=%X\r\n",eax,ebx,ecx,edx);
-	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n",esi,edi,esp,ebp);
-	printf("\033[1m CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\033[0m\r\n",(u32)cs,(u32)ds,(u32)es,(u32)fs,(u32)gs,(u32)ss);
-	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n",cr0,cr2,cr3,cr4);
+	printf("EAX=%X EBX=%X ECX=%X EDX=%X\r\n", eax, ebx, ecx, edx);
+	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n", esi, edi, esp, ebp);
+	printf
+	    ("\033[1m CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\033[0m\r\n",
+	     (u32) cs, (u32) ds, (u32) es, (u32) fs, (u32) gs, (u32) ss);
+	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n", cr0, cr2, cr3,
+	       cr4);
 
  asm("pushf      ;" "pop %[f1] ;":
 [f1] "=m"(eflags));
 
-	printf("EFLAGS=%X",eflags);
+	printf("EFLAGS=%X", eflags);
 
 	if (eflags & (1 << 0))	// Carry
 		printf(" (C1");
@@ -210,14 +214,16 @@ void dump_regs()
 		printf(" O0)\r\n");
 
 	printf("STACK\r\n");
-    u32 i=0;
-	for (u32 pointer = esp; pointer < 0x400000; pointer+=4) {
-        if (pointer==ebp) print("\033[1m\033[31m");
-		printf("+%d:%X\t\t%X\033[0m\033[37m\r\n", i++, pointer,viewstack(pointer));
-        if (i>25) {
-            print("...\r\n");
-            break;
-        }
-    }
-    sti();
+	u32 i = 0;
+	for (u32 pointer = esp; pointer < 0x400000; pointer += 4) {
+		if (pointer == ebp)
+			print("\033[1m\033[31m");
+		printf("+%d:%X\t\t%X\033[0m\033[37m\r\n", i++, pointer,
+		       viewstack(pointer));
+		if (i > 25) {
+			print("...\r\n");
+			break;
+		}
+	}
+	sti();
 }

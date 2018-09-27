@@ -96,25 +96,25 @@ static const u8 set1_ctrl[] = {
 
 /* Attend une chaine de caractère de taille max */
 
-u8* getstring(u8* temp) {
-    u8 maxwidth=strlen(temp);
-    u8 *pointer=temp;
-    u8 ascii=0;
-    while(ascii!='\r') {
-        ascii=waitascii();
-        if (ascii=='\b' && pointer>temp) {
-            pointer--;
-            putchar(ascii);
-        }
-        else if (ascii>31 && pointer<=temp+80) {
-            *pointer++=ascii;
-            putchar(ascii);
-        }
-    }
-    *pointer='\000';
-    return temp;
+u8 *getstring(u8 * temp)
+{
+	u8 maxwidth = strlen(temp);
+	u8 *pointer = temp;
+	u8 ascii = 0;
+	while (ascii != '\r') {
+		ascii = waitascii();
+		if (ascii == '\b' && pointer > temp) {
+			pointer--;
+			putchar(ascii);
+		} else if (ascii > 31 && pointer <= temp + 80) {
+			*pointer++ = ascii;
+			putchar(ascii);
+		}
+	}
+	*pointer = '\000';
+	return temp;
 }
-    
+
 /******************************************************************************/
 
 /* Fonction qui attend l'appuie d'une touche générant un code ASCII puis le retourne */
@@ -207,12 +207,10 @@ unsigned convert(u32 keypressed)
 		if (bufferscan[lastscan] == 0xE0)
 			kbdstatus |= STATUS_CTRL;
 		return 0;
-	}
-	else if (key == SCAN_CTRL) {
+	} else if (key == SCAN_CTRL) {
 		kbdstatus |= STATUS_CTRL;
 		return 0;
-	}
-	else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT) {
+	} else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT) {
 		kbdstatus |= STATUS_SHIFT;
 		return 0;
 	}
@@ -233,12 +231,10 @@ unsigned convert(u32 keypressed)
 	else if (key == SCAN_SCROLLLOCK) {
 		kbdstatus ^= STATUS_SCRL;
 		goto LEDS;
-	}
-	else if (key == SCAN_NUMLOCK) {
+	} else if (key == SCAN_NUMLOCK) {
 		kbdstatus ^= STATUS_NUM;
 		goto LEDS;
-	}
-	else if (key == SCAN_CAPSLOCK) {
+	} else if (key == SCAN_CAPSLOCK) {
 		kbdstatus ^= STATUS_CAPS;
  LEDS:
 		outkbd(0x60, 0xED);	/* "mise a jour des LEDS */

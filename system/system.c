@@ -50,22 +50,22 @@ int main(unsigned long magic, unsigned long addr)
 	printf(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux\000");
-    ok();
+	ok();
 
-
-    printf ("\033[37m\033[0m -Nombre magique multiboot2 : %X\000", (u32) magic);
-    if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
-        ok();
-    else
-        error();
+	printf("\033[37m\033[0m -Nombre magique multiboot2 : %X\000",
+	       (u32) magic);
+	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
+		ok();
+	else
+		error();
 
 	print("\033[37m\033[0m -Initilisation de la memoire (GDT)\000");
-    initgdt(&&next);
-next:
+	initgdt(&&next);
+ next:
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des taches (TSR)\000");
-    inittr();
+	inittr();
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)\000");
@@ -97,5 +97,5 @@ next:
 	initsyscall();
 	ok();
 
-    shell();
+	shell();
 }
