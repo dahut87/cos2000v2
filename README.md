@@ -1,8 +1,4 @@
-# cos2000
-
 ![logo](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/logo.png)
-
-ou Compatible Operating System 2000
 
 ## Présentation du projet
 
@@ -140,7 +136,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * * harddiskuefi.img.final
 * * floppy.img.final
 * Graphisme - fichiers images
-* *  screenshot - screenshots de l'évolution du système
+* *  screenshots - screenshots de l'évolution du système
 * *  Thème - thème de démarrage COS2000 pour plymouth
 * include - fichier d'entête C
 * lib - librairies pour le noyau
