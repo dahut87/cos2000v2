@@ -16,7 +16,7 @@ harddisk: final/harddisk.img.final
 uefi: final/harddiskuefi.img.final
 
 install:
-	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb)
+	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils)
 
 clean:	
 	(cd system; make clean)
