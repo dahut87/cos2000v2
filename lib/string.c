@@ -1,7 +1,9 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include <string.h>
 
 /******************************************************************************/
-
 /* Compare 2 chaines de caractère et renvoie la premiere distance (diff) */
 
 s8 strcmp(const u8 * src, const u8 * dest)
@@ -16,7 +18,6 @@ s8 strcmp(const u8 * src, const u8 * dest)
 }
 
 /******************************************************************************/
-
 /* Trouve la premiere occurence d'un caractère dans une chaine et renvoie un pointeur */
 
 u8 *strchr(const u8 * src, u8 achar)
@@ -28,7 +29,6 @@ u8 *strchr(const u8 * src, u8 achar)
 }
 
 /******************************************************************************/
-
 /* Trouve la premiere occurence d'un caractère dans une chaine  */
 
 u32 strchrpos(const u8 * src, u8 achar)
@@ -41,7 +41,6 @@ u32 strchrpos(const u8 * src, u8 achar)
 }
 
 /******************************************************************************/
-
 /* Renvoie la taille de la chaine */
 
 u32 strlen(const u8 * src)
@@ -53,7 +52,6 @@ u32 strlen(const u8 * src)
 }
 
 /******************************************************************************/
-
 /* copie une chaine dans une autre */
 u8 *strcpy(const u8 * src, u8 * dest)
 {
@@ -63,7 +61,6 @@ u8 *strcpy(const u8 * src, u8 * dest)
 }
 
 /******************************************************************************/
-
 /* copie une portion limité d'une chaine asciiZ*/
 
 u8 *strncpy(const u8 * src, u8 * dest, u32 count)
@@ -79,7 +76,6 @@ u8 *strncpy(const u8 * src, u8 * dest, u32 count)
 }
 
 /******************************************************************************/
-
 /* concatene 2 chaines de caractère */
 
 u8 *strcat(const u8 * src, u8 * dest)
@@ -92,7 +88,6 @@ u8 *strcat(const u8 * src, u8 * dest)
 }
 
 /******************************************************************************/
-
 /* Met en minuscule */
 
 void strtolower(u8 * src)
@@ -105,7 +100,6 @@ void strtolower(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Met en majuscule */
 
 void strtoupper(u8 * src)
@@ -118,7 +112,6 @@ void strtoupper(u8 * src)
 }
 
 /******************************************************************************/
-
 /* inverse la casse */
 
 void strinvertcase(u8 * src)
@@ -133,7 +126,6 @@ void strinvertcase(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Met une majuscule et met le reste en minuscule */
 
 void stronecase(u8 * src)
@@ -148,7 +140,6 @@ void stronecase(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Fixe la taille de la chaine */
 
 void strsetlen(u8 * src, u32 size)
@@ -157,7 +148,6 @@ void strsetlen(u8 * src, u32 size)
 }
 
 /******************************************************************************/
-
 /* Inverse la chaine */
 
 void strinvert(u8 * src)
@@ -174,7 +164,6 @@ void strinvert(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Remplace tout les caractères rechercher par un autre */
 
 void strreplace(u8 * src, u8 search, u8 replaced)
@@ -187,7 +176,6 @@ void strreplace(u8 * src, u8 search, u8 replaced)
 }
 
 /******************************************************************************/
-
 /* Rempli de caractère */
 
 u8 *strfill(u8 * dst, u8 pattern, u32 size)
@@ -200,7 +188,6 @@ u8 *strfill(u8 * dst, u8 pattern, u32 size)
 }
 
 /******************************************************************************/
-
 /* Renvoie la partie gauche d'une chaine */
 
 void strleft(u8 * src, u8 * dest, u32 size)
@@ -212,7 +199,6 @@ void strleft(u8 * src, u8 * dest, u32 size)
 }
 
 /******************************************************************************/
-
 /* Renvoie la partie droite d'une chaine */
 
 void strright(u8 * src, u8 * dest, u32 size)
@@ -225,7 +211,6 @@ void strright(u8 * src, u8 * dest, u32 size)
 }
 
 /******************************************************************************/
-
 /* Supprime une portion de chaine */
 
 void strdelete(u8 * src, u32 index, u32 size)
@@ -238,7 +223,6 @@ void strdelete(u8 * src, u32 index, u32 size)
 }
 
 /******************************************************************************/
-
 /* Insert une portion dans la chaine */
 
 void strinsert(u8 * src, u8 * dest, u32 index)
@@ -254,7 +238,6 @@ void strinsert(u8 * src, u8 * dest, u32 index)
 }
 
 /******************************************************************************/
-
 /* Supprime les délimiteurs consécutifs */
 
 void strcompressdelimiter(u8 * src, u8 delim)
@@ -270,7 +253,6 @@ void strcompressdelimiter(u8 * src, u8 delim)
 }
 
 /******************************************************************************/
-
 /* Récupérère l'élément N d'une liste utilisant un délimiteur */
 
 u8 *strgetitem(u8 * src, u8 * dest, u8 delim, u32 index)
@@ -284,7 +266,6 @@ u8 *strgetitem(u8 * src, u8 * dest, u8 delim, u32 index)
 }
 
 /******************************************************************************/
-
 /* Récupérère un pointeur sur l'élément N d'une liste utilisant un délimiteur */
 
 u8 *strgetpointeritem(u8 * src, u8 delim, u32 index)
@@ -299,7 +280,6 @@ u8 *strgetpointeritem(u8 * src, u8 delim, u32 index)
 }
 
 /******************************************************************************/
-
 /* Récupérère le nombre d'éléments d'une liste utilisant un délimiteur */
 
 u32 strgetnbitems(u8 * src, u8 delim)
@@ -317,7 +297,6 @@ u32 strgetnbitems(u8 * src, u8 delim)
 }
 
 /******************************************************************************/
-
 /* Renvoie la base minimum du nombre */
 
 u8 base[] = " 0123456789ABCDEF\000";
@@ -346,7 +325,6 @@ u8 strgetminbase(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Renvoie la base du nombre */
 
 u8 hexa[] = "0x\000";
@@ -383,7 +361,6 @@ u8 strgetbase(u8 * src)
 }
 
 /******************************************************************************/
-
 /* Transforme une chaine en nombre */
 
 u32 strtoint(u8 * src)
@@ -411,3 +388,5 @@ u32 strtoint(u8 * src)
 	}
 	return result;
 }
+
+/*******************************************************************************/

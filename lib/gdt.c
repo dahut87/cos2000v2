@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "gdt.h"
 #include "asm.h"
 #include "types.h"
@@ -12,7 +15,6 @@ static gdtdes gdt[SIZEGDT];
 static struct tss tss0;
 
 /*******************************************************************************/
-
 /* Initialise la GDT */
 
 void initgdt(u32 offset)
@@ -44,7 +46,6 @@ void initgdt(u32 offset)
 }
 
 /*******************************************************************************/
-
 /* Initialise le registre de tâche (TSR) */
 
 void inittr(void)
@@ -53,7 +54,6 @@ void inittr(void)
 }
 
 /*******************************************************************************/
-
 /* Initialise les selecteurs avec la GDT */
 
 void initselectors(u32 executingoffset)
@@ -74,7 +74,6 @@ void initselectors(u32 executingoffset)
 }
 
 /*******************************************************************************/
-
 /* Créé un descripteur GDT */
 
 void makegdtdes(u32 base, u32 limite, u8 acces, u8 flags, gdtdes * desc)

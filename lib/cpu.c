@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "types.h"
 #include "cpu.h"
 #include "cpuid.h"
@@ -31,7 +34,6 @@ static u8 *msg[] = {
 static u8 space[] = " ";
 
 /******************************************************************************/
-
 /* Annule les FLAGs CPU */
 
 bool cansetflag(u32 flag)
@@ -42,7 +44,6 @@ bool cansetflag(u32 flag)
 }
 
 /******************************************************************************/
-
 /* Lance l'instruction CPUID */
 
 void cpuid(u32 op, u32 * eax, u32 * ebx, u32 * ecx, u32 * edx)
@@ -51,7 +52,6 @@ void cpuid(u32 op, u32 * eax, u32 * ebx, u32 * ecx, u32 * edx)
 }
 
 /******************************************************************************/
-
 /* Retourne les informations sur le CPU dans une structure cpuinfo */
 
 u8 getcpuinfos(cpuinfo * proc)
@@ -127,7 +127,6 @@ u8 getcpuinfos(cpuinfo * proc)
 }
 
 /******************************************************************************/
-
 /* Retourne un élément de la pile */
 
 u32 viewstack(u32 pointer)
@@ -138,10 +137,9 @@ u32 viewstack(u32 pointer)
 }
 
 /******************************************************************************/
-
 /* Affiche les registres CPU */
 
-void dump_regs()
+void dump_regs(void)
 {
 	cli();
 	u32 eax = 0;
@@ -227,3 +225,4 @@ void dump_regs()
 	}
 	sti();
 }
+/*******************************************************************************/

@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "types.h"
 #include "asm.h"
 #include "mouse.h"
@@ -6,10 +9,9 @@
 #include "video.h"
 
 /******************************************************************************/
-
 /* initialise la souris */
 
-bool initmouse()
+bool initmouse(void)
 {
 	u16 i = 1024;
 
@@ -42,7 +44,6 @@ static bool mousebut1 = 0, mousebut2 = 0, mousebut3 = 0;
 static u8 speed = 6;
 
 /******************************************************************************/
-
 /* ecriture vers souris */
 
 void outmseack(u8 value)
@@ -61,10 +62,9 @@ void outmsecmd(u8 command)
 }
 
 /******************************************************************************/
-
 /* Handler d'interruption de la souris IRQ 12 */
 
-void mouse()
+void mouse(void)
 {
 	cli();
 	pushf();
@@ -144,3 +144,5 @@ popl %bx;\
 iret;");
 	iret();
 }
+
+/*******************************************************************************/

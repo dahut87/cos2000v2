@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "types.h"
 
 #define PIC1_CMD    0x20 /*PIC 8259A Commandes n°1 */

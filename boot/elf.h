@@ -1,3 +1,6 @@
+;/*******************************************************************************/
+;/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+;/*                                                                             */
 struc ELFheader
 .Magic                  resb 1;"0x7F"
 .MagicStr               resb 3;"ELF"

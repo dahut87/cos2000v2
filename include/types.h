@@ -1,6 +1,8 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #ifndef ALLTYPES
 # define ALLTYPES
-
 
 typedef char            	int8;
 typedef short           	int16;

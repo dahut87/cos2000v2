@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "vga.h"
 #include "memory.h"
 #include "asm.h"
@@ -28,43 +31,38 @@ static u32 basemem;		/* Adresse de la mémoire vidéo */
 static bool scrolling, graphic, blink;	/* Activation du défilement, Flag du mode graphique */
 
 /*******************************************************************************/
-
 /* Donne la resolution max horizontale */
 
-u16 getxres()
+u16 getxres(void)
 {
 	return resX;
 }
 
 /*******************************************************************************/
-
 /* Donne la profondeur en bit */
 
-u8 getdepth()
+u8 getdepth(void)
 {
 	return color;
 }
 
 /*******************************************************************************/
-
 /* Donne la resolution max verticale */
 
-u16 getyres()
+u16 getyres(void)
 {
 	return resY - splitY;
 }
 
 /*******************************************************************************/
-
 /* Donne le nombre max de page ecran dispo */
 
-u16 getnbpages()
+u16 getnbpages(void)
 {
 	return pages;
 }
 
 /*******************************************************************************/
-
 /* Fixe la page ecran de travail */
 
 void setpage(u8 page)
@@ -74,16 +72,14 @@ void setpage(u8 page)
 }
 
 /*******************************************************************************/
-
 /* Recupere la page ecran de travail */
 
-u8 getpage()
+u8 getpage(void)
 {
 	return activepage;
 }
 
 /*******************************************************************************/
-
 /* Affiche la page ecran specifié */
 
 void showpage(u8 page)
@@ -100,7 +96,6 @@ void showpage(u8 page)
 }
 
 /*******************************************************************************/
-
 /* Sépare l'écran en 2 a partir de la ligne Y */
 
 void split(u16 y)
@@ -126,10 +121,9 @@ void split(u16 y)
 }
 
 /*******************************************************************************/
-
 /* Sépare l'écran en 2 a partir de la ligne Y */
 
-void unsplit()
+void unsplit(void)
 {
 	/* line compare pour ligne atteinte */
 	outb(ccrt, 0x18);
@@ -147,28 +141,25 @@ void unsplit()
 }
 
 /*******************************************************************************/
-
 /* Attend la retrace verticale */
 
-void waitvretrace()
+void waitvretrace(void)
 {
 	while ((inb(state) & 8) == 0) ;
 }
 
 /*******************************************************************************/
-
 /* Attend la retrace horizontale */
 
-void waithretrace()
+void waithretrace(void)
 {
 	while ((inb(state) & 1) == 0) ;
 }
 
 /*******************************************************************************/
-
 /* Active l'affichage du curseur de texte */
 
-void enablecursor()
+void enablecursor(void)
 {
 	u8 curs;
 	/* active le curseur hardware */
@@ -178,10 +169,9 @@ void enablecursor()
 }
 
 /*******************************************************************************/
-
 /* Desactive l'affichage du curseur de texte */
 
-void disablecursor()
+void disablecursor(void)
 {
 	u8 curs;
 	/* Desactive le curseur hardware */
@@ -191,10 +181,9 @@ void disablecursor()
 }
 
 /*******************************************************************************/
-
 /* Active le scrolling en cas de débordement d'écran */
 
-void enablescroll()
+void enablescroll(void)
 {
 	scrolling = true;
 }
@@ -203,13 +192,12 @@ void enablescroll()
 
 /* Desactive le scrolling en cas de débordement d'écran */
 
-void disablescroll()
+void disablescroll(void)
 {
 	scrolling = false;
 }
 
 /*******************************************************************************/
-
 /* Utilise le plan de bit spécifié */
 
 void useplane(u8 plan)
@@ -226,7 +214,6 @@ void useplane(u8 plan)
 }
 
 /*******************************************************************************/
-
 /* Renvoie l'adresse du segment video */
 
 u32 getbase(void)
@@ -252,7 +239,6 @@ u32 getbase(void)
 }
 
 /*******************************************************************************/
-
 /* efface l'écran */
 
 void (*fill) (u8 attrib);
@@ -281,7 +267,6 @@ void fill_unchain(u8 attrib)
 }
 
 /*******************************************************************************/
-
 /* fixe la position du curseur texte */
 
 void gotoscr(u16 x, u16 y)
@@ -298,7 +283,6 @@ void gotoscr(u16 x, u16 y)
 }
 
 /*******************************************************************************/
-
 /* Fait defiler l'ecran de n lignes vers le haut */
 
 void (*scroll) (u8 lines, u8 attrib);
@@ -348,7 +332,6 @@ void scroll_text(u8 lines, u8 attrib)
 }
 
 /*******************************************************************************/
-
 /* Affiche le caractère a l'écran */
 
 void (*showchar) (u16 coordx, u16 coordy, u8 thechar, u8 attrib);
@@ -381,7 +364,6 @@ void showchar_text(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
 }
 
 /*******************************************************************************/
-
 /* Recupere le caractère a l'écran */
 
 u8(*getchar) (u16 coordx, u16 coordy);
@@ -396,7 +378,6 @@ u8 getchar_text(u16 coordx, u16 coordy)
 }
 
 /*******************************************************************************/
-
 /* Recupere les attributs a l'écran */
 
 u8(*getattrib) (u16 coordx, u16 coordy);
@@ -411,7 +392,6 @@ u8 getattrib_text(u16 coordx, u16 coordy)
 }
 
 /*******************************************************************************/
-
 /* Ecrit un pixel a l'écran */
 
 void (*writepxl) (u16 x, u16 y, u32 c);
@@ -472,10 +452,9 @@ void writepxl_8bitsunchain(u16 x, u16 y, u32 c)
 }
 
 /*******************************************************************************/
-
 /* Met le mode video suivant */
 
-u8 nextvmode()
+u8 nextvmode(void)
 {
 	u8 mode = getvmode();
 	mode++;
@@ -491,7 +470,6 @@ u8 nextvmode()
 }
 
 /*******************************************************************************/
-
 /* Change le mode video courant */
 
 u32 setvmode(u8 mode)
@@ -607,16 +585,14 @@ u32 setvmode(u8 mode)
 }
 
 /*******************************************************************************/
-
 /* Récupère le mode vidéo en cours */
 
-u8 getvmode()
+u8 getvmode(void)
 {
 	return vmode;
 }
 
 /*******************************************************************************/
-
 /* Charge une nouvelle police de caractère */
 
 u32 loadfont(u8 * def, u8 size, u8 font)
@@ -669,10 +645,9 @@ u32 loadfont(u8 * def, u8 size, u8 font)
 }
 
 /*******************************************************************************/
-
 /* Récupere le N° de la police de caractère en cours d'utilisation */
 
-u8 getfont()
+u8 getfont(void)
 {
 	u8 num, tmp;
 	outb(sequencer, 3);
@@ -682,10 +657,9 @@ u8 getfont()
 }
 
 /*******************************************************************************/
-
 /* Récupere le N° de la police de caractère en cours d'utilisation */
 
-u8 getfont2()
+u8 getfont2(void)
 {
 	u8 num, tmp;
 	outb(sequencer, 3);
@@ -695,7 +669,6 @@ u8 getfont2()
 }
 
 /*******************************************************************************/
-
 /* Fixe le N° de la police de caractère a utiliser */
 
 void setfont(u8 num)
@@ -708,7 +681,6 @@ void setfont(u8 num)
 }
 
 /*******************************************************************************/
-
 /* Fixe le N° de la police de caractère a utiliser */
 
 void setfont2(u8 num)
@@ -721,27 +693,24 @@ void setfont2(u8 num)
 }
 
 /*******************************************************************************/
-
 /* Autorise le clignotement */
 
-void enableblink()
+void enableblink(void)
 {
 	outb(ccrt, 0x10);
 	outb(ccrt + 1, (inb(sequencer + 1) | 0x04));
 }
 
 /*******************************************************************************/
-
 /* Annule le clignotement */
 
-void disableblink()
+void disableblink(void)
 {
 	outb(ccrt, 0x10);
 	outb(ccrt + 1, (inb(sequencer + 1) & ~0x04));
 }
 
 /*******************************************************************************/
-
 /* Envoie une série d'octet a destination d'une portion de mémoire
 vers le registre spécifié */
 
@@ -755,7 +724,6 @@ void outreg(u16 port, u8 * src, u16 num)
 }
 
 /*******************************************************************************/
-
 /* Envoie une série d'octet a destination d'une portion de mémoire
 vers le registre spécifié (accés data et index confondu) */
 
@@ -770,7 +738,6 @@ void outregsame(u16 port, u8 * src, u16 num)
 }
 
 /*******************************************************************************/
-
 /* Récupère une série d'octet en provenance d'un registre spécifié
 vers portion de mémoire */
 
@@ -784,7 +751,6 @@ void inreg(u16 port, u8 * src, u16 num)
 }
 
 /*******************************************************************************/
-
 /* Récupère une série d'octet en provenance d'un registre spécifié
 vers portion de mémoire (accés data et index confondu) */
 

@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "interrupts.h"
 #include "types.h"
 #include "asm.h"
@@ -15,7 +18,6 @@ static struct idtr idtreg;
 static idtdes idt[256];
 
 /******************************************************************************/
-
 /* Initialise le controleur d'interruption 8259A */
 
 void initpic(void)
@@ -59,7 +61,6 @@ void initpic(void)
 }
 
 /******************************************************************************/
-
 /* Active une IRQ */
 
 void enableirq(u8 irq)
@@ -72,7 +73,6 @@ void enableirq(u8 irq)
 }
 
 /******************************************************************************/
-
 /* Désactive une IRQ */
 
 void disableirq(u8 irq)
@@ -98,7 +98,6 @@ void makeidtdes(u32 offset, u16 select, u16 type, idtdes * desc)
 }
 
 /******************************************************************************/
-
 /* Change une entrée dans l'IDT */
 
 void setidt(u32 offset, u16 select, u16 type, u16 index)
@@ -125,7 +124,6 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 }
 
 /******************************************************************************/
-
 /* Affiche une erreur CPU et fige l'ordinateur */
 
 void cpuerror(const u8 * src)
@@ -139,7 +137,6 @@ void cpuerror(const u8 * src)
 }
 
 /******************************************************************************/
-
 /* Déclenché lors de l'appel d'une interruption */
 
 void interruption()
@@ -155,7 +152,6 @@ void interruption()
 }
 
 /******************************************************************************/
-
 /* Les expections */
 
 void exception0()
@@ -254,7 +250,6 @@ void exception18()
 }
 
 /******************************************************************************/
-
 /* Les IRQ par défaut */
 
 void irq0()
@@ -492,7 +487,6 @@ void irq15()
 }
 
 /******************************************************************************/
-
 /* Initialise une IDT */
 
 void initidt(void)
@@ -552,12 +546,12 @@ void initidt(void)
 }
 
 /******************************************************************************/
-
 /* 8253/8254 PIT (Programmable Interval Timer) Timer ajustable */
 
-void inittimer()
+void inittimer(void)
 {
 	outb(TIMER_MODE, RATE_GENERATOR);
 	outb(TIMER0, (u8) (TIMER_FREQ / HZ));
 	outb(TIMER0, (u8) ((TIMER_FREQ / HZ) >> 8));
 }
+/*******************************************************************************/

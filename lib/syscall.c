@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include <types.h>
 #include <gdt.h>
 #include <asm.h>
@@ -33,3 +36,5 @@ void initsyscall(void)
 	wrmsr(0x175, STACK_OFFSET, 0x0);
 	wrmsr(0x176, &sysenter_handler, 0x0);
 }
+
+/*******************************************************************************/

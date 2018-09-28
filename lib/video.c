@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "vga.h"
 #include "video.h"
 #include "stdarg.h"
@@ -23,7 +26,6 @@ console vc[8] = {
 u8 usedvc = 0;
 
 /*******************************************************************************/
-
 /* Fixe l'attribut courant */
 
 void setattrib(u8 att)
@@ -55,7 +57,6 @@ void setattrib(u8 att)
 }
 
 /*******************************************************************************/
-
 /* gere l'ansi */
 
 bool makeansi(u8 c)
@@ -194,7 +195,6 @@ bool makeansi(u8 c)
 }
 
 /*******************************************************************************/
-
 /* Change la console en cours d'utilisation */
 
 void changevc(u8 avc)
@@ -206,7 +206,6 @@ void changevc(u8 avc)
 }
 
 /*******************************************************************************/
-
 /* affiche un caractère a l'écran */
 
 void putchar(u8 thechar)
@@ -285,7 +284,6 @@ void putchar(u8 thechar)
 }
 
 /*******************************************************************************/
-
 /* affiche une chaine de caractère a l'écran */
 
 u32 print(u8 * string)
@@ -301,10 +299,9 @@ u32 print(u8 * string)
 }
 
 /*******************************************************************************/
+/* affiche une chaine de caractère formaté a l'ecran */
 
 #define buffersize 1024
-
-/* affiche une chaine de caractère formaté a l'ecran */
 
 u32 printf(const u8 * string, ...)
 {
@@ -509,7 +506,6 @@ u32 printf(const u8 * string, ...)
 }
 
 /*******************************************************************************/
-
 /* converti un entier non signé en chaine de caractère */
 
 u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
@@ -554,7 +550,6 @@ u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
 }
 
 /*******************************************************************************/
-
 /* converti un entier en chaine de caractère */
 
 u8 *sitoa(u64 num, u8 * str, u64 dim)
@@ -583,3 +578,4 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 	strinvert(str);
 	return str;
 }
+/*******************************************************************************/

@@ -1,6 +1,11 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "types.h"
 #include "timer.h"
 
+/*******************************************************************************/
+/* Arithmétique 64 bits  */
 
 unsigned long long __udivdi3 (unsigned long long num, unsigned long long den)
 {
@@ -42,7 +47,6 @@ unsigned long long __umoddi3 (unsigned long long n, unsigned long long d)
 }
 
 /******************************************************************************/ 
-    
 /* Fonction qui retourne le logarithme 2 */ 
     
 u8 log2(u64 n)
@@ -64,11 +68,8 @@ n >>= 1;
 return logValue + 1;
 
 }
-
-
  
 /******************************************************************************/ 
-    
 /* Fonction qui retourne le logarithme 10 */ 
     
 u8 log10(u64 n) 
@@ -87,8 +88,7 @@ return  (n >= 10000000000000000000u) ? 19 : (n >= 100000000000000000u) ? 18 :
 }
 
  
-/******************************************************************************/ 
-    
+/******************************************************************************/   
 /* Fonction qui retourne la valeur absolue */ 
     
 u32 abs(int x)
@@ -102,16 +102,13 @@ return (u32) x;
 
 }
 
-
- 
 /******************************************************************************/ 
-    
 /* Fonction qui initialise le générateur de nombre aléatoire */ 
 
 static u32 seed = 0x12341234;
 
  
-void randomize()
+void randomize(void)
 {
 	
 seed = gettimer();
@@ -120,60 +117,34 @@ seed = gettimer();
  
 
 /******************************************************************************/ 
-    
 /* Fonction qui renvoie un nombre aléatoire */ 
     
-u32 rand() 
+u32 rand(void) 
 {
-	
 u32 next = seed;
-	
 int result;
-	
- 
 next *= 1103515245;
-	
 next += 12345;
-	
 result = (unsigned int)(next / 65536) % 2048;
-	
- 
 next *= 1103515245;
-	
 next += 12345;
-	
 result <<= 10;
-	
 result ^= (unsigned int)(next / 65536) % 1024;
-	
- 
 next *= 1103515245;
-	
 next += 12345;
-	
 result <<= 10;
-	
 result ^= (unsigned int)(next / 65536) % 1024;
-	
- 
 seed = next;
-	
- 
 return result;
 
 }
-
-
  
 /******************************************************************************/ 
-    
 /* Fonction qui renvoie un nombre aléatoire borné */ 
     
 u32 random(u32 lower, u32 upper)
-{
-	
+{	
 return (rand() % (upper - lower + 1)) + lower;
-
 }
 
-
+/*******************************************************************************/

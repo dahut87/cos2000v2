@@ -1,3 +1,7 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
+
 u8 ansilogo[5056] = {
 	0x1B, 0x5B, 0x30, 0x6D, 0x1B, 0x5B, 0x31, 0x6D, 0xDA, 0x1B, 0x5B, 0x30,
 	    0x6D, 0xC4, 0xC4, 0x1B,

@@ -1,3 +1,7 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
+
 /* definition des registres de la carte VGA pour differents modes */
 
 #define maxgraphmode 11

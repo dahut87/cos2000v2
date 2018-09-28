@@ -1,3 +1,6 @@
+;/*******************************************************************************/
+;/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+;/*                                                                             */
 struc echs
 Sizes    	resb 1
 Reserve 	resb 1

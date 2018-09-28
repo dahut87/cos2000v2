@@ -1,4 +1,6 @@
-
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 typedef struct console {
   u8 attrib;
   s16 cursX;

@@ -1,11 +1,21 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
+
 #include "multiboot2.h"
 
 static u32 infobloc;
+
+/*******************************************************************************/
+/* Initialise avec l'adresse du bloc multiboot2 */
 
 void initmultiboot(const u32 addr)
 {
     infobloc=addr;
 }
+
+/*******************************************************************************/
+/* Affiche les informations multiboot2 */
 
 void getbootinfo(void)
 {
@@ -150,4 +160,4 @@ for (tag = (struct multiboot_tag *) (addr + 8);
              }
          }
 }
-
+/*******************************************************************************/

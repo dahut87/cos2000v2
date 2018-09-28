@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "interrupts.h"
 #include "types.h"
 #include "asm.h"
@@ -12,19 +15,17 @@ static u8 curspos = 0;
 static u32 time = 0;
 
 /******************************************************************************/
-
 /* Récupère la valeur du timer */
 
-u32 gettimer()
+u32 gettimer(void)
 {
 	return time;
 }
 
 /******************************************************************************/
-
 /* Handler d'interruption de la souris IRQ 0 */
 
-void timer()
+void timer(void)
 {
 	cli();
 	pushf();
@@ -39,3 +40,5 @@ void timer()
 	asm("addl  $0x0C, %esp;");
 	iret();
 }
+
+/*******************************************************************************/

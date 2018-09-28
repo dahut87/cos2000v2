@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "types.h"
 #include "vga.h"
 #include "video.h"
@@ -5,7 +8,6 @@
 #include "math.h"
 
 /******************************************************************************/
-
 /* Affiche une ligne entre les points spécifiés */
 
 void linev(vertex2d * A, vertex2d * B, u8 color)
@@ -56,7 +58,6 @@ void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
 }
 
 /******************************************************************************/
-
 /* Affiche une ligne horizontale entre les points spécifiés */
 
 void hline(u32 x1, u32 x2, u32 y, u8 color)
@@ -70,7 +71,6 @@ void hline(u32 x1, u32 x2, u32 y, u8 color)
 }
 
 /******************************************************************************/
-
 /* Affiche un triangle rempli entre les points spécifiés */
 
 void trianglefilled(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
@@ -143,7 +143,6 @@ void swapvertex(vertex2d * A, vertex2d * B)
 }
 
 /******************************************************************************/
-
 /* Affiche un triangle  entre les points spécifiés */
 
 void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)

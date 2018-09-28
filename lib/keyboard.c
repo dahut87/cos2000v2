@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #include "interrupts.h"
 #include "types.h"
 #include "asm.h"
@@ -14,7 +17,6 @@ static u8 ptrascii = 0;
 static u16 kbdstatus, breakcode;
 
 /******************************************************************************/
-
 /* Tables clavier */
 
 static const u8 set1_normal[] = {
@@ -116,10 +118,9 @@ u8 *getstring(u8 * temp)
 }
 
 /******************************************************************************/
-
 /* Fonction qui attend l'appuie d'une touche générant un code ASCII puis le retourne */
 
-u8 waitascii()
+u8 waitascii(void)
 {
 	u8 oldptrascii = ptrascii;
 	while ((oldptrascii == ptrascii)) ;
@@ -127,7 +128,6 @@ u8 waitascii()
 }
 
 /******************************************************************************/
-
 /* Envoi d'une commande vers le contrôleur de clavier */
 
 void outkbd(u8 port, u8 data)
@@ -147,10 +147,9 @@ void outkbd(u8 port, u8 data)
 }
 
 /******************************************************************************/
-
 /* Redemarre l'ordinateur */
 
-void reboot()
+void reboot(void)
 {
 	u8 temp;
 	cli();
@@ -169,7 +168,6 @@ void reboot()
 }
 
 /******************************************************************************/
-
 /* Converti un scancode vers une code ASCII */
 
 unsigned convert(u32 keypressed)
@@ -321,10 +319,9 @@ unsigned convert(u32 keypressed)
 }
 
 /******************************************************************************/
-
 /* Handler d'interruption IRQ 1 pour le clavier */
 
-void keyboard()
+void keyboard(void)
 {
 	cli();
 	pushf();

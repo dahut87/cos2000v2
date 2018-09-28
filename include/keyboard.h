@@ -1,3 +1,6 @@
+/*******************************************************************************/
+/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/*                                                                             */
 #define	SCAN_CTRL		0x1D	
 #define	SCAN_LEFTSHIFT		0x2A
 #define	SCAN_RIGHTSHIFT	0x36
@@ -28,8 +31,8 @@
 #define	STATUS_NUM	0x2000	
 #define	STATUS_SCRL	0x4000	
 
-void keyboard();
-void reboot();
+void keyboard(void);
+void reboot(void);
 void outkbd(u8 port, u8 data);
-u8 waitascii();
+u8 waitascii(void);
 u8* getstring(u8* temp);
