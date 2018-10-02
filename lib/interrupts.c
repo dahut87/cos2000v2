@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "video.h"
 #include "gdt.h"
+#include "system.h"
 
 #define IDT_SIZE		256	/* nombre de descripteurs */
 
@@ -15,6 +16,16 @@ static struct idtr idtreg;
 
 /* table de IDT */
 static idtdes idt[IDT_SIZE];
+
+static u32 retry_address;
+
+/******************************************************************************/
+/* Initialise la reprise après erreur */
+
+void initretry(u32 address)
+{
+    retry_address=address;
+}
 
 /******************************************************************************/
 /* Initialise le controleur d'interruption 8259A */
@@ -130,6 +141,9 @@ void cpuerror(const u8 * src)
 	print("\033[31m***** ERREUR CPU ****\r\n -");
 	print(src);
 	dump_regs();
+	print("<Appuyer une touche pour continuer>\r\n");
+    waitascii();
+    initselectors(retry_address);
 	/*while (true) {
 		nop();
 	}*/

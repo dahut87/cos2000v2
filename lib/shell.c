@@ -13,15 +13,16 @@
 #include "multiboot2.h"
 
 static command commands[] = {
-	{"REBOOT", "", &rebootnow},
-	{"CLEAR", "", &clear},
-	{"MODE", "", &mode},
-	{"DETECTCPU", "", &detectcpu},
-	{"TEST2D", "", &test2d},
-	{"REGS", "", &dump_regs},
-	{"GDT", "", &readgdt},
-	{"IDT", "", &readidt},
-	{"INFO", "", &info}
+	{"REBOOT"    , "", &rebootnow},
+	{"CLEAR"     , "", &clear},
+	{"MODE"      , "", &mode},
+	{"DETECTCPU" , "", &detectcpu},
+	{"TEST2D"    , "", &test2d},
+	{"REGS"      , "", &dump_regs},
+	{"GDT"       , "", &readgdt},
+	{"IDT"       , "", &readidt},
+	{"INFO"      , "", &info},
+    {"PAGEFAULT" , "", &pagefault}
 };
 
 /*******************************************************************************/
@@ -56,7 +57,15 @@ void shell()
 }
 
 /*******************************************************************************/
+/* Génère une erreur de page à l'adresse 0xE0000000 */
+int pagefault()
+{
+	print("*** Creation d'une erreur de page ***\r\n");
+    asm("mov $0x66666666, %eax \n \
+		mov %eax,0xE0000000");
+}
 
+/*******************************************************************************/
 /* Information sur le démarrage */
 int info()
 {
@@ -74,7 +83,6 @@ int regs()
 }
 
 /*******************************************************************************/
-
 /* Change le mode */
 int mode()
 {
@@ -190,10 +198,10 @@ int readgdt()
 			    ("\r\nSelecteur %hX: base:%X limit:%X access:%hX flags:%hX\r\n  -> ",
 			     index * sizeof(gdtdes), base, limit, acces, flags);
 			if ((acces >> 4) & 1 == 1)
-				print("Systeme ");
+				print("System ");
 			else {
 				if (acces & 1 == 1)
-					print("Acces ");
+					print("Access ");
 			}
 			if ((acces >> 3) & 1 == 1) {
 				print("Code.");
@@ -215,9 +223,9 @@ int readgdt()
 			if (flags & 1 == 1)
 				print("Dispo ");
 			if ((flags >> 2) & 1 == 1)
-				print("32 bits ");
+				print("32bits ");
 			else
-				print("16 bits ");
+				print("16bits ");
 			if ((flags >> 3) & 1 == 1)
 				print("4k ");
 			else

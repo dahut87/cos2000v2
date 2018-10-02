@@ -81,6 +81,7 @@ int main(u32 magic, u32 addr)
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
 	initidt();
 	initpic();
+	initretry(&&retry);
 	sti();
 	ok();
 
@@ -107,10 +108,6 @@ int main(u32 magic, u32 addr)
 	initsyscall();
 	ok();
 
-	print(" -Create a double fault error");
-    asm("mov $0x66666666, %eax \n \
-		mov %eax,0xE0000000");
-	error();
-
+retry:
 	shell();
 }

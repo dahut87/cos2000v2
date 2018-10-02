@@ -17,3 +17,4 @@ int mode();
 int clear();
 int dump_regs();
 int info();
+int pagefault();
