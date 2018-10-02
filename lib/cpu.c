@@ -3,7 +3,6 @@
 /*                                                                             */
 #include "types.h"
 #include "cpu.h"
-#include "cpuid.h"
 #include "memory.h"
 #include "string.h"
 #include "asm.h"
@@ -127,19 +126,20 @@ u8 getcpuinfos(cpuinfo * proc)
 }
 
 /******************************************************************************/
-/* Retourne un élément de la pile */
+/* Retourne la tête de pile */
 
-u32 viewstack(u32 pointer)
+u32 getESP(void)
 {
 	u32 stack = 0;
- asm("movl %[a1],%%ebp;" "movl (%%ebp), %[a1] ;": [result] "=r"(stack): [a1] "r"(pointer):"%ebp");
+    asm("movl %%esp,%[result];": [result] "=r"(stack));
 	return stack;
 }
+
 
 /******************************************************************************/
 /* Affiche les registres CPU */
 
-void dump_regs(void)
+void dump_regs(exception_stack *stack)
 {
 	cli();
 	u32 eax = 0;
@@ -150,6 +150,7 @@ void dump_regs(void)
 	u32 edi = 0;
 	u32 ebp = 0;
 	u32 esp = 0;
+	u32 eip = 0;
 	u16 cs = 0;
 	u16 ds = 0;
 	u16 es = 0;
@@ -167,11 +168,20 @@ void dump_regs(void)
 [f1] "=m"(edi),[g1] "=m"(esp),[h1] "=m"(ebp),[i1] "=m"(cs),[j1] "=m"(ds),
 [k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss),[o1] "=m"(cr0),
 [p1] "=m"(cr2),[q1] "=m"(cr3),[r1] "=m"(cr4));
-
+    if (stack!=0) {
+        eip=stack->eip;
+        eflags=stack->eflags;
+        cs=stack->cs;
+        esp=stack;
+        printf("\033[0m");
+    }
+    else
+    printf("\033[1mATTENTION PAS DE PILE ! REGISTRES INCERTAINS\r\n");
 	printf("EAX=%X EBX=%X ECX=%X EDX=%X\r\n", eax, ebx, ecx, edx);
 	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n", esi, edi, esp, ebp);
+	printf("EIP=%X\r\n", eip);
 	printf
-	    ("\033[1m CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\033[0m\r\n",
+	    ("CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\r\n",
 	     (u32) cs, (u32) ds, (u32) es, (u32) fs, (u32) gs, (u32) ss);
 	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n", cr0, cr2, cr3,
 	       cr4);
@@ -213,16 +223,15 @@ void dump_regs(void)
 
 	printf("STACK\r\n");
 	u32 i = 0;
-	for (u32 pointer = esp; pointer < 0x400000; pointer += 4) {
-		if (pointer == ebp)
-			print("\033[1m\033[31m");
-		printf("+%d:%X\t\t%X\033[0m\033[37m\r\n", i++, pointer,
-		       viewstack(pointer));
-		if (i > 25) {
+	for (u32 *pointer = esp; pointer < KERNEL_STACK_ADDR; pointer += 4) {
+		printf("+%d:%X\t\t%X\r\n", i++, pointer,
+		       (u32)(*pointer));
+		if (i > 5) {
 			print("...\r\n");
 			break;
 		}
 	}
+    printf("\033[0m");
 	sti();
 }
 /*******************************************************************************/

@@ -15,6 +15,6 @@ int readgdt();
 int detectcpu();
 int mode();
 int clear();
-int dump_regs();
+int regs();
 int info();
 int pagefault();

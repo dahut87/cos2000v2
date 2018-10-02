@@ -25,7 +25,7 @@ Sans système d'exploitation votre ordinateur est inopérant: c'est une boite vi
 
 COS2000 n'a pas pour but d'être utilisé en exploitation, c'est un système en cours de
 développement. Vous pouvez néanmoins l'utiliser sur un ordinateur physique ou une machine virtuelle
-afin de voir le fonctionnement d'un système rudimentatire. Voir compilation de COS2000...
+afin de voir le fonctionnement d'un système d'exploitation rudimentatire. Voir compilation de COS2000...
 
 #### Sur quel ordinateur fonctionne t'il ?
 
@@ -119,9 +119,9 @@ Pour tester l'OS en émulation taper donc la commande ```make test``` qui compil
 
 Il faut d'abord copier l'image sur une clé (Attention l'opération effacera le contenu de la clé) :
 
-```dd if=./final/harddisk.img.final of=/dev/sdx bs=1M``` (ou sdx est votre périphérique)
+```sudo dd if=./final/harddisk.img.final of=/dev/sdx bs=1M``` (ou sdx est votre périphérique)
 
-Bootez sur votre clé en mode bios (legacy). Il est possible que des dysfonctionnement apparaissent sur des machine x86_64 (en cours de résolution).
+Bootez sur votre clé en mode bios (legacy).
 
 ##### Usage de COS2000
 
@@ -136,6 +136,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * GDT affiche la table des descripteurs,
 * IDT affiche la table des interruptions,
 * INFO affiche des informations issues de GRUB.
+* PAGEFAULT génère une erreur de pagination. 
 
 ![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/28-09-2018.png)
 

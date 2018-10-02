@@ -57,6 +57,8 @@ view:
 
 debug: debug-system
 
+redebug: littleclean debug-system
+
 debug64: debug-system64
 
 debug-boot: all harddisk qemu-debug

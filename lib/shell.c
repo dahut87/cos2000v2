@@ -18,7 +18,7 @@ static command commands[] = {
 	{"MODE"      , "", &mode},
 	{"DETECTCPU" , "", &detectcpu},
 	{"TEST2D"    , "", &test2d},
-	{"REGS"      , "", &dump_regs},
+	{"REGS"      , "", &regs},
 	{"GDT"       , "", &readgdt},
 	{"IDT"       , "", &readidt},
 	{"INFO"      , "", &info},
@@ -60,7 +60,7 @@ void shell()
 /* Génère une erreur de page à l'adresse 0xE0000000 */
 int pagefault()
 {
-	print("*** Creation d'une erreur de page ***\r\n");
+	print("Creation d'une erreur de page !\r\n");
     asm("mov $0x66666666, %eax \n \
 		mov %eax,0xE0000000");
 }
@@ -78,7 +78,7 @@ int info()
 
 int regs()
 {
-	dump_regs();
+	dump_regs(0x0);
 	return 0;
 }
 

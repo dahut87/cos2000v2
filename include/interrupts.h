@@ -3,6 +3,9 @@
 /*                                                                             */
 #include "types.h"
 
+#ifndef _INTERRUPTS
+#define _INTERRUPTS
+
 #define PIC1_CMD    0x20 /*PIC 8259A Commandes n°1 */
 #define PIC1_DATA   0x21 /*PIC 8259A Données n°1 */
 #define PIC2_CMD    0xa0 /*PIC 8259A Commandes n°2 */
@@ -34,6 +37,20 @@
 #define TIMER_FREQ     1193180 /* fréquence pour timer dans un PC ou AT */
 #define HZ             100  /* Fréquence d'horloge (ajutste logiciellement sur IBM-PC) */
 
+/* exception pile */
+typedef struct exception_stack {
+    u32 error_code;
+    u32 eip;
+    u32 cs;
+    u32 eflags;
+} exception_stack __attribute__ ((packed));
+/* sans code erreur */
+typedef struct exception_stack_noerror {
+    u32 eip;
+    u32 cs;
+    u32 eflags;
+} exception_stack_noerror __attribute__ ((packed));
+
 
 /* descripteur de segment */
 typedef struct idtdes {
@@ -55,8 +72,7 @@ struct idtr {
  void initpic(void);
  void enableirq(u8 irq);
  void disableirq(u8 irq);
- void cpuerror(const u8 *src);
- 
+ void cpuerror(const u8 * src, const exception_stack *stack);
 
- 
+#endif
 

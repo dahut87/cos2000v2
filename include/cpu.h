@@ -1,6 +1,8 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
+#include "interrupts.h"
+
 typedef struct cpuinfo
 {	
 u8 vendor[13];
@@ -37,6 +39,9 @@ bool sse42;
 bool apic2;
 } cpuinfo  __attribute__ ((packed));	
 
-
-u8 getcpuinfos(cpuinfo *inf); 
+bool cansetflag (u32 flag);
+void cpuid(u32 op, u32 *eax, u32 *ebx,u32 *ecx, u32 *edx);
+u8 getcpuinfos(cpuinfo *inf);
+u32 getESP(void);
+void dump_regs(exception_stack *stack);
 
