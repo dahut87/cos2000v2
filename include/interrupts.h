@@ -20,11 +20,11 @@
 #define ICW4_BUF_MASTER 0x0C    /* mode/master avec tampon*/
 #define ICW4_SFNM       0x10    /* Complètement lié ou non */
 
-#define INTGATE 0x8E00  /* utilise pour gerer les interruptions */
-#define TRAPGATE 0x8F00 /* utilise pour faire des appels systemes */
-#define TASKGATE 0x8500 /* utilise pour commuter des taches */
-#define CALLGATE 0x8C00 /* utilise pour appeler du code */
-#define LDTDES 0x8200 /* utilise pour pointer une LDT */
+#define INTGATE     0x8E00  /* utilise pour gerer les interruptions */
+#define TRAPGATE    0x8F00 /* utilise pour faire des appels systemes */
+#define TASKGATE    0x8500 /* utilise pour commuter des taches */
+#define CALLGATE    0x8C00 /* utilise pour appeler du code */
+#define LDTDES      0x8200 /* utilise pour pointer une LDT */
 
 /* 00-11-010-0 : Compteur 0 - LSB puis MSB - generateur taux - binaire */
 #define TIMER0         0x40 /* port E/S pour le timer canal 0 */

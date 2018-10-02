@@ -6,16 +6,15 @@
 #include "asm.h"
 #include "memory.h"
 #include "video.h"
+#include "gdt.h"
 
-#define SIZEIDT		256	/* nombre de descripteurs */
-
-#define BASEIDT		0x00000000	/* addr de la IDT */
+#define IDT_SIZE		256	/* nombre de descripteurs */
 
  /* registre idt */
 static struct idtr idtreg;
 
 /* table de IDT */
-static idtdes idt[256];
+static idtdes idt[IDT_SIZE];
 
 /******************************************************************************/
 /* Initialise le controleur d'interruption 8259A */
@@ -131,9 +130,9 @@ void cpuerror(const u8 * src)
 	print("\033[31m***** ERREUR CPU ****\r\n -");
 	print(src);
 	dump_regs();
-	while (true) {
+	/*while (true) {
 		nop();
-	}
+	}*/
 }
 
 /******************************************************************************/
@@ -492,53 +491,53 @@ void irq15()
 void initidt(void)
 {
 	u16 i;
-	putidt((u32) exception0, 0x20, INTGATE, 0);
-	putidt((u32) exception1, 0x20, INTGATE, 1);
-	putidt((u32) exception2, 0x20, INTGATE, 2);
-	putidt((u32) exception3, 0x20, INTGATE, 3);
-	putidt((u32) exception4, 0x20, INTGATE, 4);
-	putidt((u32) exception5, 0x20, INTGATE, 5);
-	putidt((u32) exception6, 0x20, INTGATE, 6);
-	putidt((u32) exception7, 0x20, INTGATE, 7);
-	putidt((u32) exception8, 0x20, INTGATE, 8);
-	putidt((u32) exception9, 0x20, INTGATE, 9);
-	putidt((u32) exception10, 0x20, INTGATE, 10);
-	putidt((u32) exception11, 0x20, INTGATE, 11);
-	putidt((u32) exception12, 0x20, INTGATE, 12);
-	putidt((u32) exception13, 0x20, INTGATE, 13);
-	putidt((u32) exception14, 0x20, INTGATE, 14);
-	putidt((u32) exception15, 0x20, INTGATE, 15);
-	putidt((u32) exception16, 0x20, INTGATE, 16);
-	putidt((u32) exception17, 0x20, INTGATE, 17);
-	putidt((u32) exception18, 0x20, INTGATE, 18);
+	putidt((u32) exception0, SEL_KERNEL_CODE, INTGATE, 0);
+	putidt((u32) exception1, SEL_KERNEL_CODE, INTGATE, 1);
+	putidt((u32) exception2, SEL_KERNEL_CODE, INTGATE, 2);
+	putidt((u32) exception3, SEL_KERNEL_CODE, INTGATE, 3);
+	putidt((u32) exception4, SEL_KERNEL_CODE, INTGATE, 4);
+	putidt((u32) exception5, SEL_KERNEL_CODE, INTGATE, 5);
+	putidt((u32) exception6, SEL_KERNEL_CODE, INTGATE, 6);
+	putidt((u32) exception7, SEL_KERNEL_CODE, INTGATE, 7);
+	putidt((u32) exception8, SEL_KERNEL_CODE, INTGATE, 8);
+	putidt((u32) exception9, SEL_KERNEL_CODE, INTGATE, 9);
+	putidt((u32) exception10, SEL_KERNEL_CODE, INTGATE, 10);
+	putidt((u32) exception11, SEL_KERNEL_CODE, INTGATE, 11);
+	putidt((u32) exception12, SEL_KERNEL_CODE, INTGATE, 12);
+	putidt((u32) exception13, SEL_KERNEL_CODE, INTGATE, 13);
+	putidt((u32) exception14, SEL_KERNEL_CODE, INTGATE, 14);
+	putidt((u32) exception15, SEL_KERNEL_CODE, INTGATE, 15);
+	putidt((u32) exception16, SEL_KERNEL_CODE, INTGATE, 16);
+	putidt((u32) exception17, SEL_KERNEL_CODE, INTGATE, 17);
+	putidt((u32) exception18, SEL_KERNEL_CODE, INTGATE, 18);
 	for (i = 19; i < 32; i++) {
 		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
-	putidt((u32) irq0, 0x20, INTGATE, 32);
-	putidt((u32) irq1, 0x20, INTGATE, 33);
-	putidt((u32) irq2, 0x20, INTGATE, 34);
-	putidt((u32) irq3, 0x20, INTGATE, 35);
-	putidt((u32) irq4, 0x20, INTGATE, 36);
-	putidt((u32) irq5, 0x20, INTGATE, 37);
-	putidt((u32) irq6, 0x20, INTGATE, 38);
-	putidt((u32) irq7, 0x20, INTGATE, 39);
+	putidt((u32) irq0, SEL_KERNEL_CODE, INTGATE, 32);
+	putidt((u32) irq1, SEL_KERNEL_CODE, INTGATE, 33);
+	putidt((u32) irq2, SEL_KERNEL_CODE, INTGATE, 34);
+	putidt((u32) irq3, SEL_KERNEL_CODE, INTGATE, 35);
+	putidt((u32) irq4, SEL_KERNEL_CODE, INTGATE, 36);
+	putidt((u32) irq5, SEL_KERNEL_CODE, INTGATE, 37);
+	putidt((u32) irq6, SEL_KERNEL_CODE, INTGATE, 38);
+	putidt((u32) irq7, SEL_KERNEL_CODE, INTGATE, 39);
 	for (i = 40; i < 96; i++) {
 		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
-	putidt((u32) irq8, 0x20, INTGATE, 96);
-	putidt((u32) irq9, 0x20, INTGATE, 97);
-	putidt((u32) irq10, 0x20, INTGATE, 98);
-	putidt((u32) irq11, 0x20, INTGATE, 99);
-	putidt((u32) irq12, 0x20, INTGATE, 100);
-	putidt((u32) irq13, 0x20, INTGATE, 101);
-	putidt((u32) irq14, 0x20, INTGATE, 102);
-	putidt((u32) irq15, 0x20, INTGATE, 103);
-	for (i = 104; i < SIZEIDT; i++) {
+	putidt((u32) irq8, SEL_KERNEL_CODE, INTGATE, 96);
+	putidt((u32) irq9, SEL_KERNEL_CODE, INTGATE, 97);
+	putidt((u32) irq10, SEL_KERNEL_CODE, INTGATE, 98);
+	putidt((u32) irq11, SEL_KERNEL_CODE, INTGATE, 99);
+	putidt((u32) irq12, SEL_KERNEL_CODE, INTGATE, 100);
+	putidt((u32) irq13, SEL_KERNEL_CODE, INTGATE, 101);
+	putidt((u32) irq14, SEL_KERNEL_CODE, INTGATE, 102);
+	putidt((u32) irq15, SEL_KERNEL_CODE, INTGATE, 103);
+	for (i = 104; i < IDT_SIZE; i++) {
 		putidt((u32) interruption, 0x20, TRAPGATE, i);
 	}
 	/* initialise le registre idt */
-	idtreg.limite = SIZEIDT * 8;
-	idtreg.base = BASEIDT;
+	idtreg.limite = IDT_SIZE * 8;
+	idtreg.base = IDT_ADDR;
 	/* recopie de la IDT a son adresse */
 	memcpy(&idt, (u8 *) idtreg.base, idtreg.limite, 1);
 	/* chargement du registre IDTR */

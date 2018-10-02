@@ -4,6 +4,7 @@
 #include <types.h>
 #include <gdt.h>
 #include <asm.h>
+#include <memory.h>
 
  /* 32bit SYSENTER instruction entry.
   *
@@ -33,7 +34,7 @@ void sysenter_handler(void)
 void initsyscall(void)
 {
 	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
-	wrmsr(0x175, STACK_OFFSET, 0x0);
+	wrmsr(0x175, KERNEL_STACK_ADDR, 0x0);
 	wrmsr(0x176, &sysenter_handler, 0x0);
 }
 

@@ -173,7 +173,7 @@ int readgdt()
 	gdtdes *desc;
 	struct gdtr gdtreg;
 	sgdt(&gdtreg);
-	printf("Information sur la LGDT\r\nAdresse:%X Limite:%hX", gdtreg.base,
+	printf("Information sur la GDT\r\nAdresse:%X Limite:%hX", gdtreg.base,
 	       (u32) gdtreg.limite);
 	desc = gdtreg.base;
 	for (index = 0; index < gdtreg.limite / sizeof(gdtdes); index++) {
@@ -205,7 +205,7 @@ int readgdt()
 					print("Normal ");
 			} else {
 				print("Data.");
-				if ((acces >> 3) & 1 == 1)
+				if ((acces >> 2) & 1 == 1)
 					print("Down ");
 				else
 					print("up ");

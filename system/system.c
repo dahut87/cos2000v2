@@ -74,6 +74,10 @@ int main(u32 magic, u32 addr)
 	inittr();
 	ok();
 
+    print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
+	initpaging();
+	ok();
+
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
 	initidt();
 	initpic();
@@ -102,6 +106,11 @@ int main(u32 magic, u32 addr)
 	print(" -Installation des appels systemes utilisateur");
 	initsyscall();
 	ok();
+
+	print(" -Create a double fault error");
+    asm("mov $0x66666666, %eax \n \
+		mov %eax,0xE0000000");
+	error();
 
 	shell();
 }

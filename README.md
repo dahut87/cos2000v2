@@ -109,9 +109,21 @@ Commandes de compilation de COS2000
 * ```make test64``` lance l'émulation QEMU en 64 bits sur disque dur UEFI
 * ```make clean``` supprime les fichers compilés
 
-Pour tester fait donc un simple ```make test``` qui compilera et émulera le système directement.
-
 #### Utilisation
+
+##### Sur un ordinateur émulé
+
+Pour tester l'OS en émulation taper donc la commande ```make test``` qui compilera avant de lancer Qemu.
+
+##### Sur un ordinateur physique
+
+Il faut d'abord copier l'image sur une clé (Attention l'opération effacera le contenu de la clé) :
+
+```dd if=./final/harddisk.img.final of=/dev/sdx bs=1M``` (ou sdx est votre périphérique)
+
+Bootez sur votre clé en mode bios (legacy). Il est possible que des dysfonctionnement apparaissent sur des machine x86_64 (en cours de résolution).
+
+##### Usage de COS2000
 
 Pour l'instant quelques commandes seulement sont disponibles:
 

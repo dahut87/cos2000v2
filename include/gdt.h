@@ -1,19 +1,43 @@
 #include <types.h>
 
 /* Ordre imposé par SYSENTER */
-#define	SEL_KERNEL_CODE 0x8 /* selecteur code du kernel */
-#define	SEL_KERNEL_STACK 0x10 /* selecteur pile du kernel */
-#define	SEL_USER_CODE 0x18 /* selecteur code utilisateur */
-#define	SEL_USER_STACK 0x20 /* selecteur pile utilisateur */
-#define	SEL_KERNEL_DATA 0x28 /* selecteur data du kernel */
-#define	SEL_USER_DATA 0x30 /* selecteur data utilisateur */
+#define	SEL_KERNEL_CODE  0x8    /* Selecteur code du kernel */
+#define	SEL_KERNEL_STACK 0x10  /* Selecteur pile du kernel */
+#define	SEL_USER_CODE    0x18     /* Selecteur code utilisateur */
+#define	SEL_USER_STACK   0x20    /* Selecteur pile utilisateur */
+#define	SEL_KERNEL_DATA  0x28   /* Selecteur data du kernel */
+#define	SEL_USER_DATA    0x30     /* Selecteur data utilisateur */
 
-#define	SEL_TSS 0x38 /* selecteur TSR */
+#define	SEL_TSS 0x38 /* Selecteur TSR */
 
-#define	STACK_OFFSET 0xFFFF /* adresse de la pile du kernel */
+#define GDT_SIZE		0x8	/* Nombre de descripteurs */
 
-#define SIZEGDT		0x8	/* nombre de descripteurs */
-#define BASEGDT		0x00000800	/* addr de la GDT */
+/* Drapeau des descripteurs GDT  */ 
+#define GRANULARITY_4K  0b00001000  /* Granularité alignement 4096 octet*/
+#define GRANULARITY_1B  0b00000000  /* Granularité alignement 1 octet */
+#define OPSIZE_32B      0b00000100  /* Taille opérandes 32 bits*/
+#define OPSIZE_16B      0b00000000  /* Taille opérandes 16 bits*/
+#define SYS_AVAILABLE   0b00000001  /* Disponible pour le système (à définir)*/
+
+#define SEG_ACCESSED    0b00000001  /* Segment accédé (code ou data) */
+
+#define SEG_DATA        0b00000000  /* Segment de données */
+#define SEG_CODE        0b00001000  /* Segment de données */
+
+#define SEG_READ_WRITE  0b00000010  /* Segment lecture-ecriture (data) */
+#define SEG_EXPAND_DOWN 0b00000100  /* Segment avec expand-down (data) */
+
+#define SEG_READ        0b00000010  /* Segment lecture          (code) */
+#define SEG_CONFORMING  0b00000100  /* Segment conforming       (code) */
+
+#define SEG_PRESENT     0b10000000  /* Segment défini (obligatoire) */
+
+#define SEG_RING0       0b00000000  /* Segment anneau 0 */
+#define SEG_RING1       0b00100000  /* Segment anneau 0 */
+#define SEG_RING2       0b01000000  /* Segment anneau 0 */
+#define SEG_RING3       0b01100000  /* Segment anneau 0 */
+
+#define SEG_NORMAL      0b00010000  /* Segment normal pile/data/code (0 pour système) */
 
 typedef struct gdtdes {
     u16 lim0_15;    
