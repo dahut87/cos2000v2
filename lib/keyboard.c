@@ -218,7 +218,9 @@ unsigned convert(u32 keypressed)
 	}
 
 	else if (key == SCAN_F9) {
-		dump_regs();
+        save_stack dump;
+        dump_cpu(&dump);
+        show_cpu(&dump);
 	}
 
 	else if (key == SCAN_F10) {

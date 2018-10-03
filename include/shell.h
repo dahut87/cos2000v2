@@ -17,4 +17,6 @@ int mode();
 int clear();
 int regs();
 int info();
-int pagefault();
+int pgfaultr();
+int pgfaultw();
+int divzerr();

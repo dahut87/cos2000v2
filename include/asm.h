@@ -41,6 +41,10 @@
 
 #define ltr(tss) asm volatile ("ltr %%ax":: "a" (tss))
 
+#define str(tss) asm volatile ("str %%ax;\
+                                mov %%ax,%0":: "m" (tss))
+
+
 /******************************************************************************/
 
 #define outb(port,value) \

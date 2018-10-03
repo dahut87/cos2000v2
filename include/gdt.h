@@ -77,3 +77,11 @@ typedef struct tss {
 void inittr(void);
 void initgdt(u32 offset);
 void makegdtdes(u32 base, u32 limite, u8 acces, u8 flags, gdtdes *desc);
+u32 getdesbase(u16 sel);
+u8 getdestype(u16 sel);
+u32 getdessize(u16 sel);
+u32 getdeslimit(u16 sel);
+bool isdesvalid(u16 sel);
+u8 getdesbit3(u16 sel);
+u32 getdesdpl(u16 sel);
+u16 getdesalign(u16 sel);

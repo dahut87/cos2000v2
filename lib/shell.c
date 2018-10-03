@@ -22,7 +22,10 @@ static command commands[] = {
 	{"GDT"       , "", &readgdt},
 	{"IDT"       , "", &readidt},
 	{"INFO"      , "", &info},
-    {"PAGEFAULT" , "", &pagefault}
+    {"PGFAULTW" , "", &pgfaultw},
+    {"PGFAULTR" , "", &pgfaultr},
+    {"DIVZERR" , "", &divzerr}
+
 };
 
 /*******************************************************************************/
@@ -57,12 +60,27 @@ void shell()
 }
 
 /*******************************************************************************/
+/* Génère une erreur de division par 0 */
+int divzerr()
+{
+	print("Creation d'une erreur de division par 0 !\r\n");
+    asm("movl $0x0,%ecx; divl %ecx");
+}
+
+/*******************************************************************************/
 /* Génère une erreur de page à l'adresse 0xE0000000 */
-int pagefault()
+int pgfaultw()
 {
 	print("Creation d'une erreur de page !\r\n");
-    asm("mov $0x66666666, %eax \n \
-		mov %eax,0xE0000000");
+    asm("movl $0x66666666,(0xE0000000)");
+}
+
+/*******************************************************************************/
+/* Génère une erreur de page à l'adresse 0xD0000000 */
+int pgfaultr()
+{
+	print("Creation d'une erreur de page !\r\n");
+    asm("movl (0xD0000000),%eax");
 }
 
 /*******************************************************************************/
@@ -78,7 +96,9 @@ int info()
 
 int regs()
 {
-	dump_regs(0x0);
+    save_stack dump;
+    dump_cpu(&dump);
+    show_cpu(&dump);
 	return 0;
 }
 

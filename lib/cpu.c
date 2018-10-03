@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "string.h"
 #include "asm.h"
+#include "gdt.h"
 
 /* Technologies supportées */
 
@@ -135,103 +136,99 @@ u32 getESP(void)
 	return stack;
 }
 
+/******************************************************************************/
+/* Fixe la tête de pile */
+
+u32 setESP(u32 stack)
+{
+    asm("movl %[param],%%esp;": [param] "=r"(stack));
+}
+
+/******************************************************************************/
+/* Sauvegarde les registres CPU */
+
+void dump_cpu(save_stack *stack)
+{
+save_stack new;
+asm("   addl $0x50,%%esp \n \
+        pushl %%eax \n \
+        pushl %%ebx \n \
+        pushl %%ecx \n \
+        pushl %%edx \n \
+        pushl %%esi \n \
+        pushl %%edi \n \
+        pushl %%ebp \n \
+        pushl %%esp \n \
+        pushl %%cs \n \
+        pushl 0x0 \n \
+        pushl %%ds \n \
+        pushl %%es \n \
+        pushl %%fs \n \
+        pushl %%gs \n \
+        pushl %%ss \n \
+        pushf \n \
+        mov %%cr0, %%ebx \n \
+        pushl %%ebx\n \
+        mov %%cr2, %%ebx \n \
+        pushl %%ebx\n \
+        mov %%cr3, %%ebx \n \
+        pushl %%ebx\n \
+        mov %%cr4, %%ebx \n \
+        pushl %%ebx":::);
+    memcpy(&new, stack, sizeof(save_stack), 1);
+}
 
 /******************************************************************************/
 /* Affiche les registres CPU */
 
-void dump_regs(exception_stack *stack)
+void show_cpu(save_stack *stack)
 {
-	cli();
-	u32 eax = 0;
-	u32 ebx = 0;
-	u32 ecx = 0;
-	u32 edx = 0;
-	u32 esi = 0;
-	u32 edi = 0;
-	u32 ebp = 0;
-	u32 esp = 0;
-	u32 eip = 0;
-	u16 cs = 0;
-	u16 ds = 0;
-	u16 es = 0;
-	u16 fs = 0;
-	u16 gs = 0;
-	u16 ss = 0;
-	u32 cr0 = 0;
-	u32 cr1 = 0;
-	u32 cr2 = 0;
-	u32 cr3 = 0;
-	u32 cr4 = 0;
-	u32 eflags = 0;
- asm("movl %%eax, %[a1] ;" "movl %%ebx, %[b1] ;" "movl %%ecx, %[c1] ;" "movl %%edx, %[d1] ;" "movl %%esi, %[e1] ;" "movl %%edi, %[f1] ;" "movl %%esp, %[g1] ;" "movl %%ebp, %[h1] ;" "movw %%cs, %[i1] ;" "movw %%ds, %[j1] ;" "movw %%es, %[k1] ;" "movw %%fs, %[l1] ;" "movw %%gs, %[m1] ;" "movw %%ss, %[n1] ;" "mov %%cr0, %%eax ;" "mov %%eax, %[o1] ;" "mov %%cr2, %%eax ;" "mov %%eax, %[p1] ;" "mov %%cr3, %%eax ;" "mov %%eax, %[q1] ;" "mov %%cr4, %%eax ;" "mov %%eax,%[r1] ;":
-[a1] "=m"(eax),[b1] "=m"(ebx),[c1] "=m"(ecx),[d1] "=m"(edx),[e1] "=m"(esi),
-[f1] "=m"(edi),[g1] "=m"(esp),[h1] "=m"(ebp),[i1] "=m"(cs),[j1] "=m"(ds),
-[k1] "=m"(es),[l1] "=m"(fs),[m1] "=m"(gs),[n1] "=m"(ss),[o1] "=m"(cr0),
-[p1] "=m"(cr2),[q1] "=m"(cr3),[r1] "=m"(cr4));
-    if (stack!=0) {
-        eip=stack->eip;
-        eflags=stack->eflags;
-        cs=stack->cs;
-        esp=stack;
-        printf("\033[0m");
-    }
-    else
-    printf("\033[1mATTENTION PAS DE PILE ! REGISTRES INCERTAINS\r\n");
-	printf("EAX=%X EBX=%X ECX=%X EDX=%X\r\n", eax, ebx, ecx, edx);
-	printf("ESI=%X EDI=%X ESP=%X EBP=%X\r\n", esi, edi, esp, ebp);
-	printf("EIP=%X\r\n", eip);
-	printf
-	    ("CS=%hX  DS=%hX  ES=%hX  FS=%hX  GS=%hX  SS=%hX\r\n",
-	     (u32) cs, (u32) ds, (u32) es, (u32) fs, (u32) gs, (u32) ss);
-	printf("CR0=%X CR1=N/A       CR2=%X CR3=%X CR4=%X\r\n", cr0, cr2, cr3,
-	       cr4);
-
- asm("pushf      ;" "pop %[f1] ;":
-[f1] "=m"(eflags));
-
-	printf("EFLAGS=%X", eflags);
-
-	if (eflags & (1 << 0))	// Carry
-		printf(" (C1");
-	else
-		printf(" (C0");
-
-	if (eflags & (1 << 2))	// Parity
-		printf(" P1");
-	else
-		printf(" P0");
-
-	if (eflags & (1 << 4))	// Adjust
-		printf(" A1");
-	else
-		printf(" A0");
-
-	if (eflags & (1 << 6))	// Zero
-		printf(" Z1");
-	else
-		printf(" Z0");
-
-	if (eflags & (1 << 7))	// Sign
-		printf(" S1");
-	else
-		printf(" S0");
-
-	if (eflags & (1 << 11))	// Overflow
-		printf(" O1)\r\n");
-	else
-		printf(" O0)\r\n");
+	printf("EAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
+	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
+    (stack->eflags & (1 <<11)) ? 'O':'-',
+    (stack->eflags & (1 <<10)) ? 'D':'-',
+    (stack->eflags & (1 << 9)) ? 'I':'-',
+    (stack->eflags & (1 << 8)) ? 'T':'-',
+    (stack->eflags & (1 << 7)) ? 'S':'-',
+    (stack->eflags & (1 << 6)) ? 'Z':'-',
+    (stack->eflags & (1 << 4)) ? 'A':'-',
+    (stack->eflags & (1 << 2)) ? 'P':'-',
+    (stack->eflags & (1 << 0)) ? 'C':'-');
+	printf("CS =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->cs,getdesbase(stack->cs),getdeslimit(stack->cs),getdesdpl(stack->cs),getdestype(stack->cs),getdessize(stack->cs),getdesbit3(stack->cs),getdesbit2(stack->cs),getdesbit1(stack->cs),getdesalign(stack->cs));
+	printf("DS =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->ds,getdesbase(stack->ds),getdeslimit(stack->ds),getdesdpl(stack->ds),getdestype(stack->ds),getdessize(stack->ds),getdesbit3(stack->ds),getdesbit2(stack->ds),getdesbit1(stack->ds),getdesalign(stack->ds));
+	printf("SS =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->ss,getdesbase(stack->ss),getdeslimit(stack->ss),getdesdpl(stack->ss),getdestype(stack->ss),getdessize(stack->ss),getdesbit3(stack->ss),getdesbit2(stack->ss),getdesbit1(stack->ss),getdesalign(stack->ss));
+	printf("ES =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->es,getdesbase(stack->es),getdeslimit(stack->es),getdesdpl(stack->es),getdestype(stack->es),getdessize(stack->es),getdesbit3(stack->es),getdesbit2(stack->es),getdesbit1(stack->es),getdesalign(stack->es));
+	printf("FS =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->fs,getdesbase(stack->fs),getdeslimit(stack->fs),getdesdpl(stack->fs),getdestype(stack->fs),getdessize(stack->fs),getdesbit3(stack->fs),getdesbit2(stack->fs),getdesbit1(stack->fs),getdesalign(stack->fs));
+	printf("GS =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->gs,getdesbase(stack->gs),getdeslimit(stack->gs),getdesdpl(stack->gs),getdestype(stack->gs),getdessize(stack->gs),getdesbit3(stack->gs),getdesbit2(stack->gs),getdesbit1(stack->gs),getdesalign(stack->gs));
+    u32 tss;
+    str(tss);
+    printf("TR =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\r\n",stack->gs,getdesbase(tss),getdeslimit(tss),getdesdpl(tss),getdestype(tss),getdessize(tss),getdesbit3(tss),getdesbit2(tss),getdesbit1(tss),getdesalign(tss));
+	struct gdtr gdtreg;
+	sgdt(&gdtreg);
+     printf("GDT=     %Y %Y\r\n",gdtreg.base,gdtreg.limite);
+	struct idtr idtreg;
+	sidt(&idtreg);
+     printf("IDT=     %Y %Y\r\n",idtreg.base,idtreg.limite);
 
 	printf("STACK\r\n");
-	u32 i = 0;
-	for (u32 *pointer = esp; pointer < KERNEL_STACK_ADDR; pointer += 4) {
-		printf("+%d:%X\t\t%X\r\n", i++, pointer,
-		       (u32)(*pointer));
-		if (i > 5) {
-			print("...\r\n");
-			break;
-		}
+    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
+        printf("Pile invalide !");
+    else
+    {
+        u32 i=0;
+	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+            if (i>0 && i % 10 == 0) print("\033[10A");
+            if (i>=10)
+                print("\033[25C");            
+		    printf("+%d:%Y - %Y\r\n", i++, pointer, (u32)(*pointer));
+		    if (i > 20) {
+			    print("...\r\n");
+			    break;
+		    }
+        }
+        for(u32 j=0;j<10-(i % 10);j++)
+            print("\033[01B");
 	}
-    printf("\033[0m");
-	sti();
 }
 /*******************************************************************************/

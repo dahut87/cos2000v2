@@ -136,11 +136,12 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 /******************************************************************************/
 /* Affiche une erreur CPU et fige l'ordinateur */
 
-void cpuerror(const u8 * src, const exception_stack *stack)
+void cpuerror(const u8 * src, const save_stack *stack)
 {
 	printf("\033[31m*** ERREUR CPU : %s *** \r\n", src);
-	dump_regs(stack);
-	print("<Appuyer une touche pour continuer>\r\n");
+	show_cpu(stack);
+	print("<Appuyer une touche pour continuer>\033[0m\r\n");
+    sti();
     waitascii();
     initselectors(retry_address);
 	/*while (true) {
@@ -168,79 +169,90 @@ void interruption()
 
 void exception0()
 {
-	cpuerror("divide error",0x0);
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x80;
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("divide error",&dump);
 }
 
 void exception1()
 {
-	cpuerror("debug exception",0x0);
+	cpuerror("debug exception",NULL);
 }
 
 void exception2()
 {
-	cpuerror("non-maskable hardware interrupt",0x0);
+	cpuerror("non-maskable hardware interrupt",NULL);
 }
 
 void exception3()
 {
-	cpuerror("INT3 instruction",0x0);
+	cpuerror("INT3 instruction",NULL);
 }
 
 void exception4()
 {
-	cpuerror("INTO instruction detected overflow",0x0);
+	cpuerror("INTO instruction detected overflow",NULL);
 }
 
 void exception5()
 {
-	cpuerror("BOUND instruction detected overrange",0x0);
+	cpuerror("BOUND instruction detected overrange",NULL);
 }
 
 void exception6()
 {
-	cpuerror("invalid instruction opcode",0x0);
+	cpuerror("invalid instruction opcode",NULL);
 }
 
 void exception7()
 {
-	cpuerror("no coprocessor",0x0);
+	cpuerror("no coprocessor",NULL);
 }
 
 void exception8()
 {
-	cpuerror("double fault",0x0);
+	cpuerror("double fault",NULL);
 }
 
 void exception9()
 {
-	cpuerror("coprocessor segment overrun",0x0);
+	cpuerror("coprocessor segment overrun",NULL);
 }
 
 void exception10()
 {
-	cpuerror("invalid task state segment (TSS)",0x0);
+	cpuerror("invalid task state segment (TSS)",NULL);
 }
 
 void exception11()
 {
-	cpuerror("segment not present",0x0);
+	cpuerror("segment not present",NULL);
 }
 
 void exception12()
 {
-	cpuerror("stack fault",0x0);
+	cpuerror("stack fault",NULL);
 }
 
 void exception13()
 {
-	cpuerror("general protection fault (GPF)",0x0);
+	cpuerror("general protection fault (GPF)",NULL);
 }
 
 void exception14()
 {
-    exception_stack *stack = getESP()+0x30;
-    u8 *errorstring;
-    switch (stack->error_code) {
+    save_stack dump;
+    exception_stack *current = getESP()+0x80;
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+    u8 *errorstring="page fault";
+    switch (current->error_code) {
         case 0:
             errorstring="page fault - Supervisory process tried to read a non-present page entry";
             break;
@@ -266,27 +278,27 @@ void exception14()
             errorstring="Page fault - User process tried to write a page and caused a protection fault";
             break;   
     }
-	cpuerror(errorstring,stack);
+	cpuerror(errorstring,&dump);
 }
 
 void exception15()
 {
-	cpuerror("(reserved)",0x0);
+	cpuerror("(reserved)",NULL);
 }
 
 void exception16()
 {
-	cpuerror("coprocessor error",0x0);
+	cpuerror("coprocessor error",NULL);
 }
 
 void exception17()
 {
-	cpuerror("alignment check",0x0);
+	cpuerror("alignment check",NULL);
 }
 
 void exception18()
 {
-	cpuerror("machine check",0x0);
+	cpuerror("machine check",NULL);
 }
 
 /******************************************************************************/

@@ -75,6 +75,122 @@ void initselectors(u32 executingoffset)
 }
 
 /*******************************************************************************/
+/* récupère la base d'un descripteur GDT */
+
+u32 getdesbase(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    return (entry[index].base0_15+(entry[index].base16_23<<16)+(entry[index].base24_31<<24));
+}
+
+/*******************************************************************************/
+/* récupère la limite d'un descripteur GDT */
+
+u32 getdeslimit(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    return (entry[index].lim0_15+(entry[index].lim16_19<<16));
+}
+
+/*******************************************************************************/
+/* récupère la limite d'un descripteur GDT */
+
+u32 getdesdpl(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    return (entry[index].acces>>5 & 0b11);
+}
+
+/*******************************************************************************/
+/* récupère le type d'un descripteur GDT */
+
+u8 getdestype(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
+        return 'T';
+    else
+        return (((entry[index].acces & 0b1000) > 0) ? 'C' : 'D');
+}
+
+/*******************************************************************************/
+/* récupère l'info 1 d'un descripteur GDT */
+
+u8 getdesbit1(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
+    return (((entry[index].acces & 0b10) > 0) ? 'B' : '-');        
+        else
+    return (((entry[index].acces & 0b1) > 0) ? 'A' : '-');        
+}
+
+/*******************************************************************************/
+/* récupère l'info 2 d'un descripteur GDT */
+
+u8 getdesbit2(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
+        return (((entry[index].flags & 0b1) > 0) ? 'U' : '-');        
+    else if ((entry[index].acces & 0b1000) > 0)
+        return (((entry[index].acces & 0b10) > 0) ? 'R' : '-');
+    else
+        return (((entry[index].acces & 0b10) > 0) ? 'W' : 'R');         
+}
+
+/*******************************************************************************/
+/* récupère l'info 3 d'un descripteur GDT */
+
+u8 getdesbit3(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    if ((entry[index].acces & 0b1000) > 0)
+        return (((entry[index].acces & 0b100) > 0) ? 'C' : '-');
+    else
+        return (((entry[index].acces & 0b100) > 0) ? 'D' : 'U');           
+}
+
+/*******************************************************************************/
+/* récupère l'alignement d'un descripteur GDT */
+
+u16 getdesalign(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    return (((entry[index].flags & 0b1000) > 0) ? 4096: 1);           
+}
+
+/*******************************************************************************/
+/* récupère si descripteur GDT est valide */
+
+bool isdesvalid(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    return ((entry[index].acces & 0b10000000) > 0);
+}
+
+/*******************************************************************************/
+/* récupère la dimension d'un descripteur GDT */
+
+u32 getdessize(u16 sel)
+{
+    gdtdes *entry=GDT_ADDR;
+    u8 index=sel/sizeof(gdtdes);
+    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
+        return 32;
+    else
+        return (((entry[index].flags & 0b1000) > 0) ? 32 : 16);
+}
+/*******************************************************************************/
 /* Créé un descripteur GDT */
 
 void makegdtdes(u32 base, u32 limite, u8 acces, u8 flags, gdtdes * desc)

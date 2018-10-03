@@ -463,6 +463,8 @@ u32 printf(const u8 * string, ...)
 				break;
 			case 'x':
 			case 'X':
+			case 'y':
+			case 'Y':
                 if (asize==0)
 				    num = (u64) va_arg(args, u8);
                 else if (asize==1)
@@ -474,9 +476,9 @@ u32 printf(const u8 * string, ...)
 				if (charadd == 0xFF)
 					charadd = '0';
 				itoa(num, &buffer, 16, sizes[asize], charadd);
-				if (achar == 'X')
+				if (achar == 'X'||achar == 'Y')
 					strtoupper(&buffer);
-				print(&strbase16);
+				if (achar == 'X') print(&strbase16);
 				counter += print(&buffer) + 1;
 				flag = false;
 				break;
