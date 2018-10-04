@@ -181,7 +181,14 @@ void exception0()
 
 void exception1()
 {
-	cpuerror("debug exception",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("debug exception",&dump);
 }
 
 void exception2()

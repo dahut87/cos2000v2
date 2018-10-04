@@ -28,7 +28,9 @@ static command commands[] = {
     {"INVALIDOP","", &invalidop},
     {"INT3" , "", &int3},
     {"GENERALFAULT" , "", &generalfault},
-    {"SEGFAULT","", &segfault}
+    {"SEGFAULT","", &segfault},
+    {"BREAKPOINT","", &breakpoint},
+    {"TESTING","", &testing}
 };
 
 /*******************************************************************************/
@@ -60,6 +62,21 @@ void shell()
 		if (!found)
 			printf("Commande inconnue !\r\n\000");
 	}
+}
+
+void testing(void)
+{
+    print("Fonction de test !\r\n");
+}
+
+/*******************************************************************************/
+/* Génère un breakpoint */
+int breakpoint()
+{
+	print("Creation d'un breakpoint !\r\n");
+    asm("movl %[address],%%dr0 \n \
+         movl $0x00000003, %%eax\n \
+         movl %%eax, %%dr7"::[address] "a" (&testing):);
 }
 
 /*******************************************************************************/

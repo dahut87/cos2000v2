@@ -24,3 +24,5 @@ int invalidop();
 int segfault();
 int int3();
 int generalfault();
+int breakpoint();
+void testing(void);
