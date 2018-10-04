@@ -47,6 +47,20 @@ unsigned long long __umoddi3 (unsigned long long n, unsigned long long d)
 }
 
 /******************************************************************************/ 
+/* Fonction qui retourne la puissance n de a */ 
+
+u32 pow(u32 a, u8 n) {
+    u32 r = 1;
+    while (n > 0) {
+        if (n & 1)
+            r *= a;
+        a *= a;
+        n >>= 1;
+    }
+    return r;
+}
+
+/******************************************************************************/ 
 /* Fonction qui retourne le logarithme 2 */ 
     
 u8 log2(u64 n)

@@ -103,11 +103,13 @@ int main(u32 magic, u32 addr)
 		warning();
 	else
 		ok();
-
-	print(" -Installation des appels systemes utilisateur");
+	printf(" -Installation des appels systemes utilisateur");
 	initsyscall();
 	ok();
 
+    float test=3.14f;
+    double test2=3.14;  
+	printf(" -Test float & double %f %lf %f %f %f %f",test,test2,0.1212412544f,0.1f,15545487.0f,0.0001f);
 retry:
 	shell();
 }

@@ -176,7 +176,7 @@ void exception0()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("divide error",&dump);
+	cpuerror("#DE Divide error",&dump);
 }
 
 void exception1()
@@ -188,12 +188,19 @@ void exception1()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("debug exception",&dump);
+	cpuerror("#DB Debug exception",&dump);
 }
 
 void exception2()
 {
-	cpuerror("non-maskable hardware interrupt",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("NMI Non-maskable hardware interrupt",&dump);
 }
 
 void exception3()
@@ -205,17 +212,31 @@ void exception3()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("INT3 instruction",&dump);
+	cpuerror("#BP INT3 instruction",&dump);
 }
 
 void exception4()
 {
-	cpuerror("INTO instruction detected overflow",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#OF INTO instruction detected overflow",&dump);
 }
 
 void exception5()
 {
-	cpuerror("BOUND instruction detected overrange",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#BR BOUND instruction detected overrange",&dump);
 }
 
 void exception6()
@@ -227,27 +248,55 @@ void exception6()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("Invalid instruction opcode",&dump);
+	cpuerror("#UD Invalid instruction opcode",&dump);
 }
 
 void exception7()
 {
-	cpuerror("no coprocessor",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#NM No coprocessor",&dump);
 }
 
 void exception8()
 {
-	cpuerror("double fault",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#DF Double fault",&dump);
 }
 
 void exception9()
 {
-	cpuerror("coprocessor segment overrun",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("Coprocessor segment overrun",&dump);
 }
 
 void exception10()
 {
-	cpuerror("invalid task state segment (TSS)",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x28+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#TS Invalid task state segment (TSS)",&dump);
 }
 
 void exception11()
@@ -259,12 +308,19 @@ void exception11()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("segment not present",&dump);
+	cpuerror("#NP Segment not present",&dump);
 }
 
 void exception12()
 {
-	cpuerror("stack fault",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x30+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#SS Stack fault",&dump);
 }
 
 void exception13()
@@ -276,7 +332,7 @@ void exception13()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("general protection fault (GPF)",&dump);
+	cpuerror("#GP General protection fault (GPF)",&dump);
 }
 
 void exception14()
@@ -288,10 +344,10 @@ void exception14()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-    u8 *errorstring="page fault";
+    u8 *errorstring="#PF Page fault";
     switch (current->error_code) {
         case 0:
-            errorstring="page fault - Supervisory process tried to read a non-present page entry";
+            errorstring="Page fault - Supervisory process tried to read a non-present page entry";
             break;
         case 1:
             errorstring="Page fault - Supervisory process tried to read a page and caused a protection fault";
@@ -320,22 +376,50 @@ void exception14()
 
 void exception15()
 {
-	cpuerror("(reserved)",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x30+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("(reserved)",&dump);
 }
 
 void exception16()
 {
-	cpuerror("coprocessor error",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x30+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#MF Coprocessor error",&dump);
 }
 
 void exception17()
 {
-	cpuerror("alignment check",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x30+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#AC Alignment check",&dump);
 }
 
 void exception18()
 {
-	cpuerror("machine check",NULL);
+    cli();
+    save_stack dump;
+    exception_stack_noerror *current = getESP()+0x30+sizeof(save_stack);
+    dump_cpu(&dump);
+    dump.eip=current->eip;
+    dump.cs=current->cs;
+    dump.esp=(current+1);
+	cpuerror("#MC Machine check",&dump);
 }
 
 /******************************************************************************/

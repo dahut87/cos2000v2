@@ -372,6 +372,22 @@ u32 printf(const u8 * string, ...)
                 asize=3;
                 flag = true;
 				break;
+            case 'f':
+                if (asize==0) {
+				    num = (u64) va_arg(args, u8);
+                    break;
+                }
+                else if (asize==1) {
+                    num = (u64) va_arg(args, u16);
+                    break;
+                }
+                else if (asize==2)
+                    rtoasingle((float)va_arg(args, double), &buffer, 5);
+                else
+                    rtoadouble((double)va_arg(args, double), &buffer, 5);
+				counter += print(&buffer);
+				flag = false;
+				break;
 			case 'u':
                 if (asize==0)
 				    num = (u64) va_arg(args, u8);
@@ -508,6 +524,38 @@ u32 printf(const u8 * string, ...)
 }
 
 /*******************************************************************************/
+/* converti un réel signé en chaine de caractère */
+u8 *rtoadouble(double num, u8 * str, u8 precision) {
+    u8 *pointer=str;
+    u32 integerpart = (int)num; 
+    double fracpart = num - (double)integerpart; 
+    pointer = sitoa(integerpart, str, 0xFFFFFFFF); 
+    if (precision != 0) 
+    { 
+        *pointer = '.';
+        fracpart = fracpart * pow(10, precision); 
+        sitoa((u32)fracpart, pointer+1, 0xFFFFFFFF); 
+    } 
+
+}
+
+/*******************************************************************************/
+/* converti un réel signé en chaine de caractère */
+u8 *rtoasingle(float num, u8 * str, u8 precision) {
+    u8 *pointer=str;
+    u32 integerpart = (int)num; 
+    float fracpart = num - (float)integerpart; 
+    pointer = sitoa(integerpart, str, 0xFFFFFFFF); 
+    if (precision != 0) 
+    { 
+        *pointer = '.';
+        fracpart = fracpart * pow(10, precision); 
+        sitoa((u32)fracpart, pointer+1, 0xFFFFFFFF); 
+    } 
+    return pointer;
+}
+
+/*******************************************************************************/
 /* converti un entier non signé en chaine de caractère */
 
 u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
@@ -518,7 +566,7 @@ u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
 	if (num == 0 && (achar == 0)) {
 		*(pointer++) = '0';
 		*pointer = '\000';
-		return str;
+		return pointer;
 	}
 	switch (base) {
 	case 2:
@@ -548,7 +596,7 @@ u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
 	}
 	*pointer = '\000';
 	strinvert(str);
-	return str;
+	return pointer;
 }
 
 /*******************************************************************************/
@@ -560,9 +608,9 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 	bool isNegative = false;
 	num &= dim;
 	if (num == 0) {
-		*pointer++ = '0';
+		*(pointer++) = '0';
 		*pointer = '\000';
-		return str;
+		return pointer;
 	}
 	if ((((dim+1)>>1)&num)>0) {
 		isNegative = true;
@@ -578,6 +626,6 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 		*(pointer++) = '-';
 	*pointer = '\000';
 	strinvert(str);
-	return str;
+	return pointer;
 }
 /*******************************************************************************/

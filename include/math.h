@@ -11,3 +11,4 @@ u8 log2(u32 n);
 u8 log10(u32 n);
 unsigned long long __udivdi3 (unsigned long long num, unsigned long long den);
 unsigned long long __umoddi3 (unsigned long long n, unsigned long long d);
+u32 pow(u32 a, u8 n);
