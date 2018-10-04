@@ -31,19 +31,22 @@
 
 #define lgdt(gdtr) asm ("lgdtl %0"::"m" (*gdtr))
 
+#define lldt(ldtr) asm ("lldtl %0"::"m" (*ldtr))
+
+#define ltr(tss) asm volatile ("ltr %%ax":: "a" (tss))
+
 #define sidt(idtr) asm ("sidtl %0"::"m" (*idtr))
 
 #define sgdt(gdtr) asm ("sgdtl %0"::"m" (*gdtr))
 
-#define wrmsr(reg,low,high) asm volatile ("wrmsr" :: "c" (reg), "a" (low), "d" (high))
-
-#define rdmsr(reg,low,high) asm volatile ("rdmsr" :: "=a" (low), "=d" (high) : "c" (reg) )
-
-#define ltr(tss) asm volatile ("ltr %%ax":: "a" (tss))
+#define sldt(ldtr) asm ("sldtl %0"::"m" (*ldtr))
 
 #define str(tss) asm volatile ("str %%ax;\
                                 mov %%ax,%0":: "m" (tss))
 
+#define wrmsr(reg,low,high) asm volatile ("wrmsr" :: "c" (reg), "a" (low), "d" (high))
+
+#define rdmsr(reg,low,high) asm volatile ("rdmsr" :: "=a" (low), "=d" (high) : "c" (reg) )
 
 /******************************************************************************/
 

@@ -36,7 +36,7 @@ void initgdt(u32 offset)
 	makegdtdes(&tss0, 0x67, SEG_PRESENT | SEG_CODE | SEG_RING3 | SEG_ACCESSED , 0x00, &gdt[7]);	/* descripteur de tss */
 
 	/* initialise le registre gdt */
-	gdtreg.limite = GDT_SIZE * 8;
+	gdtreg.limite = GDT_SIZE * sizeof(gdtdes);
 	gdtreg.base = GDT_ADDR;
 	/* recopie de la GDT a son adresse */
 	memcpy(&gdt, (u8 *) gdtreg.base, gdtreg.limite, 1);

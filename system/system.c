@@ -86,17 +86,17 @@ int main(u32 magic, u32 addr)
 	ok();
 
 	print(" -Installation du handler timer (IRQ 0)");
-	setidt((u32) timer, SEL_KERNEL_CODE, INTGATE, 32);
+	setidt((u32) timer, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 32);
 	enableirq(0);
 	ok();
 
 	print(" -Installation du handler clavier (IRQ 1)");
-	setidt((u32) keyboard, SEL_KERNEL_CODE, INTGATE, 33);
+	setidt((u32) keyboard, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
 	enableirq(1);
 	ok();
 
 	print(" -Installation du handler souris (IRQ12+Cascade IRQ2)");
-	setidt((u32) mouse, SEL_KERNEL_CODE, INTGATE, 100);
+	setidt((u32) mouse, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
 	enableirq(2);
 	enableirq(12);
 	if (initmouse() != 1)

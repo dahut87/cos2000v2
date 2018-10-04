@@ -149,8 +149,9 @@ u32 setESP(u32 stack)
 
 void dump_cpu(save_stack *stack)
 {
-save_stack new;
-asm("   addl $0x50,%%esp \n \
+asm("   movl %%eax,%%ebx":::);
+asm("   addl %[size],%%esp \n \
+        addl $0x8,%%esp \n \
         pushl %%eax \n \
         pushl %%ebx \n \
         pushl %%ecx \n \
@@ -160,21 +161,45 @@ asm("   addl $0x50,%%esp \n \
         pushl %%ebp \n \
         pushl %%esp \n \
         pushl %%cs \n \
-        pushl 0x0 \n \
+        pushl $0x0 \n \
         pushl %%ds \n \
         pushl %%es \n \
         pushl %%fs \n \
         pushl %%gs \n \
         pushl %%ss \n \
         pushf \n \
-        mov %%cr0, %%ebx \n \
-        pushl %%ebx\n \
-        mov %%cr2, %%ebx \n \
-        pushl %%ebx\n \
-        mov %%cr3, %%ebx \n \
-        pushl %%ebx\n \
-        mov %%cr4, %%ebx \n \
-        pushl %%ebx":::);
+        mov %%eax,%%ebx \n \
+        mov %%cr0, %%eax \n \
+        pushl %%eax\n \
+        mov %%cr2, %%eax \n \
+        pushl %%eax\n \
+        mov %%cr3, %%eax \n \
+        pushl %%eax\n \
+        mov %%cr4, %%eax \n \
+        pushl %%eax \n \
+        mov %%dr0, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr1, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr2, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr3, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr4, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr5, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr6, %%eax \n \
+        pushl %%eax\n \
+        mov %%dr7, %%eax \n \
+        pushl %%eax\n \
+        mov $0xC0000080, %%ecx \n \
+        rdmsr \n \
+        pushl %%edx \n \
+        pushl %%eax \n \
+        subl $0x8,%%esp \n \
+        mov %%ebx,%%eax"::[size] "a" (sizeof(save_stack)):);
+    save_stack new;
     memcpy(&new, stack, sizeof(save_stack), 1);
 }
 
@@ -210,7 +235,10 @@ void show_cpu(save_stack *stack)
 	struct idtr idtreg;
 	sidt(&idtreg);
      printf("IDT=     %Y %Y\r\n",idtreg.base,idtreg.limite);
-
+     printf("CR0=%Y CR2=%Y CR3=%Y CR4=%Y\r\n",stack->cr0,stack->cr2,stack->cr3,stack->cr4);
+     printf("DR0=%Y DR1=%Y DR2=%Y DR3=%Y\r\n",stack->dr0,stack->dr1,stack->dr2,stack->dr3);
+     printf("DR4=%Y DR5=%Y DR6=%Y DR7=%Y\r\n",stack->dr4,stack->dr5,stack->dr6,stack->dr7);
+     printf("EFER=%lY\r\n",stack->efer);
 	printf("STACK\r\n");
     if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
         printf("Pile invalide !");

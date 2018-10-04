@@ -20,3 +20,7 @@ int info();
 int pgfaultr();
 int pgfaultw();
 int divzerr();
+int invalidop();
+int segfault();
+int int3();
+int generalfault();

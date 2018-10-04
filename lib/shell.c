@@ -24,8 +24,11 @@ static command commands[] = {
 	{"INFO"      , "", &info},
     {"PGFAULTW" , "", &pgfaultw},
     {"PGFAULTR" , "", &pgfaultr},
-    {"DIVZERR" , "", &divzerr}
-
+    {"DIVZERR" , "", &divzerr},
+    {"INVALIDOP","", &invalidop},
+    {"INT3" , "", &int3},
+    {"GENERALFAULT" , "", &generalfault},
+    {"SEGFAULT","", &segfault}
 };
 
 /*******************************************************************************/
@@ -57,6 +60,40 @@ void shell()
 		if (!found)
 			printf("Commande inconnue !\r\n\000");
 	}
+}
+
+/*******************************************************************************/
+/* Génère une interruption 3 */
+int int3()
+{
+	print("Creation d'une erreur interruption 3 !\r\n");
+    asm("int $0x3");
+}
+
+/*******************************************************************************/
+/* Génère une erreur general fault */
+int generalfault()
+{
+	print("Creation d'une erreur general fault !\r\n");
+    asm("mov $0x666, %ax; ltr %ax");
+}
+
+/*******************************************************************************/
+/* Génère une erreur double fault */
+int segfault()
+{
+	print("Creation d'une erreur double fault !\r\n");
+	setidt(&segfault, SEL_KERNEL_CODE, INTGATE, 104); 
+    asm("int $0x68");
+}
+
+
+/*******************************************************************************/
+/* Génère une erreur d'opcode invalide */
+int invalidop()
+{
+	print("Creation d'une erreur d'opcode invalide !\r\n");
+    asm("mov %cr7, %eax");
 }
 
 /*******************************************************************************/
@@ -162,16 +199,24 @@ int readidt()
 	idtdes *desc;
 	struct idtr idtreg;
 	sidt(&idtreg);
-	printf("Information sur l'IDT\r\nAdresse:%X Limite:%hX", idtreg.base,
+	printf("Information sur l'IDT\r\nAdresse:%X Limite:%hX\r\n", idtreg.base,
 	       (u32) idtreg.limite);
 	desc = idtreg.base;
 	for (index = 0; index < idtreg.limite / sizeof(idtdes); index++) {
 		u32 select = desc[index].select;
 		u32 offset =
 		    desc[index].offset0_15 + (desc[index].offset16_31 << 16);
-		u32 type = desc[index].type;
-		printf("\r\nInterruption % d Selecteur %hX: offset:%X type:",
-		       i++, select, offset, type);
+		u32 type = desc[index].type & 0x0F00;
+        u8 *type2;
+        if (i>=32 & i<=39)
+            type2="IRQ master";
+        else if (i>=96 & i<=103)
+            type2="IRQ slave ";
+        else if (i<19)
+            type2="EXCEPTION ";    
+        else
+            type2="INTERRUPT ";
+		printf("\r\%s % hu %hY:%Y - ", type2,i++, select, offset, type);
 		if (type == INTGATE)
 			print("INTGATE");
 		else if (type == TRAPGATE)
@@ -198,61 +243,13 @@ int readidt()
 int readgdt()
 {
 	u32 index;
-	gdtdes *desc;
 	struct gdtr gdtreg;
 	sgdt(&gdtreg);
-	printf("Information sur la GDT\r\nAdresse:%X Limite:%hX", gdtreg.base,
-	       (u32) gdtreg.limite);
-	desc = gdtreg.base;
-	for (index = 0; index < gdtreg.limite / sizeof(gdtdes); index++) {
-		u32 acces = desc[index].acces;
-		if (acces >> 7 == 1) {
-			u32 flags = desc[index].flags;
-			u32 limit =
-			    desc[index].lim0_15 + (desc[index].lim16_19 << 16);
-			u32 base =
-			    desc[index].base0_15 +
-			    (desc[index].base16_23 << 16) +
-			    (desc[index].base24_31 << 24);
-			printf
-			    ("\r\nSelecteur %hX: base:%X limit:%X access:%hX flags:%hX\r\n  -> ",
-			     index * sizeof(gdtdes), base, limit, acces, flags);
-			if ((acces >> 4) & 1 == 1)
-				print("System ");
-			else {
-				if (acces & 1 == 1)
-					print("Access ");
-			}
-			if ((acces >> 3) & 1 == 1) {
-				print("Code.");
-				if ((acces >> 1) & 1 == 1)
-					print("Readable ");
-				if ((acces >> 2) & 1 == 1)
-					print("Conforming ");
-				else
-					print("Normal ");
-			} else {
-				print("Data.");
-				if ((acces >> 2) & 1 == 1)
-					print("Down ");
-				else
-					print("up ");
-				if ((acces >> 1) & 1 == 1)
-					print("writeable ");
-			}
-			if (flags & 1 == 1)
-				print("Dispo ");
-			if ((flags >> 2) & 1 == 1)
-				print("32bits ");
-			else
-				print("16bits ");
-			if ((flags >> 3) & 1 == 1)
-				print("4k ");
-			else
-				print("1b ");
-			u8 dpl = (acces >> 5) & 0b11;
-			printf("DPL:%d", dpl);
-		}
+	printf("Information sur la GDT\r\nAdresse:%X Limite:%hX\r\n", gdtreg.base, gdtreg.limite);
+	for (index = 0; index < gdtreg.limite ; index+=sizeof(gdtdes)) {
+        if (!isdesvalid(index))
+            printf("\033[31m");
+        printf("SEL =%hY %Y %Y DPL=%d %cS%d [%c%c%c] %h ub\033[0m\r\n",index,getdesbase(index),getdeslimit(index),getdesdpl(index),getdestype(index),getdessize(index),getdesbit3(index),getdesbit2(index),getdesbit1(index),getdesalign(index));
 	}
 	return 0;
 }

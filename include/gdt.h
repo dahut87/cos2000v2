@@ -33,9 +33,9 @@
 #define SEG_PRESENT     0b10000000  /* Segment défini (obligatoire) */
 
 #define SEG_RING0       0b00000000  /* Segment anneau 0 */
-#define SEG_RING1       0b00100000  /* Segment anneau 0 */
-#define SEG_RING2       0b01000000  /* Segment anneau 0 */
-#define SEG_RING3       0b01100000  /* Segment anneau 0 */
+#define SEG_RING1       0b00100000  /* Segment anneau 1 */
+#define SEG_RING2       0b01000000  /* Segment anneau 2 */
+#define SEG_RING3       0b01100000  /* Segment anneau 3 */
 
 #define SEG_NORMAL      0b00010000  /* Segment normal pile/data/code (0 pour système) */
 
