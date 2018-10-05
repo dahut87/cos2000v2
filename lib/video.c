@@ -550,7 +550,7 @@ u8 *rtoasingle(float num, u8 * str, u8 precision) {
     { 
         *pointer = '.';
         fracpart = fracpart * pow(10, precision); 
-        sitoa((u32)fracpart, pointer+1, 0xFFFFFFFF); 
+        itoa((u32)fracpart, pointer+1, 10 , precision, '0'); 
     } 
     return pointer;
 }
@@ -562,30 +562,38 @@ u8 *itoa(u64 orignum, u8 * str, u8 base, u64 dim, u8 achar)
 {
 	u8 *pointer = str, i, size = 0;
 	u64 num = orignum;
-	num &= dim;
-	if (num == 0 && (achar == 0)) {
-		*(pointer++) = '0';
-		*pointer = '\000';
-		return pointer;
-	}
-	switch (base) {
-	case 2:
-		size = log2(dim);
-		break;
-	case 8:
-		size = log2(dim) / 2;
-		break;
-	case 10:
-		size = log10(dim);
-		break;
-	case 16:
-		size = log2(dim) / 4;
-		break;
-	}
+    if (dim>=0xFF)
+    {
+	    num &= dim;
+	    if ((num == 0) && (achar == 0)) {
+		    *(pointer++) = '0';
+		    *pointer = '\000';
+		    return pointer;
+	    }
+	    switch (base) {
+	    case 2:
+		    size = log2(dim);
+		    break;
+	    case 8:
+		    size = log2(dim) / 2;
+		    break;
+	    case 10:
+		    size = log10(dim);
+		    break;
+	    case 16:
+		    size = log2(dim) / 4;
+		    break;
+	    }
+    }
+    else
+        size=dim;
 	for (i = 0; i < size; i++) {
 		if (num == 0) {
+            if (i==0)
+                *(pointer++) = '0';
+            else
+                *(pointer++) = achar;
             if (achar == 0) break;
-            *(pointer++) = achar;
         }
         else
         {

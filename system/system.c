@@ -109,7 +109,7 @@ int main(u32 magic, u32 addr)
 
     float test=3.14f;
     double test2=3.14;  
-	printf(" -Test float & double %f %lf %f %f %f %f",test,test2,0.1212412544f,0.1f,15545487.0f,0.0001f);
+	printf(" -Test float & double %f %lf %f %f %f %f",test,test2,0.1212412544f,0.1f,15545485425425425425425425425427878787.0f,0.0001f);
 retry:
 	shell();
 }
