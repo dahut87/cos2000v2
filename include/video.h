@@ -20,5 +20,5 @@ u32 printf (const u8 *string, ...);
 void changevc(u8 vc);
 u8* itoa(u64 num, u8* str, u8 base, u64 dim, u8 achar);
 u8* sitoa(u64 num, u8 * str, u64 dim);
-u8* rtoadouble(double num, u8 * str, u8 precision);
-u8* rtoasingle(float num, u8 * str, u8 precision);
+u8* rtoadouble(double num, u8 * str, u8 precisioni , u8 precisionf);
+u8* rtoasingle(float num, u8 * str, u8 precisioni , u8 precisionf);

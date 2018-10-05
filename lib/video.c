@@ -313,13 +313,13 @@ u32 printf(const u8 * string, ...)
 	u8 strbase16[] = "0x\000";
 	u8 hexadecimal[] = "*0x\000";
 	u8 achar, temp;
-	u8 asize, charadd, unit;
+	u8 asize, charadd, unit, precisioni, precisionf;
 	u8 buffer[buffersize];
 	u8 *str = string;
 	u8 *strtemp;
 	u32 i = 0, counter = 0;
 	u64 num;
-	bool flag = false;
+	bool flag = false, intok = false, decok = false;
 
 	va_start(args, string);
 	for (achar = *str; achar != '\000'; i++, achar = *(str + i)) {
@@ -327,18 +327,22 @@ u32 printf(const u8 * string, ...)
 			putchar(achar);
 			counter++;
 			asize = 2;
+            precisioni = 0;
+            precisionf = 0;
+            intok = false;
+            decok = false;
 			charadd = 0xFF;
 		} else if (achar == '%' || flag) {
 			if (!flag)
 				++i;
 			achar = *(str + i);
 			switch (achar) {
-			case '0':
-				charadd = '0';
+			case 'z':
+				charadd = achar;
 				flag = true;
 				break;
 			case ' ':
-				charadd = ' ';
+				charadd = achar;
 				flag = true;
 				break;
 			case 'h':
@@ -351,28 +355,54 @@ u32 printf(const u8 * string, ...)
                 if (asize>3) asize=3;
 				flag = true;
 				break;
+            case '.':
+                intok=true;
+                decok=false;
+                flag = true;
+				break;
+			case '0':
 			case '1':
 			case '2':
 			case '3':
-                asize=0;
-                flag = true;
-				break;
 			case '4':
 			case '5':
 			case '6':
 			case '7':
-                asize=1;
-                flag = true;
-				break;
 			case '8':
-                asize=2;
-                flag = true;
-				break;
 			case '9':
-                asize=3;
-                flag = true;
+                if (!intok)
+                {
+                    if (!decok)
+                    {
+                        precisioni=achar-'0';
+                        decok=true;
+                    }
+                    else {
+                        precisioni*=10;
+                        precisioni+=achar-'0';
+                        decok=false;
+                    }
+                }
+                else {
+                    if (!decok)
+                    {
+                        precisionf=achar-'0';
+                        decok=true;
+                    }
+                    else {
+                        precisionf*=10;
+                        precisionf+=achar-'0';
+                        decok=false;
+                    }
+                }               
+				flag = true;
 				break;
             case 'f':
+            case 'e':
+                if (achar=='e') {
+                    precisioni=1;
+                    precisionf=8;
+                }
                 if (asize==0) {
 				    num = (u64) va_arg(args, u8);
                     break;
@@ -382,9 +412,9 @@ u32 printf(const u8 * string, ...)
                     break;
                 }
                 else if (asize==2)
-                    rtoasingle((float)va_arg(args, double), &buffer, 5);
+                    rtoasingle((float)va_arg(args, double), &buffer, precisioni, precisionf);
                 else
-                    rtoadouble((double)va_arg(args, double), &buffer, 5);
+                    rtoadouble((double)va_arg(args, double), &buffer, precisioni, precisionf);
 				counter += print(&buffer);
 				flag = false;
 				break;
@@ -525,34 +555,85 @@ u32 printf(const u8 * string, ...)
 
 /*******************************************************************************/
 /* converti un réel signé en chaine de caractère */
-u8 *rtoadouble(double num, u8 * str, u8 precision) {
-    u8 *pointer=str;
-    u32 integerpart = (int)num; 
-    double fracpart = num - (double)integerpart; 
-    pointer = sitoa(integerpart, str, 0xFFFFFFFF); 
-    if (precision != 0) 
-    { 
-        *pointer = '.';
-        fracpart = fracpart * pow(10, precision); 
-        sitoa((u32)fracpart, pointer+1, 0xFFFFFFFF); 
-    } 
 
+u8 *rtoadouble(double num, u8 * str, u8 precisioni , u8 precisionf) {
+  s8 power10;
+  u8 *pointer=str;
+  u8 i,j,integerpart,fracpart;
+  if (precisioni==0) precisioni=12;
+  if (precisionf==0) precisionf=8;  
+  bool intok=false;     
+  if (num<0) {                                                  
+      num=-num;
+      *(pointer++) = '-';            
+  }
+  power10=0;
+  {
+    while (num>=10.0) {
+        num/=10;               
+        power10++;
+    }
+  } 
+  if (power10<precisioni)
+  {  
+      fracpart=power10;                       
+      power10=0;  
+  }
+ else
+{
+   fracpart=precisioni;
+   power10=power10-precisioni+1;
+}                
+  if (power10==0)         
+    {
+        if (num!=0.0)          
+        {                  
+          while (num<1.0)     
+          {              
+              num*=10;   
+              power10--;
+          }
+        }
+     }   
+
+  i=j=0;  
+  while(num>0) 
+  {  
+    if (!intok & (i>fracpart || i>=precisioni)) {
+        *(pointer++) = '.';
+        intok=true;
+     }
+    if (intok && j>=precisionf)
+        break;
+      num-= (integerpart=num);
+      *(pointer++) = integerpart+'0';
+      num*=10.0;
+    if (!intok) 
+        i++;
+    else
+        j++;
+  }
+  while((*(pointer-1))=='0' && pointer>str+1)
+    pointer--;
+  if ((*(pointer-1))=='.') pointer--;
+  if (abs(power10)>0)
+  {
+    *(pointer++) = 'e'; 
+    if (power10<0) { 
+            power10=-power10; 
+            *(pointer++) = '-';
+        }
+        *(pointer++) = (power10/10+'0');
+        *(pointer++) = (power10%10+'0');
+   }
+    *(pointer++) = 0;
 }
 
 /*******************************************************************************/
 /* converti un réel signé en chaine de caractère */
-u8 *rtoasingle(float num, u8 * str, u8 precision) {
-    u8 *pointer=str;
-    u32 integerpart = (int)num; 
-    float fracpart = num - (float)integerpart; 
-    pointer = sitoa(integerpart, str, 0xFFFFFFFF); 
-    if (precision != 0) 
-    { 
-        *pointer = '.';
-        fracpart = fracpart * pow(10, precision); 
-        itoa((u32)fracpart, pointer+1, 10 , precision, '0'); 
-    } 
-    return pointer;
+
+u8 *rtoasingle(float num, u8 * str, u8 precisioni , u8 precisionf) {
+   return rtoadouble((double)num, str, precisioni, precisionf);
 }
 
 /*******************************************************************************/

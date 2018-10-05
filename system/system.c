@@ -107,9 +107,8 @@ int main(u32 magic, u32 addr)
 	initsyscall();
 	ok();
 
-    float test=3.14f;
-    double test2=3.14;  
-	printf(" -Test float & double %f %lf %f %f %f %f",test,test2,0.1212412544f,0.1f,15545485425425425425425425425427878787.0f,0.0001f);
+    float test=-12101412121212121212.5555555555555555f; 
+	printf(" -Test float & double :\r\n %e \r\n %f\r\n %1.2f\r\n %.2f\r\n %4.1f\r\n %10.5f\r\n %6f\r\n %8f",test,test,test,test,test,test,test,test);
 retry:
 	shell();
 }
