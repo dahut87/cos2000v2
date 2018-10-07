@@ -106,11 +106,7 @@ int main(u32 magic, u32 addr)
 	printf(" -Installation des appels systemes utilisateur");
 	initsyscall();
 	ok();
-    static u8 tester[]="ceci est un test";
-    static u8 strings[255];
-    sprintf(&strings," pour voir : %u %d %f %s",123456789,-2522,3.14f,tester);
-    print(&strings);
-
+  
 retry:
 	shell();
 }

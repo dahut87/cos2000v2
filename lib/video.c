@@ -302,6 +302,7 @@ u32 print(u8 * string)
 /* Fonction d'affichage (pour printf) */
 
 u32 printstr(u8* src, u8** dest, u32 len) {
+    if (*(src)=='\000') return;
 	for(u32 i=0;i<len;i++)
 		putchar(*(src++));
 	return len;
@@ -599,7 +600,8 @@ u32 format(const u8 * string, va_list args, u32 (*fonction)(u8* src, u8** dest, 
 			}
 		}
 	}
-    
+    buffer[0]='\000';
+    fonction(&buffer,&dest,1);
 	return counter;
 }
 

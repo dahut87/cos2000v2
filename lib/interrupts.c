@@ -339,39 +339,41 @@ void exception14()
 {
     cli();
     save_stack dump;
-    exception_stack *current = getESP()+0x28+sizeof(save_stack);
+    exception_stack *current = getESP()+0x28+255+sizeof(save_stack);
     dump_cpu(&dump);
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-    u8 *errorstring="#PF Page fault";
-    switch (current->error_code) {
+    u8* errorstring;
+    u8 completeerrorstring[255];
+    switch (current->error_code & 0xF) {
         case 0:
-            errorstring="Page fault - Supervisory process tried to read a non-present page entry";
+            errorstring="Supervisory process tried to read a non-present page entry";
             break;
         case 1:
-            errorstring="Page fault - Supervisory process tried to read a page and caused a protection fault";
+            errorstring="Supervisory process tried to read a page and caused a protection fault";
             break;
         case 2:
-            errorstring="Page fault - Supervisory process tried to write to a non-present page entry";
+            errorstring="Supervisory process tried to write to a non-present page entry";
             break;
         case 3:
-            errorstring="Page fault - Supervisory process tried to write a page and caused a protection fault";
+            errorstring="Supervisory process tried to write a page and caused a protection fault";
             break;
         case 4:
-            errorstring="Page fault - User process tried to read a non-present page entry";
+            errorstring="User process tried to read a non-present page entry";
             break;
         case 5:
-            errorstring="Page fault - User process tried to read a page and caused a protection fault";
+            errorstring="User process tried to read a page and caused a protection fault";
             break;
         case 6:
-            errorstring="Page fault - User process tried to write to a non-present page entry";
+            errorstring="User process tried to write to a non-present page entry";
             break;      
         case 7:
-            errorstring="Page fault - User process tried to write a page and caused a protection fault";
+            errorstring="User process tried to write a page and caused a protection fault";
             break;   
     }
-	cpuerror(errorstring,&dump);
+    sprintf(&completeerrorstring,"#PF Page fault - %s at adress %X",errorstring,dump.cr2);
+	cpuerror(&completeerrorstring,&dump);
 }
 
 void exception15()
