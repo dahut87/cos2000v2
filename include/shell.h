@@ -18,4 +18,5 @@ int clear();
 int regs();
 int info();
 int err();
+int view();
 int test(void);

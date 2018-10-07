@@ -193,6 +193,15 @@ bool makeansi(u8 c)
 	vc[usedvc].ansi = 0;
 	return 0;		/* Ansi fini ;) */
 }
+/*******************************************************************************/
+/* Efface la console en cours d'utilisation */
+void clearscreen(void)
+{
+    fill(0x00);
+    vc[usedvc].cursX=0;
+    vc[usedvc].cursY=0;
+    gotoscr(0,0);
+}
 
 /*******************************************************************************/
 /* Change la console en cours d'utilisation */

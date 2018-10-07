@@ -25,6 +25,7 @@ static command commands[] = {
 	{"info"      , "", &info},
 	{"err"      , "", &err},
 	{"test"      , "", &test},
+	{"view"      , "", &view},
 };
 
 /*******************************************************************************/
@@ -63,6 +64,33 @@ int test(void)
     print("Fonction de test !\r\n");
 }
 
+/*******************************************************************************/
+/* Génère des exceptions */
+
+int view(u8* commandline)
+{
+	u8 arg[] = "       \000";
+    u32 address;
+    u8 size;
+    u8* pointer;
+	if (strgetnbitems(commandline, ' ') < 3)
+    {
+		print("Syntaxe de la commande VIEW\r\nview \33[32madresse taille\r\n\r\n \33[32madresse\33[0m - Adresse a visualiser\r\n \33[32mtaille\33[0m - nombre d'octets a visualiser <256\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    address=strtoint(&arg);
+	strgetitem(commandline, &arg, ' ', 2);
+    size=strtoint(&arg);
+    printf("Adresse %Y - % hhu",address,size);
+    pointer=address;
+    for(u32 i=0;i<size;i++) {
+        if (i%16==0)
+            printf("\r\n:%Y - ",pointer);
+        else
+            printf("%hhY ",*(pointer++));
+   }
+}
 /*******************************************************************************/
 /* Génère des exceptions */
 
@@ -200,8 +228,7 @@ int mode(u8* commandline)
 
 int clear()
 {
-	fill(0x00);
-	gotoscr(0, 0);
+    clearscreen();
 	return 0;
 }
 

@@ -18,6 +18,7 @@ typedef struct console {
 
 void showhex(u8 src);
 void putchar(u8 thechar);
+void clearscreen(void);
 u32 print(u8* string);
 u32 printf (const u8 *string, ...);
 void changevc(u8 vc);
