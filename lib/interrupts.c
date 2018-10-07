@@ -372,6 +372,7 @@ void exception14()
             errorstring="User process tried to write a page and caused a protection fault";
             break;   
     }
+   // printf("%X",current->error_code);
     sprintf(&completeerrorstring,"#PF Page fault - %s at adress %X",errorstring,dump.cr2);
 	cpuerror(&completeerrorstring,&dump);
 }

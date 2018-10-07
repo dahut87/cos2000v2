@@ -118,7 +118,7 @@ u8 getcpuinfos(cpuinfo * proc)
 	boolean = &proc->mmx;
 	i = 0;
 
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < sizeof(msg); i++)
 		if (*(boolean++) == 1) {
 			strcat(msg[i], &proc->techs);
 			strcat(space, &proc->techs);

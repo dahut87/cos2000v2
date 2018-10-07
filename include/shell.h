@@ -5,7 +5,7 @@ typedef struct command
 {	
 u8 name[64];
 u8 params[64];
-int (*function)(void)
+int (*function)()
 } command  __attribute__ ((packed));	
 
 int rebootnow();
@@ -17,12 +17,5 @@ int mode();
 int clear();
 int regs();
 int info();
-int pgfaultr();
-int pgfaultw();
-int divzerr();
-int invalidop();
-int segfault();
-int int3();
-int generalfault();
-int breakpoint();
-void testing(void);
+int err();
+int test(void);

@@ -11,26 +11,20 @@
 #include "gdt.h"
 #include "shell.h"
 #include "multiboot2.h"
+#include "math.h"
 
 static command commands[] = {
-	{"REBOOT"    , "", &rebootnow},
-	{"CLEAR"     , "", &clear},
-	{"MODE"      , "", &mode},
-	{"DETECTCPU" , "", &detectcpu},
-	{"TEST2D"    , "", &test2d},
-	{"REGS"      , "", &regs},
-	{"GDT"       , "", &readgdt},
-	{"IDT"       , "", &readidt},
-	{"INFO"      , "", &info},
-    {"PGFAULTW" , "", &pgfaultw},
-    {"PGFAULTR" , "", &pgfaultr},
-    {"DIVZERR" , "", &divzerr},
-    {"INVALIDOP","", &invalidop},
-    {"INT3" , "", &int3},
-    {"GENERALFAULT" , "", &generalfault},
-    {"SEGFAULT","", &segfault},
-    {"BREAKPOINT","", &breakpoint},
-    {"TESTING","", &testing}
+	{"reboot"    , "", &rebootnow},
+	{"clear"     , "", &clear},
+	{"mode"      , "", &mode},
+	{"detectcpu" , "", &detectcpu},
+	{"test2d"    , "", &test2d},
+	{"regs"      , "", &regs},
+	{"gdt"       , "", &readgdt},
+	{"idt"       , "", &readidt},
+	{"info"      , "", &info},
+	{"err"      , "", &err},
+	{"test"      , "", &test},
 };
 
 /*******************************************************************************/
@@ -50,11 +44,11 @@ void shell()
 		if (strgetnbitems(&field, ' ') < 1)
 			continue;
 		strgetitem(&field, &item, ' ', 0);
-		strtoupper(&item);
+		strtolower(&item);
 		found = false;
 		for (i = 0; i < sizeof(commands); i++) {
 			if (strcmp(&item, &commands[i].name) == 0) {
-				(*commands[i].function) ();
+				(*commands[i].function) (&field);
 				found = true;
 				break;
 			}
@@ -64,77 +58,105 @@ void shell()
 	}
 }
 
-void testing(void)
+int test(void)
 {
     print("Fonction de test !\r\n");
 }
 
 /*******************************************************************************/
-/* Génère un breakpoint */
-int breakpoint()
+/* Génère des exceptions */
+
+int err(u8* commandline)
 {
-	print("Creation d'un breakpoint !\r\n");
-    asm("movl %[address],%%dr0 \n \
+	u8 arg[] = "       \000";
+    u32 argint;
+	if (strgetnbitems(commandline, ' ') < 2)
+    {
+		print("Syntaxe de la commande ERR\r\nerr \33[32mexception\r\n\r\n exception\33[0m - code de l'exception\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    argint=strtoint(&arg);
+    switch (argint)
+    {
+    case 0:
+        print("Creation d'une erreur de division par 0 !\r\n");
+        asm("movl $0x0,%ecx; divl %ecx");
+        break;
+    case 1:
+        print("Creation d'un breakpoint !\r\n");
+        asm("movl %[address],%%dr0 \n \
          movl $0x00000003, %%eax\n \
-         movl %%eax, %%dr7"::[address] "a" (&testing):);
-}
-
-/*******************************************************************************/
-/* Génère une interruption 3 */
-int int3()
-{
-	print("Creation d'une erreur interruption 3 !\r\n");
-    asm("int $0x3");
-}
-
-/*******************************************************************************/
-/* Génère une erreur general fault */
-int generalfault()
-{
-	print("Creation d'une erreur general fault !\r\n");
-    asm("mov $0x666, %ax; ltr %ax");
-}
-
-/*******************************************************************************/
-/* Génère une erreur double fault */
-int segfault()
-{
-	print("Creation d'une erreur double fault !\r\n");
-	setidt(&segfault, SEL_KERNEL_CODE, INTGATE, 104); 
-    asm("int $0x68");
-}
-
-
-/*******************************************************************************/
-/* Génère une erreur d'opcode invalide */
-int invalidop()
-{
-	print("Creation d'une erreur d'opcode invalide !\r\n");
-    asm("mov %cr7, %eax");
-}
-
-/*******************************************************************************/
-/* Génère une erreur de division par 0 */
-int divzerr()
-{
-	print("Creation d'une erreur de division par 0 !\r\n");
-    asm("movl $0x0,%ecx; divl %ecx");
-}
-
-/*******************************************************************************/
-/* Génère une erreur de page à l'adresse 0xE0000000 */
-int pgfaultw()
-{
-	print("Creation d'une erreur de page !\r\n");
-    asm("movl $0x66666666,(0xE0000000)");
-}
-
-/*******************************************************************************/
-/* Génère une erreur de page à l'adresse 0xD0000000 */
-int pgfaultr()
-{
-	print("Creation d'une erreur de page !\r\n");
-    asm("movl (0xD0000000),%eax");
+         movl %%eax, %%dr7"::[address] "a" (&test):);
+        break;
+    case 2:
+        print("NON GERE!\r\n");
+        break;
+    case 3:
+        print("Creation d'une erreur interruption 3 !\r\n");
+        asm("int $0x3");
+        break;
+    case 4:
+        print("NON GERE!\r\n");
+        break;
+    case 5:
+        print("NON GERE!\r\n");
+        break;
+    case 6:
+ 	    print("Creation d'une erreur d'opcode invalide !\r\n");
+        asm("mov %cr7, %eax");       
+        break;
+    case 7:
+         print("NON GERE!\r\n");       
+        break;
+    case 8:
+        print("NON GERE!\r\n");        
+        break;
+    case 9:
+         print("NON GERE!\r\n");       
+        break;
+    case 10:
+        print("NON GERE!\r\n");        
+        break;
+    case 11:
+        print("Creation d'une erreur segment non present !\r\n");
+	    setidt(&err, SEL_KERNEL_CODE, INTGATE, 104); 
+        asm("int $0x68");
+        break;   
+    case 12:
+        print("NON GERE!\r\n");          
+        break;   
+    case 13:
+        print("Creation d'une erreur general fault !\r\n");
+        asm("mov $0x666, %ax; ltr %ax");
+        break;   
+    case 14:
+        if (random(0, 100)>50) {
+        	print("Creation d'une erreur de page en ecriture !\r\n");
+            asm("movl $0x66666666,(0xE0000000)");
+        }
+        else {
+	        print("Creation d'une erreur de page en lecture !\r\n");
+            asm("movl (0xD0000000),%eax");
+        }
+        break;  
+    case 15:
+        print("NON GERE!\r\n");          
+        break;
+    case 16:
+        print("NON GERE!\r\n");          
+        break;  
+    case 17:
+        print("NON GERE!\r\n");          
+        break;  
+    case 18:
+        print("NON GERE!\r\n");          
+        break;  
+    default:
+        print("Exception qui n'existe pas !!!\r\n");  
+        break;
+    }   
+	return 0;
 }
 
 /*******************************************************************************/
@@ -158,9 +180,18 @@ int regs()
 
 /*******************************************************************************/
 /* Change le mode */
-int mode()
+int mode(u8* commandline)
 {
-	setvmode(0x84);
+	u8 arg[] = "       \000";
+    u32 argint;
+	if (strgetnbitems(commandline, ' ') < 2)
+    {
+		print("Syntaxe de la commande MODE\r\nmode \33[32mmodevideo\r\n\r\n modevideo\33[0m - mode video a initialiser (>0x80 = graphique)\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    argint=strtoint(&arg);
+	setvmode(argint);
 	return 0;
 }
 
