@@ -1,6 +1,9 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
+
+#include "stdarg.h"
+
 typedef struct console {
   u8 attrib;
   s16 cursX;
@@ -22,3 +25,4 @@ u8* itoa(u64 num, u8* str, u8 base, u64 dim, u8 achar);
 u8* sitoa(u64 num, u8 * str, u64 dim);
 u8* rtoadouble(double num, u8 * str, u8 precisioni , u8 precisionf);
 u8* rtoasingle(float num, u8 * str, u8 precisioni , u8 precisionf);
+u32 format(const u8 * string, va_list args, u32 (*fonction)(u8* src, u8** dest, u32 len), u8* dest);

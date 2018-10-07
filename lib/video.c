@@ -299,13 +299,54 @@ u32 print(u8 * string)
 }
 
 /*******************************************************************************/
-/* affiche une chaine de caractère formaté a l'ecran */
+/* Fonction d'affichage (pour printf) */
 
-#define buffersize 1024
+u32 printstr(u8* src, u8** dest, u32 len) {
+	for(u32 i=0;i<len;i++)
+		putchar(*(src++));
+	return len;
+}
+
+/*******************************************************************************/
+/* Fonction d'enregistrement dans une variable (pour sprintf) */
+
+u32 storestr(u8* src, u8** dest, u32 len) {
+    memcpy(src, *dest, len, 1);
+    *dest=*dest+len;
+    return len;
+}
+
+/*******************************************************************************/
+/* affiche une chaine de caractère formaté a l'ecran */
 
 u32 printf(const u8 * string, ...)
 {
-	va_list args,argstemp;
+	va_list args;
+	va_start(args, string);
+    format(string, args, &printstr, NULL);
+    va_end(args);
+}
+
+/*******************************************************************************/
+/* met une chaine de caractère formaté dans une variable */
+
+u32 sprintf(u8 *variable, const u8 *string, ...)
+{
+	va_list args;
+	va_start(args, string);
+
+    format(string, args, &storestr, variable);
+    va_end(args);
+}
+
+
+/*******************************************************************************/
+/* affiche une chaine de caractère formaté a l'ecran */
+
+#define maxsize 1024
+
+u32 format(const u8 * string, va_list args, u32 (*fonction)(u8* src, u8** dest, u32 len), u8* dest)
+{
 	u64 sizes[] = { 0xFF, 0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF };
 	u8 units[][4] = { "o\000\000", "kio", "mio", "gio", "tio", "pio" };
 	u8 strbase2[] = "0xb\000";
@@ -314,17 +355,18 @@ u32 printf(const u8 * string, ...)
 	u8 hexadecimal[] = "*0x\000";
 	u8 achar, temp;
 	u8 asize, charadd, unit, precisioni, precisionf;
-	u8 buffer[buffersize];
+	u8 buffer[maxsize];
+    u8* bufferend;
+    u32 buffersize;
 	u8 *str = string;
 	u8 *strtemp;
 	u32 i = 0, counter = 0;
 	u64 num;
 	bool flag = false, intok = false, decok = false;
 
-	va_start(args, string);
 	for (achar = *str; achar != '\000'; i++, achar = *(str + i)) {
 		if (achar != '%' && !flag) {
-			putchar(achar);
+			fonction((str + i),&dest,1);
 			counter++;
 			asize = 2;
             precisioni = 0;
@@ -412,10 +454,11 @@ u32 printf(const u8 * string, ...)
                     break;
                 }
                 else if (asize==2)
-                    rtoasingle((float)va_arg(args, double), &buffer, precisioni, precisionf);
+                    bufferend=rtoasingle((float)va_arg(args, double), &buffer, precisioni, precisionf);
                 else
-                    rtoadouble((double)va_arg(args, double), &buffer, precisioni, precisionf);
-				counter += print(&buffer);
+                    bufferend=rtoadouble((double)va_arg(args, double), &buffer, precisioni, precisionf);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 'u':
@@ -429,8 +472,9 @@ u32 printf(const u8 * string, ...)
                     num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
-				itoa(num, &buffer, 10, sizes[asize], charadd);
-				counter += print(&buffer);
+				bufferend=itoa(num, &buffer, 10, sizes[asize], charadd);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 'o':
@@ -444,14 +488,15 @@ u32 printf(const u8 * string, ...)
                     num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
-				itoa(num, &buffer, 8, sizes[asize], charadd);
-				print(&strbase8);
-				counter += print(&buffer) + 1;
+				counter += fonction(&strbase8,&dest,1);
+				bufferend=itoa(num, &buffer, 8, sizes[asize], charadd);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 'c':
-				temp = (u8) va_arg(args, int);
-				putchar(temp);
+				temp = (u8) va_arg(args, u8);
+			    fonction(&temp,string,1);
 				counter++;
 				flag = false;
 				break;
@@ -472,9 +517,10 @@ u32 printf(const u8 * string, ...)
                     num=num>>10;
                     unit++;
                 }   
-				sitoa(num, &buffer, sizes[asize]);
-				counter += print(&buffer);
-                print(units[unit]);
+				bufferend=sitoa(num, &buffer, sizes[asize]);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
+				counter += fonction(units[unit],&dest,3);
 				flag = false;
 				break;
 			case 'd':
@@ -489,22 +535,24 @@ u32 printf(const u8 * string, ...)
                     num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = ' ';
-				sitoa(num, &buffer, sizes[asize]);
-				counter += print(&buffer);
+				bufferend=sitoa(num, &buffer, sizes[asize]);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 's':
 				strtemp = (u8 *) va_arg(args, u8 *);
-				counter += print(strtemp);
+				counter += fonction(strtemp,&dest,strlen(strtemp));
 				flag = false;
 				break;
 			case 'p':
 				num = (u32) va_arg(args, int);
 				if (charadd == 0xFF)
 					charadd = '0';
-				print(&hexadecimal);
-				itoa(num, buffer, 16, sizes[asize], '0');
-				counter += print(&buffer) + 2;
+                counter += fonction(&hexadecimal,&dest,3);
+				bufferend=itoa(num, &buffer, 16, sizes[asize], '0');
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 'x':
@@ -521,11 +569,12 @@ u32 printf(const u8 * string, ...)
                     num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
-				itoa(num, &buffer, 16, sizes[asize], charadd);
+				if (achar == 'X') counter += fonction(&strbase16,&dest,2);
+				bufferend=itoa(num, &buffer, 16, sizes[asize], charadd);
+                buffersize=bufferend-&buffer[0];
 				if (achar == 'X'||achar == 'Y')
 					strtoupper(&buffer);
-				if (achar == 'X') print(&strbase16);
-				counter += print(&buffer) + 1;
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			case 'b':
@@ -539,9 +588,10 @@ u32 printf(const u8 * string, ...)
                     num = (u64) va_arg(args, u64);
 				if (charadd == 0xFF)
 					charadd = '0';
-				itoa(num, &buffer, 2, sizes[asize], charadd);
-				print(&strbase2);
-				counter += print(&buffer) + 1;
+                counter += fonction(&strbase2,&dest,2);
+				bufferend=itoa(num, &buffer, 2, sizes[asize], charadd);
+                buffersize=bufferend-&buffer[0];
+				counter += fonction(&buffer,&dest,buffersize);
 				flag = false;
 				break;
 			default:
@@ -549,7 +599,7 @@ u32 printf(const u8 * string, ...)
 			}
 		}
 	}
-	va_end(args);
+    
 	return counter;
 }
 
@@ -562,6 +612,9 @@ u8 *rtoadouble(double num, u8 * str, u8 precisioni , u8 precisionf) {
   u8 i,j,integerpart,fracpart;
   if (precisioni==0) precisioni=12;
   if (precisionf==0) precisionf=8;  
+  double round=0.5;
+  for (i=0;i<precisionf;i++) round/=10;
+  num+=round;
   bool intok=false;     
   if (num<0) {                                                  
       num=-num;

@@ -224,28 +224,29 @@ int readidt()
 		u32 offset =
 		    desc[index].offset0_15 + (desc[index].offset16_31 << 16);
 		u32 type = desc[index].type & 0x0F00;
-        u8 *type2;
+        u8 *typestr1, *typestr2;
         if (i>=32 & i<=39)
-            type2="IRQ master";
+            typestr1="IRQ master";
         else if (i>=96 & i<=103)
-            type2="IRQ slave ";
+            typestr1="IRQ slave ";
         else if (i<19)
-            type2="EXCEPTION ";    
+            typestr1="EXCEPTION ";    
         else
-            type2="INTERRUPT ";
-		printf("\r\%s % hu %hY:%Y - ", type2,i++, select, offset, type);
+            typestr1="INTERRUPT ";
 		if (type == INTGATE)
-			print("INTGATE");
+			typestr2="INTGATE";
 		else if (type == TRAPGATE)
-			print("TRAPGATE");
+			typestr2="TRAPGATE";
 		else if (type == TASKGATE)
-			print("TASKGATE");
+			typestr2="TASKGATE";
 		else if (type == CALLGATE)
-			print("CALLGATE");
+			typestr2="CALLGATE";
 		else if (type == LDTDES)
-			print("LDTDES");
+			typestr2="LDTDES";
 		else
 			print("inconnu");
+		printf("%s % hu %hY:%Y - %s\r\n", typestr1, i++, select, offset, typestr2);
+
 		if (i % 32 == 0) {
 			print("\r\n<Appuyez sur une touche>\r\n");
 			waitascii();

@@ -28,7 +28,7 @@ for (tag = (struct multiboot_tag *) (addr + 8);
             tag->type != MULTIBOOT_TAG_TYPE_END;
             tag = (struct multiboot_tag *) ((u8 *) tag + ((tag->size + 7) & ~7)))
          {
-           printf ("--- Tag % 4u, Taille % 4u\r\n", tag->type, tag->size);
+           printf ("--- Tag % hu, Taille % hu\r\n", tag->type, tag->size);
            switch (tag->type)
              {
              case MULTIBOOT_TAG_TYPE_CMDLINE:
@@ -51,7 +51,7 @@ for (tag = (struct multiboot_tag *) (addr + 8);
                        ((u64)((struct multiboot_tag_basic_meminfo *) tag)->mem_upper)<<10);
                break;
              case MULTIBOOT_TAG_TYPE_BOOTDEV:
-               printf ("Peripherique de demarrage : %x,%u,%u\r\n\r\n",
+               printf ("Peripherique de demarrage : %X,%u,%u\r\n\r\n",
                        ((struct multiboot_tag_bootdev *) tag)->biosdev,
                        ((struct multiboot_tag_bootdev *) tag)->slice,
                        ((struct multiboot_tag_bootdev *) tag)->part);
@@ -62,7 +62,7 @@ for (tag = (struct multiboot_tag *) (addr + 8);
                  printf ("*** Plan de memoire ***\r\n");
                  for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;(u8 *) mmap < (u8 *) tag + tag->size; mmap = (multiboot_memory_map_t *)
                         ((unsigned long) mmap + ((struct multiboot_tag_mmap *) tag)->entry_size))
-                   printf (" adresse: %lx,"" taille:%lx, type:%x\r\n",
+                   printf (" adresse: %lX,"" taille:%lX, type:%X\r\n",
                            (u64) (mmap->addr),
                            (u64) (mmap->len),
                            (u32) (mmap->type));

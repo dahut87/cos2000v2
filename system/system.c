@@ -50,7 +50,7 @@ int main(u32 magic, u32 addr)
 	/*  Efface l'ecran   */
 
 	print("\033[2J\000");
-	printf(ansilogo);
+	print(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux");
 	ok();
@@ -106,9 +106,11 @@ int main(u32 magic, u32 addr)
 	printf(" -Installation des appels systemes utilisateur");
 	initsyscall();
 	ok();
+    static u8 tester[]="ceci est un test";
+    static u8 strings[255];
+    sprintf(&strings," pour voir : %u %d %f %s",123456789,-2522,3.14f,tester);
+    print(&strings);
 
-    float test=-12101412121212121212.5555555555555555f; 
-	printf(" -Test float & double :\r\n %e \r\n %f\r\n %1.2f\r\n %.2f\r\n %4.1f\r\n %10.5f\r\n %6f\r\n %8f",test,test,test,test,test,test,test,test);
 retry:
 	shell();
 }
