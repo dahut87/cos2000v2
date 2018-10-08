@@ -326,6 +326,8 @@ u32 storestr(u8* src, u8** dest, u32 len) {
     return len;
 }
 
+#define maxbuffersize 1024
+
 /*******************************************************************************/
 /* affiche une chaine de caractère formaté a l'ecran */
 
@@ -333,7 +335,7 @@ u32 printf(const u8 * string, ...)
 {
 	va_list args;
 	va_start(args, string);
-    format(string, args, &printstr, NULL);
+    vprintf(string, args);
     va_end(args);
 }
 
@@ -344,18 +346,49 @@ u32 sprintf(u8 *variable, const u8 *string, ...)
 {
 	va_list args;
 	va_start(args, string);
-
-    format(string, args, &storestr, variable);
+    vsprintf(variable, string, args);
     va_end(args);
 }
 
+/*******************************************************************************/
+/* met une chaine de caractère formaté dans une variable de taille fixée */
+
+u32 snprintf(u8 *variable, u32 maxsize, const u8 *string, ...)
+{
+	va_list args;
+	va_start(args, string);
+    vsnprintf(variable, maxsize, string, args);
+    va_end(args);
+}
+
+/*******************************************************************************/
+/* affiche une chaine de caractère formaté a l'ecran depuis vararg */
+
+u32 vprintf(const u8 * string, va_list args)
+{
+    format(string, args, maxbuffersize, &printstr, NULL);
+}
+
+/*******************************************************************************/
+/* met une chaine de caractère formaté dans une variable depuis vararg */
+
+u32 vsprintf(u8 *variable, const u8 *string, va_list args)
+{
+    format(string, args, maxbuffersize, &storestr, variable);
+}
+
+/*******************************************************************************/
+/* met une chaine de caractère formaté dans une variable de taille fixée depuis vararg  */
+
+u32 vsnprintf(u8 *variable, u32 maxsize, const u8 *string, va_list args)
+{
+    format(string, args, maxsize, &storestr, variable);
+}
 
 /*******************************************************************************/
 /* affiche une chaine de caractère formaté a l'ecran */
 
-#define maxsize 1024
-
-u32 format(const u8 * string, va_list args, u32 (*fonction)(u8* src, u8** dest, u32 len), u8* dest)
+u32 format(const u8 * string, va_list args, u32 maxsize, u32 (*fonction)(u8* src, u8** dest, u32 len), u8* dest)
 {
 	u64 sizes[] = { 0xFF, 0xFFFF, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF };
 	u8 units[][4] = { "o\000\000", "kio", "mio", "gio", "tio", "pio" };
@@ -365,7 +398,7 @@ u32 format(const u8 * string, va_list args, u32 (*fonction)(u8* src, u8** dest, 
 	u8 hexadecimal[] = "*0x\000";
 	u8 achar, temp;
 	u8 asize, charadd, unit, precisioni, precisionf;
-	u8 buffer[maxsize];
+	u8 buffer[maxbuffersize];
     u8* bufferend;
     u32 buffersize;
 	u8 *str = string;

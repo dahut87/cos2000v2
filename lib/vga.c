@@ -306,13 +306,9 @@ void scroll_unchain(u8 lines, u8 attrib)
 void scroll_chain(u8 lines, u8 attrib)
 {
 	if (scrolling) {
-		memcpy((u8 *) basemem + activepage * pagesize +
-		       linesize * 8 * lines,
-		       (u8 *) basemem + activepage * pagesize,
-		       pagesize - linesize * 8 * lines, 1);
-		memset((u8 *) (basemem + activepage * pagesize + pagesize -
-			       linesize * 8 * lines), attrib & 0x0F,
-		       linesize * 8 * lines, 1);
+		memcpy((u8 *) basemem + activepage * pagesize + linesize * 8 * lines,
+		       (u8 *) basemem + activepage * pagesize, pagesize - linesize * 8 * lines, 1);
+		memset((u8 *) (basemem + activepage * pagesize + pagesize - linesize * 8 * lines), attrib & 0x0F, linesize * 8 * lines, 1);
 	}
 }
 

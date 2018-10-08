@@ -12,6 +12,7 @@
 #include "shell.h"
 #include "multiboot2.h"
 #include "math.h"
+#include "debug.h"
 
 static command commands[] = {
 	{"reboot"    , "", &rebootnow},
@@ -26,6 +27,7 @@ static command commands[] = {
 	{"err"      , "", &err},
 	{"test"      , "", &test},
 	{"view"      , "", &view},
+	{"disasm"      , "", &disasm}
 };
 
 /*******************************************************************************/
@@ -65,6 +67,30 @@ int test(void)
 }
 
 /*******************************************************************************/
+/* Desassemble une zone de mémoire donnée */
+
+int disasm(u8* commandline)
+{
+	u8 arg[] = "       \000";
+    u8* size;
+    u8* pointer;
+    
+	if (strgetnbitems(commandline, ' ') < 3)
+    {
+		print("Syntaxe de la commande DISASM\r\ndisasm \33[32madresse taille\r\n\r\n \33[32madresse\33[0m\33[0m\33[25D\33[10C - Adresse a visualiser\r\n \33[32mtaille\33[0m\33[25D\33[10C - nombre d'octets a desassembler <256\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    size=pointer=strtoint(&arg);
+	strgetitem(commandline, &arg, ' ', 2);
+    size+=strtoint(&arg);
+    while(pointer<size)
+    {
+         pointer+=decode(pointer);
+    }
+}
+
+/*******************************************************************************/
 /* Génère des exceptions */
 
 int view(u8* commandline)
@@ -72,24 +98,73 @@ int view(u8* commandline)
 	u8 arg[] = "       \000";
     u32 address;
     u8 size;
-    u8* pointer;
+    u8* pointerb;
+    u16* pointerw;
+    u32* pointerd;
+    u8 format;
+    u8 nbligne;
 	if (strgetnbitems(commandline, ' ') < 3)
     {
-		print("Syntaxe de la commande VIEW\r\nview \33[32madresse taille\r\n\r\n \33[32madresse\33[0m - Adresse a visualiser\r\n \33[32mtaille\33[0m - nombre d'octets a visualiser <256\r\n");
+		print("Syntaxe de la commande VIEW\r\nview \33[32madresse taille [size] [nbligne]\r\n\r\n \33[32madresse\33[0m\33[0m\33[25D\33[10C - Adresse a visualiser\r\n \33[32mtaille\33[0m\33[25D\33[10C - nombre d'octets a visualiser <256\r\n \33[32mformat\33[0m\33[25D\33[10C - c (ascii) b (octet) w (mot) d (double mot)\r\n \33[32mnbligne\33[0m\33[25D\33[10C - nombre d'octets a visualiser par ligne\r\n");
         return;
     }
 	strgetitem(commandline, &arg, ' ', 1);
     address=strtoint(&arg);
 	strgetitem(commandline, &arg, ' ', 2);
     size=strtoint(&arg);
+	if (strgetnbitems(commandline, ' ') < 4)
+        format='b';
+    else {
+        strgetitem(commandline, &arg, ' ', 3);
+        format=arg[0];
+    }
+    switch (format) {
+            case 'c':
+               pointerb=address;
+               nbligne=12;
+                break;
+            case 'b':
+               pointerb=address;
+               nbligne=22;
+                break;
+            case 'w':
+               pointerw=address;
+               nbligne=13;
+                break;
+            case 'd':
+               pointerd=address;
+               nbligne=7;
+                break;
+    }
+	if (strgetnbitems(commandline, ' ') == 5)
+    {
+        strgetitem(commandline, &arg, ' ', 4);
+        nbligne=strtoint(&arg);
+    }
     printf("Adresse %Y - % hhu",address,size);
-    pointer=address;
-    for(u32 i=0;i<size;i++) {
-        if (i%16==0)
-            printf("\r\n:%Y - ",pointer);
-        else
-            printf("%hhY ",*(pointer++));
-   }
+    for(u32 i=0;i<size;i++)
+        switch (format) {
+            case 'c':
+                if (i%nbligne==0)
+                    printf("\r\n:%Y - ",pointerb);
+                printf("%hhY \33[40C%c\33[41D",*(pointerb),*(pointerb++));
+                break;
+            case 'b':
+                if (i%nbligne==0)
+                    printf("\r\n:%Y - ",pointerb);
+                printf("%hhY ",*(pointerb++));
+                break;
+            case 'w':
+                if (i%nbligne==0)
+                    printf("\r\n:%Y - ",pointerw);
+                printf("%hY ",*(pointerw++));
+                break;
+            case 'd':
+                if (i%nbligne==0)
+                    printf("\r\n:%Y - ",pointerd);
+                 printf("%Y ",*(pointerd++));
+            break;
+        }
 }
 /*******************************************************************************/
 /* Génère des exceptions */
@@ -100,7 +175,7 @@ int err(u8* commandline)
     u32 argint;
 	if (strgetnbitems(commandline, ' ') < 2)
     {
-		print("Syntaxe de la commande ERR\r\nerr \33[32mexception\r\n\r\n exception\33[0m - code de l'exception\r\n");
+		print("Syntaxe de la commande ERR\r\nerr \33[32mexception\r\n\r\n exception\33[0m\33[25D\33[10C - code de l'exception\r\n");
         return;
     }
 	strgetitem(commandline, &arg, ' ', 1);
@@ -214,7 +289,7 @@ int mode(u8* commandline)
     u32 argint;
 	if (strgetnbitems(commandline, ' ') < 2)
     {
-		print("Syntaxe de la commande MODE\r\nmode \33[32mmodevideo\r\n\r\n modevideo\33[0m - mode video a initialiser (>0x80 = graphique)\r\n");
+		print("Syntaxe de la commande MODE\r\nmode \33[32mmodevideo\r\n\r\n modevideo\33[0m\33[25D\33[10C - mode video a initialiser (>0x80 = graphique)\r\n");
         return;
     }
 	strgetitem(commandline, &arg, ' ', 1);

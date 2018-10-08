@@ -20,3 +20,4 @@ int info();
 int err();
 int view();
 int test(void);
+int disasm(u8* commandline);
