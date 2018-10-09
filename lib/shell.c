@@ -27,7 +27,10 @@ static command commands[] = {
 	{"err"      , "", &err},
 	{"test"      , "", &test},
 	{"view"      , "", &view},
-	{"disasm"      , "", &disasm}
+	{"disasm"      , "", &disasm},
+	{"bpset"      , "", &bpset},
+	{"bpclr"      , "", &bpclr},
+	{"help"      , "", &help},
 };
 
 /*******************************************************************************/
@@ -49,7 +52,7 @@ void shell()
 		strgetitem(&field, &item, ' ', 0);
 		strtolower(&item);
 		found = false;
-		for (i = 0; i < sizeof(commands); i++) {
+		for (i = 0; i < sizeof(commands)/sizeof(commands[0]); i++) {
 			if (strcmp(&item, &commands[i].name) == 0) {
 				(*commands[i].function) (&field);
 				found = true;
@@ -64,6 +67,75 @@ void shell()
 int test(void)
 {
     print("Fonction de test !\r\n");
+    return;
+}
+
+/*******************************************************************************/
+/* Renvoie les commandes disponibles */
+
+int help()
+{
+    print("Commandes disponibles :\r\n\r\n");
+    for(u32 i=0;i<sizeof(commands)/sizeof(commands[0]);i++) {
+        printf("%s \r\n",&commands[i].name);
+    }
+    return 0;
+}
+/*******************************************************************************/
+/* Met un breakpoint */
+
+int bpset(u8* commandline)
+{
+    u8 arg[] = "       \000";
+    u8* numero;
+    u8* pointer;
+    u8 type=DBG_EXEC;
+	if (strgetnbitems(commandline, ' ') < 3)
+    {
+		print("Syntaxe de la commande BPSET\r\nbpset \33[32mnumero address [type]\r\n\r\n \33[32mnumero\33[0m\33[0m\33[25D\33[10C - numero du breakpoint (0-3)\r\n \33[32madresse\33[0m\33[25D\33[10C - adresse du breakpoint\r\n \33[32mtype\33[0m\33[25D\33[10C - type de breakpoint (0-3)\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    numero=strtoint(&arg);
+    if (numero>3) {
+        print("numero incorrect");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 2);
+    pointer=strtoint(&arg);
+	if (strgetnbitems(commandline, ' ') == 4)
+    {
+	    strgetitem(commandline, &arg, ' ', 3);
+        type=strtoint(&arg);
+    }
+    if (type>DBG_READWRITE)
+    {
+        print("type incorrect");
+        return;
+    }
+    setdebugreg(numero,pointer,type);
+}
+
+/*******************************************************************************/
+/* Retire un breakpoint */
+
+int bpclr(u8* commandline)
+{
+    u8 arg[] = "       \000";
+    u8* numero;
+    
+	if (strgetnbitems(commandline, ' ') < 2)
+    {
+		print("Syntaxe de la commande BPCLR\r\nbpclr \33[32mnumero\r\n\r\n \33[32mnumero\33[0m\33[0m\33[25D\33[10C - numero du breakpoint (0-3)\r\n");
+        return;
+    }
+	strgetitem(commandline, &arg, ' ', 1);
+    numero=strtoint(&arg);
+    if (numero>3) {
+        print("numero incorrect");
+        return;
+    }
+    setdebugreg(numero,0x0,DBG_CLEAR);
 }
 
 /*******************************************************************************/
@@ -81,12 +153,13 @@ int disasm(u8* commandline)
         return;
     }
 	strgetitem(commandline, &arg, ' ', 1);
-    size=pointer=strtoint(&arg);
+    pointer=strtoint(&arg);
+    size=pointer;
 	strgetitem(commandline, &arg, ' ', 2);
     size+=strtoint(&arg);
     while(pointer<size)
     {
-         pointer+=decode(pointer);
+         pointer+=disas(pointer);
     }
 }
 
@@ -188,9 +261,8 @@ int err(u8* commandline)
         break;
     case 1:
         print("Creation d'un breakpoint !\r\n");
-        asm("movl %[address],%%dr0 \n \
-         movl $0x00000003, %%eax\n \
-         movl %%eax, %%dr7"::[address] "a" (&test):);
+        setdebugreg(0,&test, DBG_EXEC);
+        test();
         break;
     case 2:
         print("NON GERE!\r\n");

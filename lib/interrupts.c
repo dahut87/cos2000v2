@@ -8,6 +8,7 @@
 #include "video.h"
 #include "gdt.h"
 #include "system.h"
+#include "debug.h"
 
 #define IDT_SIZE		256	/* nombre de descripteurs */
 
@@ -188,7 +189,13 @@ void exception1()
     dump.eip=current->eip;
     dump.cs=current->cs;
     dump.esp=(current+1);
-	cpuerror("#DB Debug exception",&dump);
+    changevc(6);
+    clearscreen();
+    show_lightcpu(&dump);
+    setdebugreg(0,0, DBG_CLEAR);
+	sti();
+    waitascii();
+    iret();
 }
 
 void exception2()

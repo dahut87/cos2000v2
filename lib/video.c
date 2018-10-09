@@ -326,7 +326,7 @@ u32 storestr(u8* src, u8** dest, u32 len) {
     return len;
 }
 
-#define maxbuffersize 1024
+#define maxbuffersize 4096
 
 /*******************************************************************************/
 /* affiche une chaine de caractère formaté a l'ecran */

@@ -206,6 +206,71 @@ asm("   addl %[size],%%esp \n \
 /******************************************************************************/
 /* Affiche les registres CPU */
 
+void show_lightcpu(save_stack *stack)
+{
+    u32 i;
+	printf("\33[0mEAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
+	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
+    (stack->eflags & (1 <<11)) ? 'O':'-',
+    (stack->eflags & (1 <<10)) ? 'D':'-',
+    (stack->eflags & (1 << 9)) ? 'I':'-',
+    (stack->eflags & (1 << 8)) ? 'T':'-',
+    (stack->eflags & (1 << 7)) ? 'S':'-',
+    (stack->eflags & (1 << 6)) ? 'Z':'-',
+    (stack->eflags & (1 << 4)) ? 'A':'-',
+    (stack->eflags & (1 << 2)) ? 'P':'-',
+    (stack->eflags & (1 << 0)) ? 'C':'-');
+	printf("CS =%hY DS =%hY SS =%hY ES =%hY FS =%hY GS =%hY\r\n",stack->cs,stack->ds,stack->ss,stack->es,stack->fs,stack->gs);
+    printf("CR0=%Y CR2=%Y CR3=%Y CR4=%Y\r\n\r\n\r\n",stack->cr0,stack->cr2,stack->cr3,stack->cr4);
+    
+    u8* size;
+    u8* pointer;
+    for(i=20;i<50;i++) {
+        pointer=stack->eip-i;
+        size=pointer;
+        size+=50;
+        while(pointer<size) {
+            pointer+=decode(false, pointer,false);
+            if (pointer==stack->eip) break;
+        }
+        if (pointer==stack->eip) break;
+    }
+    if (pointer==stack->eip)
+        pointer=stack->eip-i;
+    else
+         pointer=stack->eip;       
+    size=pointer;
+    size+=50;
+    while(pointer<size)
+    {
+        if (pointer==stack->eip)
+            print("\33[41m\33[1m");
+        else
+            print("\33[40m\33[0m");           
+         pointer+=disas(pointer); 
+    }
+
+	printf("\33[0m\r\n\r\n\r\nSTACK\r\n");
+    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
+        printf("Pile invalide !");
+    else
+    {
+        i=0;
+	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+            if (i>0 && i % 10 == 0) print("\033[10A");
+            if (i>=10)
+                print("\033[25C");            
+		    printf("+%d:%Y - %Y\r\n", i++, pointer, (u32)(*pointer));
+        }
+        for(u32 j=0;j<10-(i % 10);j++)
+            print("\033[01B");
+	}
+}
+
+/******************************************************************************/
+/* Affiche les registres CPU */
+
 void show_cpu(save_stack *stack)
 {
 	printf("EAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
@@ -250,10 +315,6 @@ void show_cpu(save_stack *stack)
             if (i>=10)
                 print("\033[25C");            
 		    printf("+%d:%Y - %Y\r\n", i++, pointer, (u32)(*pointer));
-		    if (i > 20) {
-			    print("...\r\n");
-			    break;
-		    }
         }
         for(u32 j=0;j<10-(i % 10);j++)
             print("\033[01B");

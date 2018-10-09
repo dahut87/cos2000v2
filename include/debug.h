@@ -35,3 +35,18 @@
         return;                           \
     }
 
+
+#define DBG_EXEC        0b00
+#define DBG_WRITE       0b01
+#define DBG_CLEAR       0b10
+#define DBG_READWRITE   0b11
+
+#define DBG_ONEBYTE     0b00
+#define DBG_TWOBYTE     0b01
+#define DBG_FOURBYTE    0b11
+
+
+void setdebugreg(u8 number,u8 *address, u8 type);
+u8* getdebugreg(u8 number);
+u32 disas(u8 *a);
+u32 decode(bool at, u8 *a, bool show);
