@@ -127,90 +127,13 @@ u8 getcpuinfos(cpuinfo * proc)
 }
 
 /******************************************************************************/
-/* Retourne la tête de pile */
-
-u32 getESP(void)
-{
-	u32 stack = 0;
-    asm("movl %%esp,%[result];": [result] "=r"(stack));
-	return stack;
-}
-
-/******************************************************************************/
-/* Fixe la tête de pile */
-
-u32 setESP(u32 stack)
-{
-    asm("movl %[param],%%esp;": [param] "=r"(stack));
-}
-
-/******************************************************************************/
-/* Sauvegarde les registres CPU */
-
-void dump_cpu(save_stack *stack)
-{
-asm("   movl %%eax,%%ebx":::);
-asm("   addl %[size],%%esp \n \
-        addl $0x8,%%esp \n \
-        pushl %%eax \n \
-        pushl %%ebx \n \
-        pushl %%ecx \n \
-        pushl %%edx \n \
-        pushl %%esi \n \
-        pushl %%edi \n \
-        pushl %%ebp \n \
-        pushl %%esp \n \
-        pushl %%cs \n \
-        pushl $0x0 \n \
-        pushl %%ds \n \
-        pushl %%es \n \
-        pushl %%fs \n \
-        pushl %%gs \n \
-        pushl %%ss \n \
-        pushf \n \
-        mov %%eax,%%ebx \n \
-        mov %%cr0, %%eax \n \
-        pushl %%eax\n \
-        mov %%cr2, %%eax \n \
-        pushl %%eax\n \
-        mov %%cr3, %%eax \n \
-        pushl %%eax\n \
-        mov %%cr4, %%eax \n \
-        pushl %%eax \n \
-        mov %%dr0, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr1, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr2, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr3, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr4, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr5, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr6, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr7, %%eax \n \
-        pushl %%eax\n \
-        mov $0xC0000080, %%ecx \n \
-        rdmsr \n \
-        pushl %%edx \n \
-        pushl %%eax \n \
-        subl $0x8,%%esp \n \
-        mov %%ebx,%%eax"::[size] "a" (sizeof(save_stack)):);
-    save_stack new;
-    memcpy(&new, stack, sizeof(save_stack), 1);
-}
-
-/******************************************************************************/
 /* Affiche les registres CPU */
 
 void show_lightcpu(save_stack *stack)
 {
     u32 i;
 	printf("\33[0mEAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
-	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->oldesp, stack->ebp);
 	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
     (stack->eflags & (1 <<11)) ? 'O':'-',
     (stack->eflags & (1 <<10)) ? 'D':'-',
@@ -252,12 +175,12 @@ void show_lightcpu(save_stack *stack)
     }
 
 	printf("\33[0m\r\n\r\n\r\nSTACK\r\n");
-    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
+    if (abs(KERNEL_STACK_ADDR-stack->oldesp)>0x10000)
         printf("Pile invalide !");
     else
     {
         i=0;
-	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+	    for (u32 *pointer = stack->oldesp; pointer < KERNEL_STACK_ADDR; pointer ++) {
             if (i>0 && i % 10 == 0) print("\033[10A");
             if (i>=10)
                 print("\033[25C");            
@@ -274,7 +197,7 @@ void show_lightcpu(save_stack *stack)
 void show_cpu(save_stack *stack)
 {
 	printf("EAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
-	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->oldesp, stack->ebp);
 	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
     (stack->eflags & (1 <<11)) ? 'O':'-',
     (stack->eflags & (1 <<10)) ? 'D':'-',
@@ -305,12 +228,12 @@ void show_cpu(save_stack *stack)
      printf("DR4=%Y DR5=%Y DR6=%Y DR7=%Y\r\n",stack->dr4,stack->dr5,stack->dr6,stack->dr7);
      printf("EFER=%lY\r\n",stack->efer);
 	printf("STACK\r\n");
-    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
+    if (abs(KERNEL_STACK_ADDR-stack->oldesp)>0x10000)
         printf("Pile invalide !");
     else
     {
         u32 i=0;
-	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+	    for (u32 *pointer = stack->oldesp; pointer < KERNEL_STACK_ADDR; pointer ++) {
             if (i>0 && i % 10 == 0) print("\033[10A");
             if (i>=10)
                 print("\033[25C");            

@@ -42,7 +42,4 @@ bool apic2;
 bool cansetflag (u32 flag);
 void cpuid(u32 op, u32 *eax, u32 *ebx,u32 *ecx, u32 *edx);
 u8 getcpuinfos(cpuinfo *inf);
-u32 getESP(void);
-u32 setESP(u32 stack);
-void dump_cpu(save_stack *stack);
 void show_cpu(save_stack *stack);

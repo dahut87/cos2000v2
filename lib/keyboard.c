@@ -219,7 +219,6 @@ unsigned convert(u32 keypressed)
 
 	else if (key == SCAN_F9) {
         save_stack dump;
-        dump_cpu(&dump);
         show_cpu(&dump);
 	}
 

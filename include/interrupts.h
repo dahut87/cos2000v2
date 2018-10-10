@@ -61,7 +61,7 @@ typedef struct save_stack {
    u32 cr3;
    u32 cr2;
    u32 cr0;
-   u32 eflags;
+   u32 oldesp;
    u32 ss;
    u32 gs;
    u32 fs;
@@ -69,13 +69,14 @@ typedef struct save_stack {
    u32 ds;
    u32 eip;
    u32 cs;
-   u32 esp;
-   u32 ebp;
+   u32 eflags;
    u32 edi;
    u32 esi;
+   u32 ebp;
+   u32 esp;
+   u32 ebx;
    u32 edx;
    u32 ecx;
-   u32 ebx;
    u32 eax;
 } save_stack __attribute__ ((packed));
 /* exception pile */
