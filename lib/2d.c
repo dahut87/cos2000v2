@@ -151,3 +151,10 @@ void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
 	line(BB->x, BB->y, CC->x, CC->y, color);
 	line(CC->x, CC->y, AA->x, AA->y, color);
 }
+
+/******************************************************************************/
+/* Affiche un pixel à l'écran */
+void writepxl (u16 x, u16 y, u32 c)
+{
+}
+

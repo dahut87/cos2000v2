@@ -2,26 +2,15 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 
+#ifndef VIDEO
+# define VIDEO
+
 #include "stdarg.h"
 
 #define maxdrivers 10
 
-typedef struct drivers {
-    u8*             nom;
-    videofonction*  pointer;
-}
-
-typedef struct capabilities {
-    u8      modenumber;
-    u16     width;
-    u16     height;
-    bool    graphic;
-    u8      depth;
-    u8      refresh;    
-}
-
 typedef struct videoinfos {
-    u8      currentmode
+    u8      currentmode;
     u16     currentwidth;
     u16     currentheight;
     u8      currentdepth;
@@ -40,6 +29,45 @@ typedef struct videoinfos {
     u32     baseaddress;
 } videoinfos __attribute__ ((packed));
 
+typedef struct videofonction {
+    u8 *(*detect_hardware)();
+    u8 (*setvideo_mode) ();
+    u8 *(*getvideo_drivername) ();
+    u8 *(*getvideo_capabilities) ();
+    videoinfos *(*getvideo_info) ();
+    u32 (*mem_to_video) ();
+    u32 (*video_to_mem) ();
+    u32 (*video_to_video) ();
+    void (*wait_vretrace) ();
+    void (*wait_hretrace) ();
+    void (*page_set) ();
+    void (*page_show) ();
+    void (*page_split) ();
+    void (*cursor_enable) ();
+    void (*cursor_disable) ();
+    void (*cursor_set)  ();
+    u32 (*font_load) ();
+    void (*font1_set) ();
+    void (*font2_set) ();
+    void (*blink_enable) ();
+    void (*blink_disable) ();
+} videofonction __attribute__ ((packed));
+
+
+typedef struct drivers {
+    u8*             nom;
+    videofonction*  pointer;
+} drivers __attribute__ ((packed));
+
+typedef struct capabilities {
+    u8      modenumber;
+    u16     width;
+    u16     height;
+    bool    graphic;
+    u8      depth;
+    u8      refresh;    
+} capabilities __attribute__ ((packed));
+
 typedef struct console {
     u8        attrib;
     s16       cursX;
@@ -50,30 +78,6 @@ typedef struct console {
     u8        param3;
     u8        page;
 } console  __attribute__ ((packed));
-
-typedef struct videofonction {
-    u8 *(*detect_hardware) (void);
-    u8 (*setvideo_mode) (u8 mode);
-    u8 *(*getvideo_drivername) (void);
-    u8 *(*getvideo_capabilities) (void);
-    videoinfos *(*getvideo_info) (void);
-    u32 (*mem_to_video) (void *src,u32 dst, u32 size, bool increment_src);
-    u32 (*video_to_mem) (u32 src,void *dst, u32 size);
-    u32 (*video_to_video) (u32 src,u32 dst, u32 size);
-    void (*wait_vretrace) (void);
-    void (*wait_hretrace) (void);
-    void (*page_set) (u8 page);
-    void (*page_show) (u8 page);
-    void (*page_split) (u16 y);
-    void (*cursor_enable) (void);
-    void (*cursor_disable) (void);
-    void (*cursor_set)  (u16 x,u16 y);
-    u32 (*font_load) (u8 * def, u8 size, u8 font);
-    void (*font1_set) (u8 num);
-    void (*font2_set) (u8 num);
-    void (*blink_enable) (void);
-    void (*blink_disable) (void);
-} videofonction __attribute__ ((packed));
 
 /* Fonctions de bas niveau */
 void fill(u8 attrib);
@@ -111,6 +115,7 @@ void apply_bestdriver(void);
 void apply_nextdriver(void);
 void apply_driver(u8* name);
 void apply_nextvideomode(void);
+void initvideo(void);
 
 /* Fonctions du pilote */
 u8 *(*detect_hardware) (void);
@@ -134,3 +139,5 @@ void (*font1_set) (u8 num);
 void (*font2_set) (u8 num);
 void (*blink_enable) (void);
 void (*blink_disable) (void);
+
+#endif

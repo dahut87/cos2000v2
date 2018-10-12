@@ -12,36 +12,11 @@
 
 static videoinfos infos;
 
-static videofonction fonctions = 
-{
-    VGA_detect_hardware;
-    VGA_setvideo_mode;
-    VGA_getvideo_drivername;
-    VGA_getvideo_capabilities;
-    VGA_getvideo_info;
-    VGA_mem_to_video;
-    VGA_video_to_mem;
-    VGA_video_to_video;
-    VGA_wait_vretrace;
-    VGA_wait_hretrace;
-    VGA_page_set;
-    VGA_page_show;
-    VGA_page_split;
-    VGA_cursor_enable;
-    VGA_cursor_disable;
-    VGA_cursor_set;
-    VGA_font_load;
-    VGA_font1_set;
-    VGA_font2_set;
-    VGA_blink_enable;
-    VGA_blink_disable;
-}
-
 /*******************************************************************************/
 /* Detecte si le hardware est disponible, return NULL ou pointeur sur le type de pilote */
-u8 *VGA_detect_hardware {
-    return "LEGACY",
-};
+u8 *VGA_detect_hardware(void) {
+    return "LEGACY";
+}
 
 /*******************************************************************************/
 /* Renvoie l'adresse du segment video */
@@ -49,11 +24,11 @@ u8 *VGA_detect_hardware {
 u32 getbase(void)
 {
 	u32 base;
-	/*outb(graphics, 6);
-	base = inb(graphics + 1);
+	/*outb(GRAPHICS, 6);
+	base = inb(GRAPHICS + 1);
 	base >>= 2;
 	base &= 3;*/
-    base = modes[infos.currentmode].graphics.Miscellaneous_Graphics_Register;
+    base = modes[infos.currentmode].graphic.Miscellaneous_Graphics_Register;
 	switch (base) {
 	case 0:
 	case 1:
@@ -74,13 +49,14 @@ u32 getbase(void)
 /* ERR 0 aucune
 /* ERR 1 mode non existant */
 
-u32 VGA_setvideo_mode(u8 mode)
+u8 VGA_setvideo_mode(u8 mode)
 {
-    u32 index;
+    u32 index=0;
     while(vgacapabilities[index].modenumber!=0xFF) {
         if (vgacapabilities[index].modenumber==mode) {    
             infos.currentmode=vgacapabilities[index].modenumber;     
             break;
+        }
         index++;
     }
     if (infos.currentmode!=mode)
@@ -98,60 +74,60 @@ u32 VGA_setvideo_mode(u8 mode)
     infos.isblinking=false;
     infos.iscursorvisible=false;  
     if (infos.isgraphic) {
-		loadfont(font8x8, 8, 1);
-		loadfont(font8x16, 16, 0);
-        switch (infos.depth) {
+        switch (infos.currentdepth) {
 		    case 1:
 			    /* mode N&B */
-			    infos.currentpitch = infos.width;
+			    infos.currentpitch = infos.currentwidth;
 			    break;
 		    case 2:
 			    /* mode 4 couleurs */
-			    infos.currentpitch = (infos.width << 1);
+			    infos.currentpitch = (infos.currentwidth << 1);
 			    break;
 		    case 4:
 			    /* mode 16 couleurs */
-			    infos.currentpitch = infos.width;
+			    infos.currentpitch = infos.currentwidth;
 			    break;
 		    case 8:
 			    /* mode 256 couleurs */
 			    if (modes[index].sequencer.Sequencer_Memory_Mode_Register == 0x0E) {
 				    /* mode chainé (plus rapide mais limité en mémoire) */
-				    infos.currentpitch = (infos.width << 3);
+				    infos.currentpitch = (infos.currentwidth << 3);
 			    } else {
 				    /* mode non chainé */
-				    infos.currentpitch = (infos.width << 1);
+				    infos.currentpitch = (infos.currentwidth << 1);
 			    }
 			    break;
 		    default:
 			    break;
 		    }
-		infos.pagesize = ((infos.height * infos.currentpitch) << 3);
+		infos.pagesize = ((infos.currentheight * infos.currentpitch) << 3);
 	}
     else {
-        infos.currentpitch= infos.width * 2;
-        infos.pagesize=infos.height * infos.currentpitch;
+		VGA_font_load(font8x8, 8, 1);
+		VGA_font_load(font8x16, 16, 0);
+        infos.currentpitch= infos.currentwidth * 2;
+        infos.pagesize=infos.currentheight * infos.currentpitch;
     }
-    infos.pagesnumber=(planesize / infos.currentpitch); 
-    infos.baseaddress=(modes[index].ccrt.Cursor_Location_High_Register << 8) + modes[index].ccrt.Cursor_Location_Low_Register + getbase();
+    infos.pagesnumber=(PLANESIZE / infos.currentpitch); 
+    infos.baseaddress=(modes[index].ctrc.Cursor_Location_High_Register << 8) + modes[index].ctrc.Cursor_Location_Low_Register + getbase();
 	/* Initialise les registre "divers" */
-	outb(misc, modes[index].misc);
+	outb(MISC_WRITE, modes[index].misc);
 	/* Initialise les registre d'etat */
-	outb(state, 0x00);
+	outb(STATE, 0x00);
 	/* Initialise le séquenceur */
-	outreg(sequencer, modes[index].sequencer, 5);
+	outreg(SEQUENCER, modes[index].sequencer, 5);
 	/* Debloque le verouillage des registres controleur CRT */
-	outb(ccrt, 0x11);
-	outb(ccrt + 1, 0x0E);
+	outb(CCRT, 0x11);
+	outb(CCRT + 1, 0x0E);
 	/* Initialise le controleur CRT */
-	outreg(ccrt, ctrc, 25);
+	outreg(CCRT, modes[index].ctrc, 25);
 	/* Initialise le controleur graphique */
-	outreg(graphics, modes[index].graphic, 9);
-	inb(state);
+	outreg(GRAPHICS, modes[index].graphic, 9);
+	inb(STATE);
 	/* Initialise le controleur d'attributs */
-	outregsame(attribs, modes[index].attributs, 21);
-	inb(state);
-	outb(attribs, 0x20);
+	outregsame(ATTRIBS, modes[index].attribut, 21);
+	inb(STATE);
+	outb(ATTRIBS, 0x20);
 	/* Initialise l'adresse des procedures de gestion graphique et les differentes
 	   variables en fonction de la profondeur et du mode */
 	return 0;
@@ -173,7 +149,7 @@ u8 *VGA_getvideo_capabilities (void) {
 /*******************************************************************************/
 /* Renvoie un pointeur sur l'état courant de la carte */
 videoinfos *VGA_getvideo_info (void) {
-    return infos;
+    return &infos;
 }
 
 /*******************************************************************************/
@@ -211,10 +187,10 @@ void VGA_page_show(u8 page)
 	if (page < infos.pagesnumber) {
 		u16 addr;
 		addr = page * infos.pagesize / 2;
-		outb(ccrt, 0x0C);
-		outb(ccrt + 1, (addr >> 8));
-		outb(ccrt, 0x0D);
-		outb(ccrt + 1, (addr & 0xFF));
+		outb(CCRT, 0x0C);
+		outb(CCRT + 1, (addr >> 8));
+		outb(CCRT, 0x0D);
+		outb(CCRT + 1, (addr & 0xFF));
 		infos.currentshowedpage = page;
 	}
 }
@@ -228,38 +204,38 @@ void VGA_page_split(u16 y)
 {
     if (y!=0) {
 	    u16 addr;
-	    if (graphic == 0)
+	    if (!infos.isgraphic)
 		    addr = (y << 3);
 	    else
 		    addr = y;
 	    /* line compare pour ligne atteinte */
-	    outb(ccrt, 0x18);
-	    outb(ccrt + 1, (addr & 0xFF));
+	    outb(CCRT, 0x18);
+	    outb(CCRT + 1, (addr & 0xFF));
 	    /* overflow pour le bit 8 */
 
-	    outb(ccrt, 0x07);
-	    outb(ccrt + 1, (inb(ccrt + 1) & ~16) | ((addr >> 4) & 16));
+	    outb(CCRT, 0x07);
+	    outb(CCRT + 1, (inb(CCRT + 1) & ~16) | ((addr >> 4) & 16));
 
 	    /*  Maximum Scan Line pour le bit 9 */
 
-	    outb(ccrt, 0x09);
-	    outb(ccrt + 1, (inb(ccrt + 1) & ~64) | ((addr >> 3) & 64));
+	    outb(CCRT, 0x09);
+	    outb(CCRT + 1, (inb(CCRT + 1) & ~64) | ((addr >> 3) & 64));
 	    splitY = y;
     }
     else
     {
         /* line compare pour ligne atteinte */
-	    outb(ccrt, 0x18);
-	    outb(ccrt + 1, 0);
+	    outb(CCRT, 0x18);
+	    outb(CCRT + 1, 0);
 	    /* overflow pour le bit 8 */
 
-	    outb(ccrt, 0x07);
-	    outb(ccrt + 1, inb(ccrt + 1) & ~16);
+	    outb(CCRT, 0x07);
+	    outb(CCRT + 1, inb(CCRT + 1) & ~16);
 
 	    /*  Maximum Scan Line pour le bit 9 */
 
-	    outb(ccrt, 0x09);
-	    outb(ccrt + 1, inb(ccrt + 1) & ~64);
+	    outb(CCRT, 0x09);
+	    outb(CCRT + 1, inb(CCRT + 1) & ~64);
 	    splitY = 0;
     }
 }
@@ -269,7 +245,7 @@ void VGA_page_split(u16 y)
 
 void VGA_wait_vretrace(void)
 {
-	while ((inb(state) & 8) == 0) ;
+	while ((inb(STATE) & 8) == 0) ;
 }
 
 /*******************************************************************************/
@@ -277,7 +253,7 @@ void VGA_wait_vretrace(void)
 
 void VGA_wait_hretrace(void)
 {
-	while ((inb(state) & 1) == 0) ;
+	while ((inb(STATE) & 1) == 0) ;
 }
 
 /*******************************************************************************/
@@ -287,9 +263,9 @@ void VGA_cursor_enable(void)
 {
 	u8 curs;
 	/* active le curseur hardware */
-	outb(ccrt, 10);
-	curs = inb(ccrt + 1) & ~32;
-	outb(ccrt + 1, curs);
+	outb(CCRT, 10);
+	curs = inb(CCRT + 1) & ~32;
+	outb(CCRT + 1, curs);
     infos.isgraphic=true;
 }
 
@@ -300,9 +276,9 @@ void VGA_cursor_disable(void)
 {
 	u8 curs;
 	/* Desactive le curseur hardware */
-	outb(ccrt, 10);
-	curs = inb(ccrt + 1) | 32;
-	outb(ccrt + 1, curs);
+	outb(CCRT, 10);
+	curs = inb(CCRT + 1) | 32;
+	outb(CCRT + 1, curs);
     infos.isgraphic=false;
 }
 
@@ -315,11 +291,11 @@ void useplane(u8 plan)
 	plan &= 3;
 	mask = 1 << plan;
 	/* choisi le plan de lecture */
-	outb(graphics, 4);
-	outb(graphics + 1, plan);
+	outb(GRAPHICS, 4);
+	outb(GRAPHICS + 1, plan);
 	/* choisi le plan d'ecriture */
-	outb(sequencer, 2);
-	outb(sequencer + 1, mask);
+	outb(SEQUENCER, 2);
+	outb(SEQUENCER + 1, mask);
 }
 
 /*******************************************************************************/
@@ -329,15 +305,15 @@ void VGA_cursor_set(u16 x, u16 y)
 {
 	u16 pos;
 	if (splitY == 0)
-		pos = (infos.currentshowedpage * infos.pagesize / 2 + x + y * infos.width);
+		pos = (infos.currentshowedpage * infos.pagesize / 2 + x + y * infos.currentwidth);
 	else
-		pos = (x + y * infos.width);
-	outb(ccrt, 0x0F);
-	outb(ccrt + 1, (u8) (pos & 0x00FF));
-	outb(ccrt, 0x0E);
-	outb(ccrt + 1, (u8) ((pos & 0xFF00) >> 8));
-    info.currentcursorX=x;
-    info.currentcursorY=y;
+		pos = (x + y * infos.currentwidth);
+	outb(CCRT, 0x0F);
+	outb(CCRT + 1, (u8) (pos & 0x00FF));
+	outb(CCRT, 0x0E);
+	outb(CCRT + 1, (u8) ((pos & 0xFF00) >> 8));
+    infos.currentcursorX=x;
+    infos.currentcursorY=y;
 }
 
 /*******************************************************************************/
@@ -358,38 +334,38 @@ u32 VGA_font_load(u8 * def, u8 size, u8 font)
 	else
 		base = (u8 *) (getbase() + ((((font - 4) << 1) + 1) << 13));
 	/* sauve les anciens registres */
-	outb(sequencer, 2);
-	oldregs[0] = inb(sequencer + 1);
-	outb(sequencer, 4);
-	oldregs[1] = inb(sequencer + 1);
+	outb(SEQUENCER, 2);
+	oldregs[0] = inb(SEQUENCER + 1);
+	outb(SEQUENCER, 4);
+	oldregs[1] = inb(SEQUENCER + 1);
 	/* Adressage paire/impair desactivé (lineaire) */
-	outb(sequencer + 1, oldregs[1] | 0x04);
-	outb(graphics, 4);
-	oldregs[2] = inb(graphics + 1);
-	outb(graphics, 5);
-	oldregs[3] = inb(graphics + 1);
+	outb(SEQUENCER + 1, oldregs[1] | 0x04);
+	outb(GRAPHICS, 4);
+	oldregs[2] = inb(GRAPHICS + 1);
+	outb(GRAPHICS, 5);
+	oldregs[3] = inb(GRAPHICS + 1);
 	/* Adressage paire/impair desactivé (lineaire) */
-	outb(graphics + 1, oldregs[3] & ~0x10);
-	outb(graphics, 6);
-	oldregs[4] = inb(graphics + 1);
+	outb(GRAPHICS + 1, oldregs[3] & ~0x10);
+	outb(GRAPHICS, 6);
+	oldregs[4] = inb(GRAPHICS + 1);
 	/* Adressage paire/impair desactivé (lineaire) */
-	outb(graphics + 1, oldregs[4] & ~0x02);
+	outb(GRAPHICS + 1, oldregs[4] & ~0x02);
 	/* utilisation du plan N°2 */
 	useplane(2);
 	for (i = 0; i < 256; i++) {
 		memcpy(def, base + i * 32, size, 1);
 		def += size;
 	}
-	outb(sequencer, 2);
-	outb(sequencer + 1, oldregs[0]);
-	outb(sequencer, 4);
-	outb(sequencer + 1, oldregs[1]);
-	outb(graphics, 4);
-	outb(graphics + 1, oldregs[2]);
-	outb(graphics, 5);
-	outb(graphics + 1, oldregs[3]);
-	outb(graphics, 6);
-	outb(graphics + 1, oldregs[4]);
+	outb(SEQUENCER, 2);
+	outb(SEQUENCER + 1, oldregs[0]);
+	outb(SEQUENCER, 4);
+	outb(SEQUENCER + 1, oldregs[1]);
+	outb(GRAPHICS, 4);
+	outb(GRAPHICS + 1, oldregs[2]);
+	outb(GRAPHICS, 5);
+	outb(GRAPHICS + 1, oldregs[3]);
+	outb(GRAPHICS, 6);
+	outb(GRAPHICS + 1, oldregs[4]);
 	return 0;
 }
 
@@ -399,11 +375,11 @@ u32 VGA_font_load(u8 * def, u8 size, u8 font)
 void VGA_font1_set(u8 num)
 {
 	num &= 0x07;
-	outb(sequencer, 3);
-	outb(sequencer + 1,
-	     (inb(sequencer + 1) & 0xEC) | ((num & 0x03) +
+	outb(SEQUENCER, 3);
+	outb(SEQUENCER + 1,
+	     (inb(SEQUENCER + 1) & 0xEC) | ((num & 0x03) +
 					    ((num & 0x04) << 2)));
-    info.currentfont1=num;
+    infos.currentfont1=num;
 }
 
 /*******************************************************************************/
@@ -412,11 +388,11 @@ void VGA_font1_set(u8 num)
 void VGA_font2_set(u8 num)
 {
 	num &= 0x07;
-	outb(sequencer, 3);
-	outb(sequencer + 1,
-	     (inb(sequencer + 1) & 0xD3) | (((num & 0x03) << 2) +
+	outb(SEQUENCER, 3);
+	outb(SEQUENCER + 1,
+	     (inb(SEQUENCER + 1) & 0xD3) | (((num & 0x03) << 2) +
 					    ((num & 0x04) << 3)));
-    info.currentfont2=num;
+    infos.currentfont2=num;
 }
 
 /*******************************************************************************/
@@ -424,9 +400,9 @@ void VGA_font2_set(u8 num)
 
 void VGA_blink_enable(void)
 {
-	outb(ccrt, 0x10);
-	outb(ccrt + 1, (inb(sequencer + 1) | 0x04));
-    info.isblinking=true;
+	outb(CCRT, 0x10);
+	outb(CCRT + 1, (inb(SEQUENCER + 1) | 0x04));
+    infos.isblinking=true;
 }
 
 /*******************************************************************************/
@@ -434,9 +410,9 @@ void VGA_blink_enable(void)
 
 void VGA_blink_disable(void)
 {
-	outb(ccrt, 0x10);
-	outb(ccrt + 1, (inb(sequencer + 1) & ~0x04));
-    info.isblinking=false;
+	outb(CCRT, 0x10);
+	outb(CCRT + 1, (inb(SEQUENCER + 1) & ~0x04));
+    infos.isblinking=false;
 }
 
 /*******************************************************************************/

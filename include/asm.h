@@ -24,16 +24,6 @@
         asm volatile ("movl %%esp,%%eax;": "=a" (_v)); \
         _v; \
 })
-   u32 ss;
-   u32 gs;
-   u32 fs;
-   u32 es;
-   u32 ds;
-   u32 eip;
-   u32 cs;
-
-
-
 
 #define dumpcpu() asm("\
         mov $0x6666666, %%eax  \n \

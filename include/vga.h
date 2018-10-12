@@ -2,28 +2,29 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "types.h"
+#include "video.h"
 
 #define TEXTSCREEN 0xB8000	/* debut de la memoire video texte*/
 #define GRPHSCREEN 0xA0000	/* debut de la memoire video graphique*/
 
 /* Registres VGAs */
 
-#define sequencer   0x3c4
-#define misc_write  0x3c2
-#define misc_read   0x3cc
-#define ccrt        0x3D4
-#define attribs     0x3c0
-#define graphics    0x3ce
-#define state       0x3da
+#define SEQUENCER   0x3c4
+#define MISC_WRITE  0x3c2
+#define MISC_READ   0x3cc
+#define CCRT        0x3D4
+#define ATTRIBS     0x3c0
+#define GRAPHICS    0x3ce
+#define STATE       0x3da
 
 /* Taille d'un plan de bit */
 
-#define planesize 0x10000
+#define PLANESIZE 0x10000
 
 /* Registres VGA */
 typedef struct misc_regs {
     u8 Miscellaneous_Output_Register;  
-} misc_reg __attribute__ ((packed));
+} misc_regs __attribute__ ((packed));
 
 typedef struct sequencer_regs {
     u8 Reset_Register;  
@@ -31,7 +32,7 @@ typedef struct sequencer_regs {
     u8 Map_Mask_Register;  
     u8 Character_Map_Select_Register;  
     u8 Sequencer_Memory_Mode_Register;  
-} sequencer_reg __attribute__ ((packed));
+} sequencer_regs __attribute__ ((packed));
 
 typedef struct crtc_regs {
     u8 Horizontal_Total_Register;  
@@ -74,7 +75,7 @@ typedef struct graphics_regs {
 } graphics_regs __attribute__ ((packed));
 
 typedef struct attributs_regs {
-    u8 Palette Registers[16];
+    u8 Palette_Registers[16];
     u8 Attribute_Mode_Control_Register;  
     u8 Overscan_Color_Register;  
     u8 Color_Plane_Enable_Register;
@@ -112,3 +113,28 @@ void VGA_font1_set (u8 num);
 void VGA_font2_set (u8 num);
 void VGA_blink_enable (void);
 void VGA_blink_disable (void);
+
+static videofonction fonctions = 
+{
+    &VGA_detect_hardware,
+    &VGA_setvideo_mode,
+    &VGA_getvideo_drivername,
+    &VGA_getvideo_capabilities,
+    &VGA_getvideo_info,
+    &VGA_mem_to_video,
+    &VGA_video_to_mem,
+    &VGA_video_to_video,
+    &VGA_wait_vretrace,
+    &VGA_wait_hretrace,
+    &VGA_page_set,
+    &VGA_page_show,
+    &VGA_page_split,
+    &VGA_cursor_enable,
+    &VGA_cursor_disable,
+    &VGA_cursor_set,
+    &VGA_font_load,
+    &VGA_font1_set,
+    &VGA_font2_set,
+    &VGA_blink_enable,
+    &VGA_blink_disable
+};

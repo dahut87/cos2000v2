@@ -4,9 +4,7 @@
 
 /* definition des registres de la carte VGA pour differents modes */
 
-#define nbmodes 9
-
-static capabilities vgacapabilities[nbmodes] = {
+static capabilities vgacapabilities[] = {
     {0x00, 80, 25,false, 4,  0},
     {0x01, 80, 50,false, 4,  0},
     {0x80,640,480,true , 1,  0},
@@ -20,7 +18,7 @@ static capabilities vgacapabilities[nbmodes] = {
 };
 
 
-static vgamode modes[nbmodes] = {
+static vgamode modes[] = {
 
 	/*80*25 16 couleurs mode 0x00 */
 	{{0x67},

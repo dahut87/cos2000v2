@@ -7,21 +7,16 @@
 
 drivers registred[maxdrivers];
 
+videoinfos *vinfo;
+
 console vc[8] = {
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
-	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
 	{0x07, 0, 0, 0, 0, 0, 0, 0}
 };
 
@@ -96,7 +91,7 @@ bool makeansi(u8 c)
 				fill(vc[usedvc].attrib);
 				vc[usedvc].cursX = 0;
 				vc[usedvc].cursY = 0;
-				gotoscr(0, 0);
+				cursor_set(0, 0);
 				vc[usedvc].ansi = 0;
 				return 1;
 			}
@@ -113,16 +108,16 @@ bool makeansi(u8 c)
 			if (vc[usedvc].cursY < 0)
 				vc[usedvc].cursY = 0;
 			vc[usedvc].ansi = 0;
-			gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
 		}
 /* ESC[num1B -- bouge le curseur de num1 vers le bas */
 		else if (c == 'B') {
 			vc[usedvc].cursY += vc[usedvc].param1;
-			if (vc[usedvc].cursY >= getyres() - 1)
-				vc[usedvc].cursY = getyres();
+			if (vc[usedvc].cursY >= vinfo->currentheight - 1)
+				vc[usedvc].cursY = vinfo->currentheight;
 			vc[usedvc].ansi = 0;
-			gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
 		}
 /* ESC[num1D -- bouge le curseur de num1 vers la gauche */
@@ -131,16 +126,16 @@ bool makeansi(u8 c)
 			if (vc[usedvc].cursX < 0)
 				vc[usedvc].cursX = 0;
 			vc[usedvc].ansi = 0;
-			gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
 		}
 /* ESC[num1C -- bouge le curseur de num1 vers la droite */
 		else if (c == 'C') {
 			vc[usedvc].cursX += vc[usedvc].param1;
-			if (vc[usedvc].cursX >= getxres() - 1)
-				vc[usedvc].cursX = getxres();
+			if (vc[usedvc].cursX >= vinfo->currentwidth - 1)
+				vc[usedvc].cursX = vinfo->currentwidth;
 			vc[usedvc].ansi = 0;
-			gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
 		}
 		break;
@@ -157,7 +152,7 @@ bool makeansi(u8 c)
 /* ESC[num1;num2H ou ESC[num1;num2f-- bouge le curseur en num1,num2 */
 		else if ((c == 'H') || (c == 'f')) {
 			/* Remet la position du curseur matériel  a num1,num2 */
-			gotoscr(vc[usedvc].param2, vc[usedvc].param1);
+			cursor_set(vc[usedvc].param2, vc[usedvc].param1);
 			/* Remet la position du curseur logiciel  a num1,num2 */
 			vc[usedvc].cursX = vc[usedvc].param2;
 			vc[usedvc].cursY = vc[usedvc].param1;
@@ -195,6 +190,13 @@ bool makeansi(u8 c)
 	vc[usedvc].ansi = 0;
 	return 0;		/* Ansi fini ;) */
 }
+
+void changemode(u8 mode)
+{
+    setvideo_mode(mode);
+    vinfo=getvideo_info();
+}
+
 /*******************************************************************************/
 /* Efface la console en cours d'utilisation */
 void clearscreen(void)
@@ -202,7 +204,7 @@ void clearscreen(void)
     fill(0x00);
     vc[usedvc].cursX=0;
     vc[usedvc].cursY=0;
-    gotoscr(0,0);
+    cursor_set(0,0);
 }
 
 /*******************************************************************************/
@@ -211,9 +213,9 @@ void clearscreen(void)
 void changevc(u8 avc)
 {
 	usedvc = avc;
-	showpage(usedvc);
-	setpage(usedvc);
-	gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+	page_show(usedvc);
+	page_set(usedvc);
+	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 }
 
 /*******************************************************************************/
@@ -221,8 +223,8 @@ void changevc(u8 avc)
 
 void putchar(u8 thechar)
 {
-	showpage(usedvc);
-	setpage(usedvc);
+	page_show(usedvc);
+	page_set(usedvc);
 	if (makeansi(thechar))
 		return;
 	switch (thechar) {
@@ -231,7 +233,7 @@ void putchar(u8 thechar)
 			vc[usedvc].cursY--;
 		break;
 	case 0x12:
-		if (vc[usedvc].cursY < getyres() - 1)
+		if (vc[usedvc].cursY < vinfo->currentheight - 1)
 			vc[usedvc].cursY++;
 		break;
 	case 0x13:
@@ -239,7 +241,7 @@ void putchar(u8 thechar)
 			vc[usedvc].cursX--;
 		break;
 	case 0x14:
-		if (vc[usedvc].cursX < getxres() - 1)
+		if (vc[usedvc].cursX < vinfo->currentwidth - 1)
 			vc[usedvc].cursX++;
 		break;
 	case 0x2:
@@ -248,15 +250,15 @@ void putchar(u8 thechar)
 		break;
 	case 0x3:
 		vc[usedvc].cursX = 0;
-		vc[usedvc].cursY = getyres() - 1;
+		vc[usedvc].cursY = vinfo->currentheight - 1;
 		break;
 	case 0x19:
-		vc[usedvc].cursX = getxres() - 1;
+		vc[usedvc].cursX = vinfo->currentwidth - 1;
 		break;
 	case '\b':
 		if (vc[usedvc].cursX == 0) {
 			if (vc[usedvc].cursY > 0) {
-				vc[usedvc].cursX = getxres() - 1;
+				vc[usedvc].cursX = vinfo->currentwidth - 1;
 				vc[usedvc].cursY--;
 			}
 		} else {
@@ -283,15 +285,15 @@ void putchar(u8 thechar)
 		}
 		break;
 	}
-	if (vc[usedvc].cursX >= getxres()) {
+	if (vc[usedvc].cursX >= vinfo->currentwidth) {
 		vc[usedvc].cursX = 0;
 		vc[usedvc].cursY++;
 	}
-	if (vc[usedvc].cursY >= getyres()) {
+	if (vc[usedvc].cursY >= vinfo->currentheight) {
 		scroll(1, vc[usedvc].attrib);
-		vc[usedvc].cursY = getyres() - 1;
+		vc[usedvc].cursY = vinfo->currentheight - 1;
 	}
-	gotoscr(vc[usedvc].cursX, vc[usedvc].cursY);
+	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 }
 
 /*******************************************************************************/
@@ -825,7 +827,7 @@ void initdriver() {
 
 /*******************************************************************************/
 /* Enregistre un pilote dans le tableau des pilotes vidéo */
-void registerdriver(videofonction *pointer);
+void registerdriver(videofonction *pointer)
 {
     u32 i;  
     for(i=0;i<maxdrivers;i++) 
@@ -835,6 +837,7 @@ void registerdriver(videofonction *pointer);
     while (registred[i].nom!=NULL && i<maxdrivers) 
         i++;
     registred[i].pointer=pointer;
+    registred[i].nom=pointer->getvideo_drivername();
 }
 /*******************************************************************************/
 /* Choisi le meilleur driver en terme d'affichage */
@@ -844,15 +847,16 @@ void apply_bestdriver(void) {
     u8 bestresol=0x0;
     u8 bestmode=0x0;
     u8* bestdriver=NULL;
+    capabilities *cap;
     while (registred[i].nom!=NULL && i<maxdrivers) {
-        capabilities cap=registred[i].pointer.getvideo_capabilities();
+        cap=registred[i].pointer->getvideo_capabilities();
         while(cap[j].modenumber!=0xFF) {
             if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
             {
                 bestdepth=cap[j].depth;
                 bestresol=cap[j].width*cap[j].height;
                 bestmode=cap[j].modenumber;
-                bestdriver=registred[i].pointer.getvideo_drivername();
+                bestdriver=registred[i].pointer->getvideo_drivername();
             }
             j++;
         }
@@ -864,43 +868,44 @@ void apply_bestdriver(void) {
 
 /*******************************************************************************/
 /* Choisi le meilleur driver spécifié par le nom */
-void apply_driver(u8* name);
+void apply_driver(u8* name)
 {
     u32 i=0;
     while (registred[i].nom!=NULL && i<maxdrivers) {
         if (strcmp(name,registred[i].nom)==0) {
-            detect_hardware=registred[i].pointer.detect_hardware;
-            setvideo_mode=registred[i].pointer.setvideo_mode;
-            getvideo_drivername=registred[i].pointer.getvideo_drivername;
-            getvideo_capabilities=registred[i].pointer.getvideo_capabilities;
-            getvideo_info=registred[i].pointer.getvideo_info;
-            mem_to_video=registred[i].pointer.mem_to_video;
-            video_to_mem=registred[i].pointer.video_to_mem;
-            video_to_video=registred[i].pointer.video_to_video;
-            wait_vretrace=registred[i].pointer.wait_vretrace;
-            wait_hretrace=registred[i].pointer.wait_hretrace;
-            page_set=registred[i].pointer.page_set;
-            page_show=registred[i].pointer.page_show;
-            page_split=registred[i].pointer.page_split;
-            cursor_enable=registred[i].pointer.cursor_enable;
-            cursor_disable=registred[i].pointer.cursor_disable;
-            cursor_set=registred[i].pointer.cursor_set;
-            font_load=registred[i].pointer.font_load;
-            font1_set=registred[i].pointer.font1_set;
-            font2_set=registred[i].pointer.font2_set;
-            blink_enable=registred[i].pointer.blink_enable;
-            blink_disable=registred[i].pointer.blink_disable;
+            detect_hardware=registred[i].pointer->detect_hardware;
+            setvideo_mode=registred[i].pointer->setvideo_mode;
+            getvideo_drivername=registred[i].pointer->getvideo_drivername;
+            getvideo_capabilities=registred[i].pointer->getvideo_capabilities;
+            getvideo_info=registred[i].pointer->getvideo_info;
+            mem_to_video=registred[i].pointer->mem_to_video;
+            video_to_mem=registred[i].pointer->video_to_mem;
+            video_to_video=registred[i].pointer->video_to_video;
+            wait_vretrace=registred[i].pointer->wait_vretrace;
+            wait_hretrace=registred[i].pointer->wait_hretrace;
+            page_set=registred[i].pointer->page_set;
+            page_show=registred[i].pointer->page_show;
+            page_split=registred[i].pointer->page_split;
+            cursor_enable=registred[i].pointer->cursor_enable;
+            cursor_disable=registred[i].pointer->cursor_disable;
+            cursor_set=registred[i].pointer->cursor_set;
+            font_load=registred[i].pointer->font_load;
+            font1_set=registred[i].pointer->font1_set;
+            font2_set=registred[i].pointer->font2_set;
+            blink_enable=registred[i].pointer->blink_enable;
+            blink_disable=registred[i].pointer->blink_disable;
+            setvideo_mode(0x0);
+            return;
         }
         i++;
     }
-    setvideo_mode(0x0);
 }
 /*******************************************************************************/
 /* Applique le driver suivant */
 
 void apply_nextdriver(void) {
     u32 i=0;
-    while (registred[i].nom!=NULL && i<maxdrivers) {
+    while (registred[i].nom!=NULL && i<maxdrivers)
         if (strcmp(getvideo_drivername(),registred[i].nom)==0) {
             i++;
             if (registred[i].nom!=NULL) i=0;
@@ -914,9 +919,9 @@ void apply_nextdriver(void) {
 /* Applique le mode suivant (le driver suivant si dernier mode) */
 
 void apply_nextvideomode(void) {
-    capabilities cap=getvideo_capabilities();
-    videoinfos info=getvideo_info();
-    u32 mode=info.modenumber;
+    capabilities *cap=getvideo_capabilities();
+    videoinfos *info=getvideo_info();
+    u32 mode=info->currentmode;
     u8 index=0;
     while(cap[index].modenumber!=0xFF) {
         if (cap[index].modenumber==mode) {    
@@ -929,6 +934,15 @@ void apply_nextvideomode(void) {
         }
         index++;
     }
+}
+
+/*******************************************************************************/
+/* Initialise la video */
+void initvideo(void)
+{
+    initdriver();
+    registerdriver(&fonctions);
+    apply_driver("VGA");
 }
 
 /*******************************/

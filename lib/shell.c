@@ -365,7 +365,7 @@ int mode(u8* commandline)
     }
 	strgetitem(commandline, &arg, ' ', 1);
     argint=strtoint(&arg);
-	setvmode(argint);
+	setvideo_mode(argint);
 	return 0;
 }
 
@@ -394,7 +394,7 @@ int rebootnow()
 
 int test2d()
 {
-	setvmode(0x89);
+	setvideo_mode(0x87);
 	fill(0x00);
 	struct vertex2d a, b, c;
 	randomize();

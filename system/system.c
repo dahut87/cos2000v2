@@ -46,10 +46,8 @@ void error()
 int main(u32 magic, u32 addr)
 {
 	cli();
-    initdriver();
-    registerdriver(&fonctions);
-    apply_driver("VGA");
-	setvideo_mode(0x02);
+    initvideo();
+	changemode(0x02);
 	/*  Efface l'ecran   */
 
 	print("\033[2J\000");
