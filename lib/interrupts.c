@@ -351,7 +351,7 @@ void exception14()
     cli();
     dumpcpu();
     save_stack *dump = getESP();
-    exception_stack *current = getESP()+36;
+    exception_stack *current = getESP()+sizeof(save_stack)+100;
     dump->eip=current->eip;
     dump->cs=current->cs;
     dump->oldesp=(current+1);

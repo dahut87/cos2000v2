@@ -2,6 +2,7 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "vga.h"
+#include "video.h"
 #include "memory.h"
 #include "asm.h"
 #include "types.h"
@@ -9,141 +10,264 @@
 #include "VGA/8x8fnt.c"
 #include "VGA/8x16fnt.c"
 
-/* Registres VGAs */
+static videoinfos infos;
 
-#define sequencer 0x3c4
-#define misc 0x3c2
-#define ccrt 0x3D4
-#define attribs 0x3c0
-#define graphics 0x3ce
-#define state 0x3da
-
-/* Taille d'un plan de bit */
-
-#define planesize 0x10000
-
-static u16 resX, resY, color, splitY;	/* resolution x,y en caractères et profondeur */
-
-static u8 pages, activepage, showedpage;	/* nombre de pages disponibles N° de la page active */
-static u32 linesize, pagesize;	/* Taille d'une ligne et d'une page */
-static u8 vmode = 0xFF;		/* mode en cours d'utilisation */
-static u32 basemem;		/* Adresse de la mémoire vidéo */
-static bool scrolling, graphic, blink;	/* Activation du défilement, Flag du mode graphique */
-
-/*******************************************************************************/
-/* Donne la resolution max horizontale */
-
-u16 getxres(void)
+static videofonction fonctions = 
 {
-	return resX;
+    VGA_detect_hardware;
+    VGA_setvideo_mode;
+    VGA_getvideo_drivername;
+    VGA_getvideo_capabilities;
+    VGA_getvideo_info;
+    VGA_mem_to_video;
+    VGA_video_to_mem;
+    VGA_video_to_video;
+    VGA_wait_vretrace;
+    VGA_wait_hretrace;
+    VGA_page_set;
+    VGA_page_show;
+    VGA_page_split;
+    VGA_cursor_enable;
+    VGA_cursor_disable;
+    VGA_cursor_set;
+    VGA_font_load;
+    VGA_font1_set;
+    VGA_font2_set;
+    VGA_blink_enable;
+    VGA_blink_disable;
 }
 
 /*******************************************************************************/
-/* Donne la profondeur en bit */
+/* Detecte si le hardware est disponible, return NULL ou pointeur sur le type de pilote */
+u8 *VGA_detect_hardware {
+    return "LEGACY",
+};
 
-u8 getdepth(void)
+/*******************************************************************************/
+/* Renvoie l'adresse du segment video */
+
+u32 getbase(void)
 {
-	return color;
+	u32 base;
+	/*outb(graphics, 6);
+	base = inb(graphics + 1);
+	base >>= 2;
+	base &= 3;*/
+    base = modes[infos.currentmode].graphics.Miscellaneous_Graphics_Register;
+	switch (base) {
+	case 0:
+	case 1:
+		base = 0xA0000;
+		break;
+	case 2:
+		base = 0xB0000;
+		break;
+	case 3:
+		base = 0xB8000;
+		break;
+	}
+	return base;
 }
 
 /*******************************************************************************/
-/* Donne la resolution max verticale */
+/* Change le mode video courant */
+/* ERR 0 aucune
+/* ERR 1 mode non existant */
 
-u16 getyres(void)
+u32 VGA_setvideo_mode(u8 mode)
 {
-	return resY - splitY;
+    u32 index;
+    while(vgacapabilities[index].modenumber!=0xFF) {
+        if (vgacapabilities[index].modenumber==mode) {    
+            infos.currentmode=vgacapabilities[index].modenumber;     
+            break;
+        index++;
+    }
+    if (infos.currentmode!=mode)
+        return 1;
+    infos.currentwidth=vgacapabilities[index].width;
+    infos.currentheight=vgacapabilities[index].height;
+    infos.currentdepth=vgacapabilities[index].depth;
+    infos.currentactivepage=0;
+    infos.currentshowedpage=0;
+    infos.currentcursorX=0;
+    infos.currentcursorY=0;  
+    infos.currentfont1=0;
+    infos.currentfont2=0; 
+    infos.isgraphic=vgacapabilities[index].graphic; 
+    infos.isblinking=false;
+    infos.iscursorvisible=false;  
+    if (infos.isgraphic) {
+		loadfont(font8x8, 8, 1);
+		loadfont(font8x16, 16, 0);
+        switch (infos.depth) {
+		    case 1:
+			    /* mode N&B */
+			    infos.currentpitch = infos.width;
+			    break;
+		    case 2:
+			    /* mode 4 couleurs */
+			    infos.currentpitch = (infos.width << 1);
+			    break;
+		    case 4:
+			    /* mode 16 couleurs */
+			    infos.currentpitch = infos.width;
+			    break;
+		    case 8:
+			    /* mode 256 couleurs */
+			    if (modes[index].sequencer.Sequencer_Memory_Mode_Register == 0x0E) {
+				    /* mode chainé (plus rapide mais limité en mémoire) */
+				    infos.currentpitch = (infos.width << 3);
+			    } else {
+				    /* mode non chainé */
+				    infos.currentpitch = (infos.width << 1);
+			    }
+			    break;
+		    default:
+			    break;
+		    }
+		infos.pagesize = ((infos.height * infos.currentpitch) << 3);
+	}
+    else {
+        infos.currentpitch= infos.width * 2;
+        infos.pagesize=infos.height * infos.currentpitch;
+    }
+    infos.pagesnumber=(planesize / infos.currentpitch); 
+    infos.baseaddress=(modes[index].ccrt.Cursor_Location_High_Register << 8) + modes[index].ccrt.Cursor_Location_Low_Register + getbase();
+	/* Initialise les registre "divers" */
+	outb(misc, modes[index].misc);
+	/* Initialise les registre d'etat */
+	outb(state, 0x00);
+	/* Initialise le séquenceur */
+	outreg(sequencer, modes[index].sequencer, 5);
+	/* Debloque le verouillage des registres controleur CRT */
+	outb(ccrt, 0x11);
+	outb(ccrt + 1, 0x0E);
+	/* Initialise le controleur CRT */
+	outreg(ccrt, ctrc, 25);
+	/* Initialise le controleur graphique */
+	outreg(graphics, modes[index].graphic, 9);
+	inb(state);
+	/* Initialise le controleur d'attributs */
+	outregsame(attribs, modes[index].attributs, 21);
+	inb(state);
+	outb(attribs, 0x20);
+	/* Initialise l'adresse des procedures de gestion graphique et les differentes
+	   variables en fonction de la profondeur et du mode */
+	return 0;
 }
 
 /*******************************************************************************/
-/* Donne le nombre max de page ecran dispo */
+/* Renvoie le nom du driver */
+u8 *VGA_getvideo_drivername (void) {
+    return "VGA";
+}
 
-u16 getnbpages(void)
-{
-	return pages;
+/*******************************************************************************/
+/* Renvoie un pointeur sur la structure des capacités graphiques */
+
+u8 *VGA_getvideo_capabilities (void) {
+    return vgacapabilities;
+}
+
+/*******************************************************************************/
+/* Renvoie un pointeur sur l'état courant de la carte */
+videoinfos *VGA_getvideo_info (void) {
+    return infos;
+}
+
+/*******************************************************************************/
+/* Effecture un mouvement de la mémoire centrale vers la mémoire video (linéarisée) */
+u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
+
+}
+
+/*******************************************************************************/
+/* Effecture un mouvement de la mémoire video (linéarisée) vers la mémoire centrale*/
+u32 VGA_video_to_mem (u32 src,void *dst, u32 size) {
+
+}
+
+/*******************************************************************************/
+/* Effecture un mouvement de la mémoire video (linéarisé) vers la mémoire vidéo (linéarisée) */
+u32 VGA_video_to_video (u32 src,u32 dst, u32 size) {
+
 }
 
 /*******************************************************************************/
 /* Fixe la page ecran de travail */
 
-void setpage(u8 page)
+void VGA_page_set(u8 page)
 {
-	if (page < pages)
-		activepage = page;
-}
-
-/*******************************************************************************/
-/* Recupere la page ecran de travail */
-
-u8 getpage(void)
-{
-	return activepage;
+	if (page < infos.pagesnumber)
+		infos.currentactivepage = page;
 }
 
 /*******************************************************************************/
 /* Affiche la page ecran specifié */
 
-void showpage(u8 page)
+void VGA_page_show(u8 page)
 {
-	if (page < pages) {
+	if (page < infos.pagesnumber) {
 		u16 addr;
-		addr = page * pagesize / 2;
+		addr = page * infos.pagesize / 2;
 		outb(ccrt, 0x0C);
 		outb(ccrt + 1, (addr >> 8));
 		outb(ccrt, 0x0D);
 		outb(ccrt + 1, (addr & 0xFF));
-		showedpage = page;
+		infos.currentshowedpage = page;
 	}
 }
 
 /*******************************************************************************/
 /* Sépare l'écran en 2 a partir de la ligne Y */
 
-void split(u16 y)
+static splitY=0;
+
+void VGA_page_split(u16 y)
 {
-	u16 addr;
-	if (graphic == 0)
-		addr = (y << 3);
-	else
-		addr = y;
-	/* line compare pour ligne atteinte */
-	outb(ccrt, 0x18);
-	outb(ccrt + 1, (addr & 0xFF));
-	/* overflow pour le bit 8 */
+    if (y!=0) {
+	    u16 addr;
+	    if (graphic == 0)
+		    addr = (y << 3);
+	    else
+		    addr = y;
+	    /* line compare pour ligne atteinte */
+	    outb(ccrt, 0x18);
+	    outb(ccrt + 1, (addr & 0xFF));
+	    /* overflow pour le bit 8 */
 
-	outb(ccrt, 0x07);
-	outb(ccrt + 1, (inb(ccrt + 1) & ~16) | ((addr >> 4) & 16));
+	    outb(ccrt, 0x07);
+	    outb(ccrt + 1, (inb(ccrt + 1) & ~16) | ((addr >> 4) & 16));
 
-	/*  Maximum Scan Line pour le bit 9 */
+	    /*  Maximum Scan Line pour le bit 9 */
 
-	outb(ccrt, 0x09);
-	outb(ccrt + 1, (inb(ccrt + 1) & ~64) | ((addr >> 3) & 64));
-	splitY = y;
-}
+	    outb(ccrt, 0x09);
+	    outb(ccrt + 1, (inb(ccrt + 1) & ~64) | ((addr >> 3) & 64));
+	    splitY = y;
+    }
+    else
+    {
+        /* line compare pour ligne atteinte */
+	    outb(ccrt, 0x18);
+	    outb(ccrt + 1, 0);
+	    /* overflow pour le bit 8 */
 
-/*******************************************************************************/
-/* Sépare l'écran en 2 a partir de la ligne Y */
+	    outb(ccrt, 0x07);
+	    outb(ccrt + 1, inb(ccrt + 1) & ~16);
 
-void unsplit(void)
-{
-	/* line compare pour ligne atteinte */
-	outb(ccrt, 0x18);
-	outb(ccrt + 1, 0);
-	/* overflow pour le bit 8 */
+	    /*  Maximum Scan Line pour le bit 9 */
 
-	outb(ccrt, 0x07);
-	outb(ccrt + 1, inb(ccrt + 1) & ~16);
-
-	/*  Maximum Scan Line pour le bit 9 */
-
-	outb(ccrt, 0x09);
-	outb(ccrt + 1, inb(ccrt + 1) & ~64);
-	splitY = 0;
+	    outb(ccrt, 0x09);
+	    outb(ccrt + 1, inb(ccrt + 1) & ~64);
+	    splitY = 0;
+    }
 }
 
 /*******************************************************************************/
 /* Attend la retrace verticale */
 
-void waitvretrace(void)
+void VGA_wait_vretrace(void)
 {
 	while ((inb(state) & 8) == 0) ;
 }
@@ -151,7 +275,7 @@ void waitvretrace(void)
 /*******************************************************************************/
 /* Attend la retrace horizontale */
 
-void waithretrace(void)
+void VGA_wait_hretrace(void)
 {
 	while ((inb(state) & 1) == 0) ;
 }
@@ -159,42 +283,27 @@ void waithretrace(void)
 /*******************************************************************************/
 /* Active l'affichage du curseur de texte */
 
-void enablecursor(void)
+void VGA_cursor_enable(void)
 {
 	u8 curs;
 	/* active le curseur hardware */
 	outb(ccrt, 10);
 	curs = inb(ccrt + 1) & ~32;
 	outb(ccrt + 1, curs);
+    infos.isgraphic=true;
 }
 
 /*******************************************************************************/
 /* Desactive l'affichage du curseur de texte */
 
-void disablecursor(void)
+void VGA_cursor_disable(void)
 {
 	u8 curs;
 	/* Desactive le curseur hardware */
 	outb(ccrt, 10);
 	curs = inb(ccrt + 1) | 32;
 	outb(ccrt + 1, curs);
-}
-
-/*******************************************************************************/
-/* Active le scrolling en cas de débordement d'écran */
-
-void enablescroll(void)
-{
-	scrolling = true;
-}
-
-/*******************************************************************************/
-
-/* Desactive le scrolling en cas de débordement d'écran */
-
-void disablescroll(void)
-{
-	scrolling = false;
+    infos.isgraphic=false;
 }
 
 /*******************************************************************************/
@@ -214,386 +323,30 @@ void useplane(u8 plan)
 }
 
 /*******************************************************************************/
-/* Renvoie l'adresse du segment video */
-
-u32 getbase(void)
-{
-	u32 base;
-	outb(graphics, 6);
-	base = inb(graphics + 1);
-	base >>= 2;
-	base &= 3;
-	switch (base) {
-	case 0:
-	case 1:
-		base = 0xA0000;
-		break;
-	case 2:
-		base = 0xB0000;
-		break;
-	case 3:
-		base = 0xB8000;
-		break;
-	}
-	return base;
-}
-
-/*******************************************************************************/
-/* efface l'écran */
-
-void (*fill) (u8 attrib);
-
-void fill_text(u8 attrib)
-{
-	memset((u8 *) (basemem + activepage * pagesize), ' ', pagesize / 2, 2);
-	memset((u8 *) (basemem + activepage * pagesize + 1), attrib,
-	       pagesize / 2, 2);
-}
-
-void fill_chain(u8 attrib)
-{
-	memset((u8 *) (basemem + activepage * pagesize), attrib & 0x0F,
-	       pagesize, 1);
-}
-
-void fill_unchain(u8 attrib)
-{
-	int i;
-	for (i = 0; i < 4; i++) {
-		useplane(i);
-		memset((u8 *) (basemem + activepage * pagesize), attrib & 0x0F,
-		       pagesize, 1);
-	}
-}
-
-/*******************************************************************************/
 /* fixe la position du curseur texte */
 
-void gotoscr(u16 x, u16 y)
+void VGA_cursor_set(u16 x, u16 y)
 {
 	u16 pos;
 	if (splitY == 0)
-		pos = (showedpage * pagesize / 2 + x + y * resX);
+		pos = (infos.currentshowedpage * infos.pagesize / 2 + x + y * infos.width);
 	else
-		pos = (x + y * resX);
+		pos = (x + y * infos.width);
 	outb(ccrt, 0x0F);
 	outb(ccrt + 1, (u8) (pos & 0x00FF));
 	outb(ccrt, 0x0E);
 	outb(ccrt + 1, (u8) ((pos & 0xFF00) >> 8));
-}
-
-/*******************************************************************************/
-/* Fait defiler l'ecran de n lignes vers le haut */
-
-void (*scroll) (u8 lines, u8 attrib);
-
-void scroll_unchain(u8 lines, u8 attrib)
-{
-	if (scrolling) {
-		u8 i;
-		for (i = 0; i < 4; i++) {
-			useplane(i);
-			memcpy((u8 *) (basemem + activepage * pagesize +
-				       linesize * 8 * lines), (u8 *) basemem,
-			       pagesize - linesize * 8 * lines, 1);
-			memset((u8 *) (basemem + activepage * pagesize +
-				       pagesize - linesize * 8 * lines),
-			       attrib & 0x0F, linesize * 8 * lines, 1);
-		}
-	}
-}
-
-void scroll_chain(u8 lines, u8 attrib)
-{
-	if (scrolling) {
-		memcpy((u8 *) basemem + activepage * pagesize + linesize * 8 * lines,
-		       (u8 *) basemem + activepage * pagesize, pagesize - linesize * 8 * lines, 1);
-		memset((u8 *) (basemem + activepage * pagesize + pagesize - linesize * 8 * lines), attrib & 0x0F, linesize * 8 * lines, 1);
-	}
-}
-
-void scroll_text(u8 lines, u8 attrib)
-{
-	if (scrolling) {
-		memcpy((u8 *) basemem + activepage * pagesize +
-		       linesize * lines, (u8 *) basemem + activepage * pagesize,
-		       pagesize - linesize * lines, 1);
-		memset((u8 *) (basemem + activepage * pagesize + pagesize -
-			       linesize * lines - 2), ' ',
-		       (linesize * lines) / 2, 2);
-		memset((u8 *) (basemem + activepage * pagesize + pagesize -
-			       linesize * lines - 1), attrib,
-		       (linesize * lines) / 2, 2);
-	}
-}
-
-/*******************************************************************************/
-/* Affiche le caractère a l'écran */
-
-void (*showchar) (u16 coordx, u16 coordy, u8 thechar, u8 attrib);
-
-void showchar_graphic(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
-{
-	u8 x, y, pattern, set;
-	for (y = 0; y < 8; y++) {
-		pattern = font8x8[thechar * 8 + y];
-		for (x = 0; x < 8; x++) {
-			set = ((pattern >> (7 - x)) & 0x1);	/* mettre un ROL importé depuis asm */
-			if (set == 0)
-				writepxl(coordx * 8 + x, coordy * 8 + y,
-					 ((attrib & 0xF0) >> 8) * set);
-			else
-				writepxl(coordx * 8 + x, coordy * 8 + y,
-					 (attrib & 0x0F) * set);
-		}
-	}
-}
-
-void showchar_text(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
-{
-	u8 *screen;
-	screen =
-	    (u8 *) basemem + activepage * pagesize + 2 * (coordx +
-							  coordy * resX);
-	*screen = thechar;
-	*(++screen) = attrib;
-}
-
-/*******************************************************************************/
-/* Recupere le caractère a l'écran */
-
-u8(*getchar) (u16 coordx, u16 coordy);
-
-u8 getchar_text(u16 coordx, u16 coordy)
-{
-	u8 *screen;
-	screen =
-	    (u8 *) basemem + activepage * pagesize + 2 * (coordx +
-							  coordy * resX);
-	return *screen;
-}
-
-/*******************************************************************************/
-/* Recupere les attributs a l'écran */
-
-u8(*getattrib) (u16 coordx, u16 coordy);
-
-u8 getattrib_text(u16 coordx, u16 coordy)
-{
-	u8 *screen;
-	screen =
-	    (u8 *) basemem + activepage * pagesize + 2 * (coordx +
-							  coordy * resX) + 1;
-	return *screen;
-}
-
-/*******************************************************************************/
-/* Ecrit un pixel a l'écran */
-
-void (*writepxl) (u16 x, u16 y, u32 c);
-
-void writepxl_1bit(u16 x, u16 y, u32 c)
-{
-	u8 *off;
-	u8 mask;
-	c = (c & 1) * 0xFF;
-	off = (u8 *) (basemem + activepage * pagesize + linesize * y + x / 8);
-	x = (x & 7) * 1;
-	mask = 0x80 >> x;
-	*off = ((*off) & ~mask) | (c & mask);
-}
-
-void writepxl_2bits(u16 x, u16 y, u32 c)
-{
-	u8 *off;
-	u8 mask;
-	c = (c & 3) * 0x55;
-	off = (u8 *) (basemem + activepage * pagesize + linesize * y + x / 4);
-	x = (x & 3) * 2;
-	mask = 0xC0 >> x;
-	*off = ((*off) & ~mask) | (c & mask);
-}
-
-void writepxl_4bits(u16 x, u16 y, u32 c)
-{
-	u8 *off;
-	u8 mask, p, pmask;
-	off = (u8 *) (basemem + activepage * pagesize + linesize * y + x / 8);
-	x = (x & 7) * 1;
-	mask = 0x80 >> x;
-	pmask = 1;
-	for (p = 0; p < 4; p++) {
-		useplane(p);
-		if (pmask & c)
-			*off = ((*off) | mask);
-		else
-			*off = ((*off) & ~mask);
-		pmask <<= 1;
-	}
-}
-
-void writepxl_8bits(u16 x, u16 y, u32 c)
-{
-	u8 *off;
-	off = (u8 *) (basemem + activepage * pagesize + linesize * y + x);
-	*off = c;
-}
-
-void writepxl_8bitsunchain(u16 x, u16 y, u32 c)
-{
-	u8 *off;
-	off = (u8 *) (basemem + activepage * pagesize + linesize * y + x / 4);
-	useplane(x & 3);
-	*off = c;
-}
-
-/*******************************************************************************/
-/* Met le mode video suivant */
-
-u8 nextvmode(void)
-{
-	u8 mode = getvmode();
-	mode++;
-	if (mode >= 0x80) {
-		if (mode > maxgraphmode)
-			mode = 0x0;
-	} else {
-		if (mode > maxtextmode)
-			mode = 0x80;
-	}
-	setvmode(mode);
-	return mode;
-}
-
-/*******************************************************************************/
-/* Change le mode video courant */
-
-u32 setvmode(u8 mode)
-{
-	u8 *def, gmode;
-	/* Récupere la definition des registres VGA en fonction du mode
-	   graphique : >0x80
-	   text      : 0x00 - 0x7F
-	 */
-	if (mode >= 0x80) {
-		gmode = mode - 0x80;
-		if (gmode > maxgraphmode)
-			return 1;	/* mode inexistant */
-		def = graphmodes[gmode];
-		graphic = true;
-	} else {
-		if (mode > maxtextmode)
-			return 1;	/* mode inexistant */
-		def = textmodes[mode];
-		graphic = false;
-		loadfont(font8x8, 8, 1);
-		loadfont(font8x16, 16, 0);
-	}
-	/* Initialise les registre "divers" */
-	outb(misc, def[0]);
-	/* Initialise les registre d'etat */
-	outb(state, 0x00);
-	/* Initialise le séquenceur */
-	outreg(sequencer, &def[1], 5);
-	/* Debloque le verouillage des registres controleur CRT */
-	outb(ccrt, 0x11);
-	outb(ccrt + 1, 0x0E);
-	/* Initialise le controleur CRT */
-	outreg(ccrt, &def[6], 25);
-	/* Initialise le controleur graphique */
-	outreg(graphics, &def[31], 9);
-	inb(state);
-	/* Initialise le controleur d'attributs */
-	outregsame(attribs, &def[40], 21);
-	inb(state);
-	outb(attribs, 0x20);
-	/* Récupere depuis la table de définition des mode la résolution et la
-	   profondeur (en bits) */
-	resX = def[61];
-	resY = def[62];
-	color = def[63];
-	/* Initialise l'adresse des procedures de gestion graphique et les differentes
-	   variables en fonction de la profondeur et du mode */
-	if (!graphic) {
-		/* mode texte */
-		linesize = resX * 2;
-		writepxl = NULL;	/* pas d'affichage de pixels */
-		showchar = showchar_text;
-		scroll = scroll_text;
-		fill = fill_text;
-		pagesize = resY * linesize;
-		getchar = getchar_text;
-		getattrib = getattrib_text;
-	} else {
-		switch (color) {
-		case 1:
-			/* mode N&B */
-			linesize = resX;
-			writepxl = writepxl_1bit;
-			fill = fill_chain;
-			scroll = scroll_chain;
-			break;
-		case 2:
-			/* mode 4 couleurs */
-			linesize = (resX << 1);
-			writepxl = writepxl_2bits;
-			fill = fill_chain;
-			scroll = scroll_chain;
-			break;
-		case 4:
-			/* mode 16 couleurs */
-			linesize = resX;
-			writepxl = writepxl_4bits;
-			fill = fill_unchain;
-			scroll = scroll_unchain;
-			break;
-		case 8:
-			/* mode 256 couleurs */
-			if (def[5] == 0x0E) {
-				/* mode chainé (plus rapide mais limité en mémoire) */
-				linesize = (resX << 3);
-				writepxl = writepxl_8bits;
-				scroll = scroll_chain;
-				fill = fill_chain;
-			} else {
-				/* mode non chainé */
-				linesize = (resX << 1);
-				writepxl = writepxl_8bitsunchain;
-				scroll = scroll_unchain;
-				fill = fill_unchain;
-			}
-			break;
-		default:
-			break;
-		}
-		showchar = showchar_graphic;
-		pagesize = ((resY * linesize) << 3);
-	}
-	/* calcul des variables d'état video */
-	activepage = 0;
-	showedpage = 0;
-	splitY = 0;
-	vmode = mode;
-	scrolling = 1;
-	pages = (planesize / pagesize);
-	basemem = (def[20] << 8) + def[21] + getbase();
-	return 0;
-}
-
-/*******************************************************************************/
-/* Récupère le mode vidéo en cours */
-
-u8 getvmode(void)
-{
-	return vmode;
+    info.currentcursorX=x;
+    info.currentcursorY=y;
 }
 
 /*******************************************************************************/
 /* Charge une nouvelle police de caractère */
+/* ERR 1 mode graphique activé*/
 
-u32 loadfont(u8 * def, u8 size, u8 font)
+u32 VGA_font_load(u8 * def, u8 size, u8 font)
 {
-	if (graphics == 1)
+	if (infos.isgraphic)
 		return 1;
 	u8 oldregs[5] = { 0, 0, 0, 0, 0 };
 	u8 *base;
@@ -641,69 +394,49 @@ u32 loadfont(u8 * def, u8 size, u8 font)
 }
 
 /*******************************************************************************/
-/* Récupere le N° de la police de caractère en cours d'utilisation */
-
-u8 getfont(void)
-{
-	u8 num, tmp;
-	outb(sequencer, 3);
-	tmp = inb(sequencer + 1);
-	num = (tmp & 0x03) | ((tmp & 0x10) >> 2);
-	return num;
-}
-
-/*******************************************************************************/
-/* Récupere le N° de la police de caractère en cours d'utilisation */
-
-u8 getfont2(void)
-{
-	u8 num, tmp;
-	outb(sequencer, 3);
-	tmp = inb(sequencer + 1);
-	num = ((tmp & 0x0C) >> 2) | ((tmp & 0x20) >> 3);
-	return num;
-}
-
-/*******************************************************************************/
 /* Fixe le N° de la police de caractère a utiliser */
 
-void setfont(u8 num)
+void VGA_font1_set(u8 num)
 {
 	num &= 0x07;
 	outb(sequencer, 3);
 	outb(sequencer + 1,
 	     (inb(sequencer + 1) & 0xEC) | ((num & 0x03) +
 					    ((num & 0x04) << 2)));
+    info.currentfont1=num;
 }
 
 /*******************************************************************************/
 /* Fixe le N° de la police de caractère a utiliser */
 
-void setfont2(u8 num)
+void VGA_font2_set(u8 num)
 {
 	num &= 0x07;
 	outb(sequencer, 3);
 	outb(sequencer + 1,
 	     (inb(sequencer + 1) & 0xD3) | (((num & 0x03) << 2) +
 					    ((num & 0x04) << 3)));
+    info.currentfont2=num;
 }
 
 /*******************************************************************************/
 /* Autorise le clignotement */
 
-void enableblink(void)
+void VGA_blink_enable(void)
 {
 	outb(ccrt, 0x10);
 	outb(ccrt + 1, (inb(sequencer + 1) | 0x04));
+    info.isblinking=true;
 }
 
 /*******************************************************************************/
 /* Annule le clignotement */
 
-void disableblink(void)
+void VGA_blink_disable(void)
 {
 	outb(ccrt, 0x10);
 	outb(ccrt + 1, (inb(sequencer + 1) & ~0x04));
+    info.isblinking=false;
 }
 
 /*******************************************************************************/

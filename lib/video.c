@@ -5,6 +5,8 @@
 #include "video.h"
 #include "stdarg.h"
 
+drivers registred[maxdrivers];
+
 console vc[8] = {
 	{0x07, 0, 0, 0, 0, 0, 0, 0}
 	,
@@ -815,3 +817,153 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 	return pointer;
 }
 /*******************************************************************************/
+/* initialise le tableau des pilotes vidéo */
+void initdriver() {
+    for(u32 i=0;i<maxdrivers;i++) 
+          registred[i].nom=NULL;
+}
+
+/*******************************************************************************/
+/* Enregistre un pilote dans le tableau des pilotes vidéo */
+void registerdriver(videofonction *pointer);
+{
+    u32 i;  
+    for(i=0;i<maxdrivers;i++) 
+         if (registred[i].pointer==pointer)
+            return;
+    i=0;
+    while (registred[i].nom!=NULL && i<maxdrivers) 
+        i++;
+    registred[i].pointer=pointer;
+}
+/*******************************************************************************/
+/* Choisi le meilleur driver en terme d'affichage */
+void apply_bestdriver(void) {
+    u32 i=0,j=0;  
+    u8 bestdepth=0x0;
+    u8 bestresol=0x0;
+    u8 bestmode=0x0;
+    u8* bestdriver=NULL;
+    while (registred[i].nom!=NULL && i<maxdrivers) {
+        capabilities cap=registred[i].pointer.getvideo_capabilities();
+        while(cap[j].modenumber!=0xFF) {
+            if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
+            {
+                bestdepth=cap[j].depth;
+                bestresol=cap[j].width*cap[j].height;
+                bestmode=cap[j].modenumber;
+                bestdriver=registred[i].pointer.getvideo_drivername();
+            }
+            j++;
+        }
+        i++;
+    }
+    if (bestdriver!=NULL) apply_driver(bestdriver);
+    setvideo_mode(bestmode);
+}
+
+/*******************************************************************************/
+/* Choisi le meilleur driver spécifié par le nom */
+void apply_driver(u8* name);
+{
+    u32 i=0;
+    while (registred[i].nom!=NULL && i<maxdrivers) {
+        if (strcmp(name,registred[i].nom)==0) {
+            detect_hardware=registred[i].pointer.detect_hardware;
+            setvideo_mode=registred[i].pointer.setvideo_mode;
+            getvideo_drivername=registred[i].pointer.getvideo_drivername;
+            getvideo_capabilities=registred[i].pointer.getvideo_capabilities;
+            getvideo_info=registred[i].pointer.getvideo_info;
+            mem_to_video=registred[i].pointer.mem_to_video;
+            video_to_mem=registred[i].pointer.video_to_mem;
+            video_to_video=registred[i].pointer.video_to_video;
+            wait_vretrace=registred[i].pointer.wait_vretrace;
+            wait_hretrace=registred[i].pointer.wait_hretrace;
+            page_set=registred[i].pointer.page_set;
+            page_show=registred[i].pointer.page_show;
+            page_split=registred[i].pointer.page_split;
+            cursor_enable=registred[i].pointer.cursor_enable;
+            cursor_disable=registred[i].pointer.cursor_disable;
+            cursor_set=registred[i].pointer.cursor_set;
+            font_load=registred[i].pointer.font_load;
+            font1_set=registred[i].pointer.font1_set;
+            font2_set=registred[i].pointer.font2_set;
+            blink_enable=registred[i].pointer.blink_enable;
+            blink_disable=registred[i].pointer.blink_disable;
+        }
+        i++;
+    }
+    setvideo_mode(0x0);
+}
+/*******************************************************************************/
+/* Applique le driver suivant */
+
+void apply_nextdriver(void) {
+    u32 i=0;
+    while (registred[i].nom!=NULL && i<maxdrivers) {
+        if (strcmp(getvideo_drivername(),registred[i].nom)==0) {
+            i++;
+            if (registred[i].nom!=NULL) i=0;
+            apply_driver(registred[i].nom);
+            return;
+        }
+        i++;
+}
+
+/*******************************************************************************/
+/* Applique le mode suivant (le driver suivant si dernier mode) */
+
+void apply_nextvideomode(void) {
+    capabilities cap=getvideo_capabilities();
+    videoinfos info=getvideo_info();
+    u32 mode=info.modenumber;
+    u8 index=0;
+    while(cap[index].modenumber!=0xFF) {
+        if (cap[index].modenumber==mode) {    
+            index++;
+            if (cap[index].modenumber==0xFF)
+                apply_nextdriver();
+            else
+                setvideo_mode(cap[index].modenumber);
+                return;
+        }
+        index++;
+    }
+}
+
+/*******************************/
+
+void fill(u8 attrib) 
+{
+
+}
+
+void scroll (u8 lines, u8 attrib) 
+{
+
+}
+
+void scroll_enable(void) 
+{
+
+}
+
+void scroll_disable(void) 
+{
+
+}
+
+void showchar (u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
+{
+
+}
+
+u8 getchar (u16 coordx, u16 coordy) 
+{ 
+
+}
+
+u8 getattrib (u16 coordx, u16 coordy) 
+{
+
+}

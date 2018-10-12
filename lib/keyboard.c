@@ -223,7 +223,7 @@ unsigned convert(u32 keypressed)
 	}
 
 	else if (key == SCAN_F10) {
-		nextvmode();
+		apply_nextvideomode();
 	}
 
 /* Scroll Lock, Num Lock, and Caps Lock mise a jour des leds */

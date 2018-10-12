@@ -28,7 +28,7 @@ align MULTIBOOT_TAG_ALIGN
     dd multiboot_header_end - multiboot_header
     dd -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + (multiboot_header_end - multiboot_header))
 align MULTIBOOT_TAG_ALIGN
-%if arch = "bits32"
+%if arch = "bitsd32"
 %warning "Avec la console VGA/EGA." 
 console_tag_start:
     dw MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS ; type
