@@ -47,7 +47,6 @@ int main(u32 magic, u32 addr)
 {
 	cli();
     initvideo();
-	changemode(0x02);
 	/*  Efface l'ecran   */
 
 	print("\033[2J\000");

@@ -5,22 +5,22 @@
 #include "video.h"
 #include "stdarg.h"
 
-drivers registred[maxdrivers];
+static drivers registred[maxdrivers];
 
-videoinfos *vinfo;
+static  videoinfos *vinfo;
 
-console vc[8] = {
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}	,
-	{0x07, 0, 0, 0, 0, 0, 0, 0}
+static  console vc[8] = {
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x00, 0, 0, 0, 0, 0, 0, 0, true}
 };
 
-u8 usedvc = 0;
+static u8 usedvc = 0;
 
 /*******************************************************************************/
 /* Fixe l'attribut courant */
@@ -201,7 +201,7 @@ void changemode(u8 mode)
 /* Efface la console en cours d'utilisation */
 void clearscreen(void)
 {
-    fill(0x00);
+    fill(vc[usedvc].attrib);
     vc[usedvc].cursX=0;
     vc[usedvc].cursY=0;
     cursor_set(0,0);
@@ -279,8 +279,7 @@ void putchar(u8 thechar)
 		break;
 	default:
 		if (thechar >= ' ') {
-			showchar(vc[usedvc].cursX, vc[usedvc].cursY, thechar,
-				 vc[usedvc].attrib);
+			showchar(vc[usedvc].cursX, vc[usedvc].cursY, thechar, vc[usedvc].attrib);
 			vc[usedvc].cursX++;
 		}
 		break;
@@ -894,7 +893,7 @@ void apply_driver(u8* name)
             font2_set=registred[i].pointer->font2_set;
             blink_enable=registred[i].pointer->blink_enable;
             blink_disable=registred[i].pointer->blink_disable;
-            setvideo_mode(0x0);
+            changemode(0x0);
             return;
         }
         i++;
@@ -929,7 +928,7 @@ void apply_nextvideomode(void) {
             if (cap[index].modenumber==0xFF)
                 apply_nextdriver();
             else
-                setvideo_mode(cap[index].modenumber);
+                changemode(cap[index].modenumber);
                 return;
         }
         index++;
@@ -943,33 +942,53 @@ void initvideo(void)
     initdriver();
     registerdriver(&fonctions);
     apply_driver("VGA");
+    changemode(0x1);
 }
 
 /*******************************/
+static u8 space=' ';
 
 void fill(u8 attrib) 
 {
-
+    mem_to_video(space   ,0,vinfo->pagesize, 0, false);
+    mem_to_video(attrib,1,vinfo->pagesize, 0, false);
 }
 
 void scroll (u8 lines, u8 attrib) 
 {
-
+    if (vc[usedvc].scroll) {
+        if (!vinfo->isgraphic)
+        {
+            u32 gain=vinfo->currentpitch*lines;
+            video_to_video(gain,0,vinfo->pagesize-gain, 0);
+            mem_to_video(space   ,vinfo->pagesize-gain-2,gain, 0, false);
+            mem_to_video(attrib,vinfo->pagesize-gain-1,gain, 0, false);
+        }
+    }
+    else
+    {
+        clearscreen();
+    }
 }
 
 void scroll_enable(void) 
 {
-
+    vc[usedvc].scroll=true;
 }
 
 void scroll_disable(void) 
 {
-
+    vc[usedvc].scroll=false;
 }
 
-void showchar (u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
+void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
 {
-
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        mem_to_video(thechar,addr  , 1, 0, false);
+        mem_to_video(attrib, addr+1, 1, 0, false);  
+    }  
 }
 
 u8 getchar (u16 coordx, u16 coordy) 

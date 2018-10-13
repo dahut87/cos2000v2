@@ -7,6 +7,25 @@
 #define TEXTSCREEN 0xB8000	/* debut de la memoire video texte*/
 #define GRPHSCREEN 0xA0000	/* debut de la memoire video graphique*/
 
+#define movsb(src,dst,count) \
+	asm volatile ("cld;rep movsb"::"S" (src), "D" (dst), "c" (count));
+
+#define movsw(src,dst,count) \
+	asm volatile ("cld;rep movsw"::"S" (src), "D" (dst), "c" (count));
+
+#define movsd(src,dst,count) \
+	asm volatile ("cld;rep movsd"::"S" (src), "D" (dst), "c" (count));
+
+#define stosb(pattern,dst,count) \
+	asm volatile ("cld;rep stosb"::"c" (count), "D" (dst), "a" (pattern));
+
+#define stosw(pattern,dst,count) \
+	asm volatile ("cld;rep stosw"::"a" (pattern), "c" (count), "D" (dst));
+
+#define stosd(pattern,dst,count) \
+	asm volatile ("cld;rep stosd"::"a" (pattern), "c" (count), "D" (dst));
+
+
 /* Registres VGAs */
 
 #define SEQUENCER   0x3c4
@@ -97,9 +116,9 @@ u8 VGA_setvideo_mode (u8 mode);
 u8 *VGA_getvideo_drivername (void);
 u8 *VGA_getvideo_capabilities (void);
 videoinfos *VGA_getvideo_info (void);
-u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src);
-u32 VGA_video_to_mem (u32 src,void *dst, u32 size);
-u32 VGA_video_to_video (u32 src,u32 dst, u32 size);
+u32 VGA_mem_to_video (void *src,u32 dst, u32 size, u8 realsize, bool increment_src);
+u32 VGA_video_to_mem (u32 src,void *dst, u32 size, u8 realsize);
+u32 VGA_video_to_video (u32 src,u32 dst, u32 size, u8 realsize);
 void VGA_wait_vretrace (void);
 void VGA_wait_hretrace (void);
 void VGA_page_set (u8 page);

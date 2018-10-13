@@ -77,6 +77,7 @@ typedef struct console {
     u8        param2;
     u8        param3;
     u8        page;
+    bool      scroll;
 } console  __attribute__ ((packed));
 
 /* Fonctions de bas niveau */
@@ -123,9 +124,9 @@ u8 (*setvideo_mode) (u8 mode);
 u8 *(*getvideo_drivername) (void);
 u8 *(*getvideo_capabilities) (void);
 videoinfos *(*getvideo_info) (void);
-u32 (*mem_to_video) (void *src,u32 dst, u32 size, bool increment_src);
-u32 (*video_to_mem) (u32 src,void *dst, u32 size);
-u32 (*video_to_video) (u32 src,u32 dst, u32 size);
+u32 (*mem_to_video) (void *src,u32 dst, u32 size, u8 realsize, bool increment_src);
+u32 (*video_to_mem) (u32 src,void *dst, u32 size, u8 realsize);
+u32 (*video_to_video) (u32 src,u32 dst, u32 size, u8 realsize);
 void (*wait_vretrace) (void);
 void (*wait_hretrace) (void);
 void (*page_set) (u8 page);
