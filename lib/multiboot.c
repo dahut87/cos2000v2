@@ -15,6 +15,14 @@ void initmultiboot(const u32 addr)
 }
 
 /*******************************************************************************/
+/* Renvoie l'adresse du bloc multiboot2 */
+
+u32 getblockinfo(void)
+{
+    return infobloc;
+}
+
+/*******************************************************************************/
 /* Affiche les informations multiboot2 */
 
 void getbootinfo(void)

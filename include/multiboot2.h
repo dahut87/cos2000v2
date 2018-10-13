@@ -3,6 +3,9 @@
 /*                                                                             */
 #include "types.h"
      
+#ifndef MULTIBOOT
+# define ALLTYMULTIBOOTPES
+
      /*  How many bytes from the start of the file we search for the header. */
      #define MULTIBOOT_SEARCH                        32768
      #define MULTIBOOT_HEADER_ALIGN                  8
@@ -387,5 +390,7 @@
      };
 
 void getbootinfo(void);
+u32 getblockinfo(void);
 void initmultiboot(const u32 addr);
      
+#endif

@@ -394,17 +394,17 @@ int rebootnow()
 
 int test2d()
 {
-	setvideo_mode(0x87);
-	fill(0x00);
+	changemode(0x83);
+    videoinfos *vinfo=getvideo_info();
 	struct vertex2d a, b, c;
 	randomize();
-	for (int i = 0; i < 3200; i++) {
-		a.x = random(0, 800);
-		a.y = random(0, 600);
-		b.x = random(0, 800);
-		b.y = random(0, 600);
-		c.x = random(0, 800);
-		c.y = random(0, 600);
+	for (int i = 0; i < 3000; i++) {
+		a.x = random(0, vinfo->currentwidth);
+		a.y = random(0, vinfo->currentheight);
+		b.x = random(0, vinfo->currentwidth);
+		b.y = random(0, vinfo->currentheight);
+		c.x = random(0, vinfo->currentwidth);
+		c.y = random(0, vinfo->currentheight);
 		trianglefilled(&a, &b, &c, random(0, 16));
 		triangle(&a, &b, &c, 2);
 	}

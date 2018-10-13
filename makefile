@@ -61,6 +61,8 @@ redebug: littleclean debug-system
 
 debug64: debug-system64
 
+redebug64: littleclean debug-system64
+
 debug-boot: bits32 harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/boot.txt)
 

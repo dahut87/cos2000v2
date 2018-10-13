@@ -1,8 +1,6 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
-#include "vga.h"
-#include "vesa.h"
 #include "asm.h"
 #include "video.h"
 #include "stdarg.h"
@@ -870,8 +868,11 @@ void registerdriver(videofonction *pointer)
     i=0;
     while (registred[i].nom!=NULL && i<MAXDRIVERS) 
         i++;
-    registred[i].pointer=pointer;
-    registred[i].nom=pointer->getvideo_drivername();
+    if (pointer->detect_hardware()!=NULL)
+    {
+        registred[i].pointer=pointer;
+        registred[i].nom=pointer->getvideo_drivername();
+    }
 }
 /*******************************************************************************/
 /* Choisi le meilleur driver en terme d'affichage */
@@ -907,29 +908,29 @@ void apply_driver(u8* name)
     u32 i=0;
     while (registred[i].nom!=NULL && i<MAXDRIVERS) {
         if (strcmp(name,registred[i].nom)==0) {
-            detect_hardware=registred[i].pointer->detect_hardware;
-            setvideo_mode=registred[i].pointer->setvideo_mode;
-            getvideo_drivername=registred[i].pointer->getvideo_drivername;
-            getvideo_capabilities=registred[i].pointer->getvideo_capabilities;
-            getvideo_info=registred[i].pointer->getvideo_info;
-            mem_to_video=registred[i].pointer->mem_to_video;
-            video_to_mem=registred[i].pointer->video_to_mem;
-            video_to_video=registred[i].pointer->video_to_video;
-            wait_vretrace=registred[i].pointer->wait_vretrace;
-            wait_hretrace=registred[i].pointer->wait_hretrace;
-            page_set=registred[i].pointer->page_set;
-            page_show=registred[i].pointer->page_show;
-            page_split=registred[i].pointer->page_split;
-            cursor_enable=registred[i].pointer->cursor_enable;
-            cursor_disable=registred[i].pointer->cursor_disable;
-            cursor_set=registred[i].pointer->cursor_set;
-            font_load=registred[i].pointer->font_load;
-            font1_set=registred[i].pointer->font1_set;
-            font2_set=registred[i].pointer->font2_set;
-            blink_enable=registred[i].pointer->blink_enable;
-            blink_disable=registred[i].pointer->blink_disable;
-            changemode(0x0);
-            return;
+                detect_hardware=registred[i].pointer->detect_hardware;
+                setvideo_mode=registred[i].pointer->setvideo_mode;
+                getvideo_drivername=registred[i].pointer->getvideo_drivername;
+                getvideo_capabilities=registred[i].pointer->getvideo_capabilities;
+                getvideo_info=registred[i].pointer->getvideo_info;
+                mem_to_video=registred[i].pointer->mem_to_video;
+                video_to_mem=registred[i].pointer->video_to_mem;
+                video_to_video=registred[i].pointer->video_to_video;
+                wait_vretrace=registred[i].pointer->wait_vretrace;
+                wait_hretrace=registred[i].pointer->wait_hretrace;
+                page_set=registred[i].pointer->page_set;
+                page_show=registred[i].pointer->page_show;
+                page_split=registred[i].pointer->page_split;
+                cursor_enable=registred[i].pointer->cursor_enable;
+                cursor_disable=registred[i].pointer->cursor_disable;
+                cursor_set=registred[i].pointer->cursor_set;
+                font_load=registred[i].pointer->font_load;
+                font1_set=registred[i].pointer->font1_set;
+                font2_set=registred[i].pointer->font2_set;
+                blink_enable=registred[i].pointer->blink_enable;
+                blink_disable=registred[i].pointer->blink_disable;
+                changemode(0x0);
+                return;
         }
         i++;
     }
@@ -968,18 +969,6 @@ void apply_nextvideomode(void) {
         }
         index++;
     }
-}
-
-/*******************************************************************************/
-/* Initialise la video */
-
-void initvideo(void)
-{
-    initdriver();
-    registerdriver(&vgafonctions);
-    registerdriver(&vesafonctions);
-    apply_driver("VGA");
-    changemode(0x01);
 }
 
 /******************************************************************************/
@@ -1048,6 +1037,7 @@ void scroll_disable(void)
 void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
 {
 	u8 x, y, pattern, set;
+    u32 color;
     if (!vinfo->isgraphic)
     {
         u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
@@ -1063,14 +1053,23 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
             {
                 set = pattern & 0x1;
 			    if (set == 0)
-				    writepxl((coordx<<3) + x, (coordy<<3) + y, ((attrib & 0xF0) >> 8));
+                    if (vinfo->currentdepth>24)
+                        color = 0xFFFFFF;
+                    else
+                        color = ((attrib & 0xF0) >> 8);
 			    else
-				    writepxl((coordx<<3) + x, (coordy<<3) + y, (attrib & 0x0F) );
+				    if (vinfo->currentdepth>24)
+                        color = 0;
+                    else
+                        color = (attrib & 0x0F);
+                writepxl((coordx<<3) + x, (coordy<<3) + y, color);
                 rol(pattern);
             }
 		}
 	}
 }
+
+                 
 
 /******************************************************************************/
 /* Retourne le caractère du mode texte aux coordonnées spécifiées */
@@ -1107,10 +1106,13 @@ u8 getattrib (u16 coordx, u16 coordy)
 
 void hline(u32 x1, u32 x2, u32 y, u8 color)
 {
-	if (x2 > x1)
-        mem_to_video(color,x1,x2-x1,false);
-    else
-        mem_to_video(color,x2,x2-x1,false);       
+    if (vinfo->isgraphic)
+    {
+	    if (x2 > x1)
+            mem_to_video(color,x1+vinfo->currentpitch*y,x2-x1,false);
+        else
+            mem_to_video(color,x2+vinfo->currentpitch*y,x1-x2,false);
+    }  
 }
 
 
@@ -1118,7 +1120,10 @@ void hline(u32 x1, u32 x2, u32 y, u8 color)
 /* Affiche un pixel à l'écran */
 void writepxl (u16 x, u16 y, u32 color)
 {
-        u32 addr=x+vinfo->currentpitch*y;
+    if (vinfo->isgraphic)
+    {
+        u32 addr=(vinfo->currentdepth>>3)*x+vinfo->currentpitch*y;
         mem_to_video(color,addr,1,false);
+    }
 }
 

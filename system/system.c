@@ -2,6 +2,7 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "vga.h"
+#include "vesa.h"
 #include "video.h"
 #include "interrupts.h"
 #include "timer.h"
@@ -46,24 +47,19 @@ void error()
 int main(u32 magic, u32 addr)
 {
 	cli();
-    initvideo();
-	/*  Efface l'ecran   */
+	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC) initmultiboot(addr);
+    initdriver();
+    registerdriver(&vgafonctions);
+    registerdriver(&vesafonctions);
+    apply_bestdriver();
+    changemode(0x0);
 
-	print("\033[2J\000");
-	if (getwidth()>40) print(ansilogo);
+	/*  Efface l'ecran   */
+	print("\033[2J\r\n\000");
+	if (getwidth()==80) print(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux");
 	ok();
-
-	printf("\033[37m\033[0m -Nombre magique multiboot2 : %X",
-	       (u32) magic);
-	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
-{
-        initmultiboot(addr);
-		ok();
- }
-	else
-		error();
 
 	print("\033[37m\033[0m -Initilisation de la memoire (GDT)");
 	initgdt(&&next);
@@ -75,7 +71,7 @@ int main(u32 magic, u32 addr)
 	ok();
 
     print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
-	initpaging();
+	//initpaging();
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");

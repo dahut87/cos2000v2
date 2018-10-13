@@ -202,6 +202,20 @@ u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
                 stosb(pattern,realdst,size);        
             } 
         }
+        else {
+        if (size%4 == 0) 
+            {
+                movsd(src,realdst,size>>2); 
+            }            
+            else if (size%2 == 0)
+            {
+                movsw(src,realdst,size>>1);       
+            }
+            else
+            {
+                movsb(src,realdst,size);        
+            }  
+            }
         break;
     case 9:
     

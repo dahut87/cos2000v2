@@ -69,7 +69,6 @@ typedef struct capabilities {
     bool    graphic;
     u8      depth;
     u8      refresh;
-    u8      fonttype;
 } capabilities __attribute__ ((packed));
 
 typedef struct console {
@@ -125,7 +124,6 @@ void apply_bestdriver(void);
 void apply_nextdriver(void);
 void apply_driver(u8* name);
 void apply_nextvideomode(void);
-void initvideo(void);
 
 /* Fonctions du pilote */
 u8 *(*detect_hardware) (void);
