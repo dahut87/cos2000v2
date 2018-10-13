@@ -36,11 +36,12 @@ void initpaging(void)
 
 void memset(void *dst, u8 val, u32 count, u32 size) 
 {
-u8 * temp;
-for (temp = (u8 *) dst; count != 0; count--) {	
-temp += size;	
-*temp = val;
-}
+    u8 *d = (u8 *) dst;
+    if (size>0) size--;
+    for (; count != 0; count--) {	
+        *(d++) = val;
+        d+=size;	
+    }
 }
 
 /*******************************************************************************/   
@@ -48,13 +49,13 @@ temp += size;
 
 void memcpy(void *src, void *dst, u32 count, u32 size)
 {
-char *s, *d;
-u32 i;
-s = (u8 *) src;
-d = (u8 *) dst;
-for (i = 0; i < count; i++) {	
-*(d + i * size) = *(s + i);
-}
+    u8 *s = (u8 *) src;
+    u8 *d = (u8 *) dst;
+    if (size>0) size--;
+    for (; count != 0; count--) {	
+        *(d++) = *(s++);
+        d+=size;
+    }
 }
 
 /*******************************************************************************/   
@@ -62,13 +63,14 @@ for (i = 0; i < count; i++) {
     
 u32 memcmp(void *src, void *dst, u32 count, u32 size) 
 {
-const u8 *mem1 = (const u8 *)src;
-const u8 *mem2 = (const u8 *)dst;
-for (; count != 0; count--) {
-if (*mem1 != *mem2)	
-return *mem1 - *mem2;
-mem1 += size;
-mem2 += size;
+    u8 *s = (u8 *) src;
+    u8 *d = (u8 *) dst;
+    if (size>0) size--;
+    for (; count != 0; count--) {
+        if (*(s++) != *(d++))	
+            return *d - *s;
+        s+= size;
+        d+= size;
 }
 }
  

@@ -2,22 +2,25 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "vga.h"
+#include "asm.h"
 #include "video.h"
 #include "stdarg.h"
+#include "VGA/8x8fnt.c"
+#include "VGA/8x16fnt.c"
 
 static drivers registred[maxdrivers];
 
 static  videoinfos *vinfo;
 
 static  console vc[8] = {
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}	,
-	{0x00, 0, 0, 0, 0, 0, 0, 0, true}
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
+	{0x07, 0, 0, 0, 0, 0, 0, 0, true}
 };
 
 static u8 usedvc = 0;
@@ -195,6 +198,10 @@ void changemode(u8 mode)
 {
     setvideo_mode(mode);
     vinfo=getvideo_info();
+    if (!vinfo->isgraphic) {		
+        font_load(font8x8, 8, 1);
+		font_load(font8x16, 16, 0);
+    }
 }
 
 /*******************************************************************************/
@@ -937,6 +944,7 @@ void apply_nextvideomode(void) {
 
 /*******************************************************************************/
 /* Initialise la video */
+
 void initvideo(void)
 {
     initdriver();
@@ -945,14 +953,19 @@ void initvideo(void)
     changemode(0x1);
 }
 
-/*******************************/
+/******************************************************************************/
+/* Rempli l'écran avec un attribut donné et des espaces vides */
+
 static u8 space=' ';
 
 void fill(u8 attrib) 
 {
-    mem_to_video(space   ,0,vinfo->pagesize, 0, false);
-    mem_to_video(attrib,1,vinfo->pagesize, 0, false);
+    mem_to_video(space ,0,vinfo->pagesize>>1, false);
+    mem_to_video(attrib,1,vinfo->pagesize>>1, false);
 }
+
+/******************************************************************************/
+/* Défile l'écran de N ligne si le scrolling est activé */
 
 void scroll (u8 lines, u8 attrib) 
 {
@@ -960,9 +973,9 @@ void scroll (u8 lines, u8 attrib)
         if (!vinfo->isgraphic)
         {
             u32 gain=vinfo->currentpitch*lines;
-            video_to_video(gain,0,vinfo->pagesize-gain, 0);
-            mem_to_video(space   ,vinfo->pagesize-gain-2,gain, 0, false);
-            mem_to_video(attrib,vinfo->pagesize-gain-1,gain, 0, false);
+            video_to_video(gain,0,vinfo->pagesize-gain);
+            mem_to_video(space ,vinfo->pagesize-gain-2,gain, false);
+            mem_to_video(attrib,vinfo->pagesize-gain-1,gain, false);
         }
     }
     else
@@ -971,32 +984,98 @@ void scroll (u8 lines, u8 attrib)
     }
 }
 
+/******************************************************************************/
+/* Active le scrolling */
+
 void scroll_enable(void) 
 {
     vc[usedvc].scroll=true;
 }
+
+/******************************************************************************/
+/* Désactive le scrolling */
 
 void scroll_disable(void) 
 {
     vc[usedvc].scroll=false;
 }
 
+/******************************************************************************/
+/* Affiche un caractère */
+
 void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
 {
     if (!vinfo->isgraphic)
     {
         u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
-        mem_to_video(thechar,addr  , 1, 0, false);
-        mem_to_video(attrib, addr+1, 1, 0, false);  
-    }  
+        mem_to_video(thechar,addr  , 1, false);
+        mem_to_video(attrib, addr+1, 1, false);  
+    }
+    else
+    {
+	    u8 x, y, pattern, set;
+	    for (y = 0; y < 8; y++) 
+        {
+		    pattern = font8x8[thechar<<3 + y];
+		    for (x = 0; x < 8; x++) {
+                rol(pattern);
+			    //set = ((pattern >> (7 - x)) & 0x1);
+			if (pattern & 0x1 == 0)
+				writepxl(coordx << 3 + x, coordy << 3 + y, ((attrib & 0xF0) >> 8) * set);
+			else
+				writepxl(coordx << 3 + x, coordy << 3 + y, (attrib & 0x0F) * set);
+            }
+		}
+	}
 }
+
+/******************************************************************************/
+/* Retourne le caractère du mode texte aux coordonnées spécifiées */
 
 u8 getchar (u16 coordx, u16 coordy) 
-{ 
-
+{
+    u8 thechar=0;
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        video_to_mem(addr,&thechar,1);
+    }
+    return thechar;
 }
+
+
+/******************************************************************************/
+/* Retourne l'attribut du mode texte aux coordonnées spécifiées */
 
 u8 getattrib (u16 coordx, u16 coordy) 
 {
-
+    u8 attrib=0;
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        video_to_mem(addr+1,&attrib,1);  
+    }
+    return attrib;
 }
+
+
+/******************************************************************************/
+/* Affiche une ligne horizontale entre les points spécifiés */
+
+void hline(u32 x1, u32 x2, u32 y, u8 color)
+{
+	if (x2 > x1)
+        mem_to_video(color,x1,x2-x1,false);
+    else
+        mem_to_video(color,x2,x2-x1,false);       
+}
+
+
+/******************************************************************************/
+/* Affiche un pixel à l'écran */
+void writepxl (u16 x, u16 y, u32 color)
+{
+        u32 addr=x+vinfo->currentheight*y;
+        mem_to_video(color,addr,1,false);
+}
+

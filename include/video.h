@@ -88,6 +88,8 @@ void scroll_disable(void);
 void showchar (u16 coordx, u16 coordy, u8 thechar, u8 attrib);
 u8 getchar (u16 coordx, u16 coordy);
 u8 getattrib (u16 coordx, u16 coordy);
+void writepxl (u16 x, u16 y, u32 color);
+void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color);
 
 /* Fonctions de console */
 void changevc(u8 vc);
@@ -124,9 +126,9 @@ u8 (*setvideo_mode) (u8 mode);
 u8 *(*getvideo_drivername) (void);
 u8 *(*getvideo_capabilities) (void);
 videoinfos *(*getvideo_info) (void);
-u32 (*mem_to_video) (void *src,u32 dst, u32 size, u8 realsize, bool increment_src);
-u32 (*video_to_mem) (u32 src,void *dst, u32 size, u8 realsize);
-u32 (*video_to_video) (u32 src,u32 dst, u32 size, u8 realsize);
+u32 (*mem_to_video) (void *src,u32 dst, u32 size, bool increment_src);
+u32 (*video_to_mem) (u32 src,void *dst, u32 size);
+u32 (*video_to_video) (u32 src,u32 dst, u32 size);
 void (*wait_vretrace) (void);
 void (*wait_hretrace) (void);
 void (*page_set) (u8 page);

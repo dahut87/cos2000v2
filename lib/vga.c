@@ -7,8 +7,6 @@
 #include "asm.h"
 #include "types.h"
 #include "VGA/modes.c"
-#include "VGA/8x8fnt.c"
-#include "VGA/8x16fnt.c"
 
 static videoinfos infos;
 
@@ -110,8 +108,6 @@ u8 VGA_setvideo_mode(u8 mode)
 		infos.pagesize = ((infos.currentheight * infos.currentpitch) << 3);
 	}
     else {
-		VGA_font_load(font8x8, 8, 1);
-		VGA_font_load(font8x16, 16, 0);
         infos.currentpitch= infos.currentwidth * 2;
         infos.pagesize=infos.currentheight * infos.currentpitch;
         realsize=0;
@@ -162,7 +158,7 @@ videoinfos *VGA_getvideo_info (void) {
 
 /*******************************************************************************/
 /* Effecture un mouvement de la mémoire centrale vers la mémoire video (linéarisée) */
-u32 VGA_mem_to_video (void *src,u32 dst, u32 size, u8 realsize, bool increment_src) {
+u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
     u32 realdst=infos.baseaddress + infos.currentactivepage * infos.pagesize+dst;
     switch (realsize)
     {
@@ -170,11 +166,11 @@ u32 VGA_mem_to_video (void *src,u32 dst, u32 size, u8 realsize, bool increment_s
           if (!increment_src)
           {
             u8 tmp=(u8) src;
-            stosb(tmp,realdst,size); 
+            memset(realdst,tmp,size,2); 
           }
           else
           {
-            
+            memcpy(src,realdst,size,2); 
           }
         break;
     case 1:
@@ -217,19 +213,44 @@ u32 VGA_mem_to_video (void *src,u32 dst, u32 size, u8 realsize, bool increment_s
 
 /*******************************************************************************/
 /* Effecture un mouvement de la mémoire video (linéarisée) vers la mémoire centrale*/
-u32 VGA_video_to_mem (u32 src,void *dst, u32 size, u8 realsize) {
+u32 VGA_video_to_mem (u32 src,void *dst, u32 size)
+{
+    u32 realsrc=infos.baseaddress + infos.currentactivepage * infos.pagesize+src;
+    switch (realsize)
+    {
+    case 0:
+        memcpy(realsrc,dst,size,2); 
+        break;
+    case 1:
+    
+        break;
+    case 2:
+    
+        break;
+    case 4:
 
+        break;
+    case 8:
+    
+        break;
+    case 9:
+    
+        break;
+    
+    }
+ 
 }
 
 /*******************************************************************************/
 /* Effecture un mouvement de la mémoire video (linéarisé) vers la mémoire vidéo (linéarisée) */
-u32 VGA_video_to_video (u32 src,u32 dst, u32 size, u8 realsize) 
+u32 VGA_video_to_video (u32 src,u32 dst, u32 size) 
 {
     u32 base=infos.baseaddress + infos.currentactivepage * infos.pagesize;
     u32 realsrc=base+src;
     u32 realdst=base+dst;
     switch (realsize)
     {
+    case 8:
     case 0:
           if (size%4 == 0) 
             {
@@ -242,7 +263,7 @@ u32 VGA_video_to_video (u32 src,u32 dst, u32 size, u8 realsize)
             else
             {
                 movsb(realsrc,realdst,size);        
-            } 
+            }   
         break;
     case 1:
     
@@ -252,8 +273,6 @@ u32 VGA_video_to_video (u32 src,u32 dst, u32 size, u8 realsize)
         break;
     case 4:
     
-        break;
-    case 8:
         break;
     case 9:
     

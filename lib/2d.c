@@ -58,19 +58,6 @@ void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
 }
 
 /******************************************************************************/
-/* Affiche une ligne horizontale entre les points spécifiés */
-
-void hline(u32 x1, u32 x2, u32 y, u8 color)
-{
-	if (x2 > x1)
-		for (; x1 <= x2; x1++)
-			writepxl(x1, y, color);
-	else
-		for (; x2 <= x1; x2++)
-			writepxl(x2, y, color);
-}
-
-/******************************************************************************/
 /* Affiche un triangle rempli entre les points spécifiés */
 
 void trianglefilled(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
@@ -152,9 +139,4 @@ void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
 	line(CC->x, CC->y, AA->x, AA->y, color);
 }
 
-/******************************************************************************/
-/* Affiche un pixel à l'écran */
-void writepxl (u16 x, u16 y, u32 c)
-{
-}
 

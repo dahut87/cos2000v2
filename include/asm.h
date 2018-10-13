@@ -122,6 +122,29 @@
 
 #define rdmsr(reg,low,high) asm volatile ("rdmsr" :: "=a" (low), "=d" (high) : "c" (reg) )
 
+#define movsb(src,dst,count) \
+	asm volatile ("cld;rep movsb"::"S" (src), "D" (dst), "c" (count));
+
+#define movsw(src,dst,count) \
+	asm volatile ("cld;rep movsw"::"S" (src), "D" (dst), "c" (count));
+
+#define movsd(src,dst,count) \
+	asm volatile ("cld;rep movsd"::"S" (src), "D" (dst), "c" (count));
+
+#define stosb(pattern,dst,count) \
+	asm volatile ("cld;rep stosb"::"c" (count), "D" (dst), "a" (pattern));
+
+#define stosw(pattern,dst,count) \
+	asm volatile ("cld;rep stosw"::"a" (pattern), "c" (count), "D" (dst));
+
+#define stosd(pattern,dst,count) \
+	asm volatile ("cld;rep stosd"::"a" (pattern), "c" (count), "D" (dst));
+
+#define rol(addr) \
+	asm volatile ("rolb %0":"=m" (addr):);
+
+#define ror(addr) \
+	asm volatile ("rorb %0":"=m" (addr):);
 /******************************************************************************/
 
 #define outb(port,value) \
