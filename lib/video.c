@@ -2,6 +2,7 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "vga.h"
+#include "vesa.h"
 #include "asm.h"
 #include "video.h"
 #include "stdarg.h"
@@ -213,6 +214,7 @@ void changemode(u8 mode)
         width=(vinfo->currentwidth>>3);
         height=(vinfo->currentheight>>3);
     }
+    clearscreen();
 }
 
 /*******************************************************************************/
@@ -974,9 +976,10 @@ void apply_nextvideomode(void) {
 void initvideo(void)
 {
     initdriver();
-    registerdriver(&fonctions);
+    registerdriver(&vgafonctions);
+    registerdriver(&vesafonctions);
     apply_driver("VGA");
-    changemode(0x83);
+    changemode(0x01);
 }
 
 /******************************************************************************/

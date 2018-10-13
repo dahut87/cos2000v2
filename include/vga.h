@@ -115,7 +115,7 @@ void VGA_font2_set (u8 num);
 void VGA_blink_enable (void);
 void VGA_blink_disable (void);
 
-static videofonction fonctions = 
+static videofonction vgafonctions = 
 {
     &VGA_detect_hardware,
     &VGA_setvideo_mode,

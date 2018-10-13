@@ -365,7 +365,7 @@ int mode(u8* commandline)
     }
 	strgetitem(commandline, &arg, ' ', 1);
     argint=strtoint(&arg);
-	setvideo_mode(argint);
+	changemode(argint);
 	return 0;
 }
 
