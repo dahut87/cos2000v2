@@ -7,7 +7,10 @@
 
 #include "stdarg.h"
 
-#define maxdrivers 10
+#define MAXDRIVERS 10
+
+#define FONT8X16 0
+#define FONT8X8  1
 
 typedef struct videoinfos {
     u8      currentmode;
@@ -65,7 +68,8 @@ typedef struct capabilities {
     u16     height;
     bool    graphic;
     u8      depth;
-    u8      refresh;    
+    u8      refresh;
+    u8      fonttype;
 } capabilities __attribute__ ((packed));
 
 typedef struct console {
@@ -90,11 +94,14 @@ u8 getchar (u16 coordx, u16 coordy);
 u8 getattrib (u16 coordx, u16 coordy);
 void writepxl (u16 x, u16 y, u32 color);
 void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color);
+void changemode(u8 mode);
 
 /* Fonctions de console */
 void changevc(u8 vc);
 void putchar(u8 thechar);
 void clearscreen(void);
+u16 getwidth(void);
+u16 getheight(void);
 
 /* Fonctions de haut niveau */
 u32 print(u8* string);

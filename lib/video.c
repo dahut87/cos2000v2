@@ -8,9 +8,11 @@
 #include "VGA/8x8fnt.c"
 #include "VGA/8x16fnt.c"
 
-static drivers registred[maxdrivers];
+static drivers registred[MAXDRIVERS];
 
 static  videoinfos *vinfo;
+
+static width,height;
 
 static  console vc[8] = {
 	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
@@ -117,8 +119,8 @@ bool makeansi(u8 c)
 /* ESC[num1B -- bouge le curseur de num1 vers le bas */
 		else if (c == 'B') {
 			vc[usedvc].cursY += vc[usedvc].param1;
-			if (vc[usedvc].cursY >= vinfo->currentheight - 1)
-				vc[usedvc].cursY = vinfo->currentheight;
+			if (vc[usedvc].cursY >= getheight()  - 1)
+				vc[usedvc].cursY = getheight() ;
 			vc[usedvc].ansi = 0;
 			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
@@ -135,8 +137,8 @@ bool makeansi(u8 c)
 /* ESC[num1C -- bouge le curseur de num1 vers la droite */
 		else if (c == 'C') {
 			vc[usedvc].cursX += vc[usedvc].param1;
-			if (vc[usedvc].cursX >= vinfo->currentwidth - 1)
-				vc[usedvc].cursX = vinfo->currentwidth;
+			if (vc[usedvc].cursX >= getwidth() - 1)
+				vc[usedvc].cursX = getwidth();
 			vc[usedvc].ansi = 0;
 			cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 			return 1;
@@ -194,6 +196,8 @@ bool makeansi(u8 c)
 	return 0;		/* Ansi fini ;) */
 }
 
+/*******************************************************************************/
+/* Change de mode video */
 void changemode(u8 mode)
 {
     setvideo_mode(mode);
@@ -201,8 +205,30 @@ void changemode(u8 mode)
     if (!vinfo->isgraphic) {		
         font_load(font8x8, 8, 1);
 		font_load(font8x16, 16, 0);
+        width=vinfo->currentwidth;
+        height=vinfo->currentheight;
+    }
+    else
+    {
+        width=(vinfo->currentwidth>>3);
+        height=(vinfo->currentheight>>3);
     }
 }
+
+/*******************************************************************************/
+/* Renvoie la taille horizontale */
+u16 getwidth(void)
+{
+    return width;
+}
+
+/*******************************************************************************/
+/* Renvoie la taille verticale */
+u16 getheight(void)
+{
+    return height;
+}
+
 
 /*******************************************************************************/
 /* Efface la console en cours d'utilisation */
@@ -240,7 +266,7 @@ void putchar(u8 thechar)
 			vc[usedvc].cursY--;
 		break;
 	case 0x12:
-		if (vc[usedvc].cursY < vinfo->currentheight - 1)
+		if (vc[usedvc].cursY < getheight() - 1)
 			vc[usedvc].cursY++;
 		break;
 	case 0x13:
@@ -248,7 +274,7 @@ void putchar(u8 thechar)
 			vc[usedvc].cursX--;
 		break;
 	case 0x14:
-		if (vc[usedvc].cursX < vinfo->currentwidth - 1)
+		if (vc[usedvc].cursX < getwidth() - 1)
 			vc[usedvc].cursX++;
 		break;
 	case 0x2:
@@ -257,15 +283,15 @@ void putchar(u8 thechar)
 		break;
 	case 0x3:
 		vc[usedvc].cursX = 0;
-		vc[usedvc].cursY = vinfo->currentheight - 1;
+		vc[usedvc].cursY = getheight() - 1;
 		break;
 	case 0x19:
-		vc[usedvc].cursX = vinfo->currentwidth - 1;
+		vc[usedvc].cursX = getwidth() - 1;
 		break;
 	case '\b':
 		if (vc[usedvc].cursX == 0) {
 			if (vc[usedvc].cursY > 0) {
-				vc[usedvc].cursX = vinfo->currentwidth - 1;
+				vc[usedvc].cursX = getwidth() - 1;
 				vc[usedvc].cursY--;
 			}
 		} else {
@@ -291,13 +317,13 @@ void putchar(u8 thechar)
 		}
 		break;
 	}
-	if (vc[usedvc].cursX >= vinfo->currentwidth) {
+	if (vc[usedvc].cursX >= getwidth()) {
 		vc[usedvc].cursX = 0;
 		vc[usedvc].cursY++;
 	}
-	if (vc[usedvc].cursY >= vinfo->currentheight) {
+	if (vc[usedvc].cursY >= getheight() ) {
 		scroll(1, vc[usedvc].attrib);
-		vc[usedvc].cursY = vinfo->currentheight - 1;
+		vc[usedvc].cursY = getheight()  - 1;
 	}
 	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 }
@@ -827,7 +853,7 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 /*******************************************************************************/
 /* initialise le tableau des pilotes vidéo */
 void initdriver() {
-    for(u32 i=0;i<maxdrivers;i++) 
+    for(u32 i=0;i<MAXDRIVERS;i++) 
           registred[i].nom=NULL;
 }
 
@@ -836,11 +862,11 @@ void initdriver() {
 void registerdriver(videofonction *pointer)
 {
     u32 i;  
-    for(i=0;i<maxdrivers;i++) 
+    for(i=0;i<MAXDRIVERS;i++) 
          if (registred[i].pointer==pointer)
             return;
     i=0;
-    while (registred[i].nom!=NULL && i<maxdrivers) 
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) 
         i++;
     registred[i].pointer=pointer;
     registred[i].nom=pointer->getvideo_drivername();
@@ -854,7 +880,7 @@ void apply_bestdriver(void) {
     u8 bestmode=0x0;
     u8* bestdriver=NULL;
     capabilities *cap;
-    while (registred[i].nom!=NULL && i<maxdrivers) {
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
         cap=registred[i].pointer->getvideo_capabilities();
         while(cap[j].modenumber!=0xFF) {
             if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
@@ -877,7 +903,7 @@ void apply_bestdriver(void) {
 void apply_driver(u8* name)
 {
     u32 i=0;
-    while (registred[i].nom!=NULL && i<maxdrivers) {
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
         if (strcmp(name,registred[i].nom)==0) {
             detect_hardware=registred[i].pointer->detect_hardware;
             setvideo_mode=registred[i].pointer->setvideo_mode;
@@ -911,7 +937,7 @@ void apply_driver(u8* name)
 
 void apply_nextdriver(void) {
     u32 i=0;
-    while (registred[i].nom!=NULL && i<maxdrivers)
+    while (registred[i].nom!=NULL && i<MAXDRIVERS)
         if (strcmp(getvideo_drivername(),registred[i].nom)==0) {
             i++;
             if (registred[i].nom!=NULL) i=0;
@@ -950,7 +976,7 @@ void initvideo(void)
     initdriver();
     registerdriver(&fonctions);
     apply_driver("VGA");
-    changemode(0x1);
+    changemode(0x83);
 }
 
 /******************************************************************************/
@@ -960,8 +986,15 @@ static u8 space=' ';
 
 void fill(u8 attrib) 
 {
-    mem_to_video(space ,0,vinfo->pagesize>>1, false);
-    mem_to_video(attrib,1,vinfo->pagesize>>1, false);
+    if (!vinfo->isgraphic)
+    {
+        mem_to_video(space ,0,vinfo->pagesize>>1, false);
+        mem_to_video(attrib,1,vinfo->pagesize>>1, false);
+    }
+    else
+    {
+        mem_to_video(0x0,0,vinfo->pagesize, false);
+    }
 }
 
 /******************************************************************************/
@@ -976,6 +1009,12 @@ void scroll (u8 lines, u8 attrib)
             video_to_video(gain,0,vinfo->pagesize-gain);
             mem_to_video(space ,vinfo->pagesize-gain-2,gain, false);
             mem_to_video(attrib,vinfo->pagesize-gain-1,gain, false);
+        }
+        else
+        {
+            u32 gain=vinfo->currentpitch*(lines<<3);
+            video_to_video(gain,0,vinfo->pagesize-gain);
+            mem_to_video(0x0 ,vinfo->pagesize-gain-2,gain, false);
         }
     }
     else
@@ -1005,6 +1044,7 @@ void scroll_disable(void)
 
 void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
 {
+	u8 x, y, pattern, set;
     if (!vinfo->isgraphic)
     {
         u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
@@ -1013,17 +1053,17 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
     }
     else
     {
-	    u8 x, y, pattern, set;
 	    for (y = 0; y < 8; y++) 
         {
-		    pattern = font8x8[thechar<<3 + y];
-		    for (x = 0; x < 8; x++) {
+		    pattern = font8x8[(thechar<<3) + y];
+		    for (x = 0; x < 8; x++) 
+            {
+                set = pattern & 0x1;
+			    if (set == 0)
+				    writepxl((coordx<<3) + x, (coordy<<3) + y, ((attrib & 0xF0) >> 8));
+			    else
+				    writepxl((coordx<<3) + x, (coordy<<3) + y, (attrib & 0x0F) );
                 rol(pattern);
-			    //set = ((pattern >> (7 - x)) & 0x1);
-			if (pattern & 0x1 == 0)
-				writepxl(coordx << 3 + x, coordy << 3 + y, ((attrib & 0xF0) >> 8) * set);
-			else
-				writepxl(coordx << 3 + x, coordy << 3 + y, (attrib & 0x0F) * set);
             }
 		}
 	}
@@ -1075,7 +1115,7 @@ void hline(u32 x1, u32 x2, u32 y, u8 color)
 /* Affiche un pixel à l'écran */
 void writepxl (u16 x, u16 y, u32 color)
 {
-        u32 addr=x+vinfo->currentheight*y;
+        u32 addr=x+vinfo->currentpitch*y;
         mem_to_video(color,addr,1,false);
 }
 

@@ -50,7 +50,7 @@ int main(u32 magic, u32 addr)
 	/*  Efface l'ecran   */
 
 	print("\033[2J\000");
-	print(ansilogo);
+	if (getwidth()>40) print(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux");
 	ok();

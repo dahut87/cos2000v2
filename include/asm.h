@@ -129,7 +129,7 @@
 	asm volatile ("cld;rep movsw"::"S" (src), "D" (dst), "c" (count));
 
 #define movsd(src,dst,count) \
-	asm volatile ("cld;rep movsd"::"S" (src), "D" (dst), "c" (count));
+	asm volatile ("cld;rep movsl"::"S" (src), "D" (dst), "c" (count));
 
 #define stosb(pattern,dst,count) \
 	asm volatile ("cld;rep stosb"::"c" (count), "D" (dst), "a" (pattern));
@@ -138,13 +138,13 @@
 	asm volatile ("cld;rep stosw"::"a" (pattern), "c" (count), "D" (dst));
 
 #define stosd(pattern,dst,count) \
-	asm volatile ("cld;rep stosd"::"a" (pattern), "c" (count), "D" (dst));
+	asm volatile ("cld;rep stosl"::"a" (pattern), "c" (count), "D" (dst));
 
 #define rol(addr) \
-	asm volatile ("rolb %0":"=m" (addr):);
+	asm volatile ("rolb $0x1,%0":"=m" (addr):);
 
 #define ror(addr) \
-	asm volatile ("rorb %0":"=m" (addr):);
+	asm volatile ("rorb $0x1,%0":"=m" (addr):);
 /******************************************************************************/
 
 #define outb(port,value) \

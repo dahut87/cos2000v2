@@ -113,9 +113,8 @@ void mouse(void)
 		if (mousey >= 65535) {
 			mousey = 65535;
 		}
-        videoinfos *vinfo=getvideo_info();
-		u16 newx = (u32) mousex * vinfo->currentwidth / 65536;
-		u16 newy = (u32) mousey * vinfo->currentheight / 65536;
+		u16 newx = (u32) mousex * getwidth() / 65536;
+		u16 newy = (u32) mousey * getheight() / 65536;
 
 		// Retrieve mouse button status from packet
 		mousebut1 = mpacket[0] & 1;

@@ -94,18 +94,18 @@ u8 VGA_setvideo_mode(u8 mode)
 			    /* mode 256 couleurs */
 			    if (modes[index].sequencer.Sequencer_Memory_Mode_Register == 0x0E) {
 				    /* mode chainé (plus rapide mais limité en mémoire) */
-				    infos.currentpitch = (infos.currentwidth << 3);
+				    infos.currentpitch = infos.currentwidth;
                     realsize=8;
 			    } else {
 				    /* mode non chainé */
-				    infos.currentpitch = (infos.currentwidth << 1);
+				    infos.currentpitch = infos.currentwidth >> 2;
                     realsize=9;
 			    }
 			    break;
 		    default:
 			    break;
 		    }
-		infos.pagesize = ((infos.currentheight * infos.currentpitch) << 3);
+		infos.pagesize = infos.currentheight * infos.currentpitch;
 	}
     else {
         infos.currentpitch= infos.currentwidth * 2;
@@ -189,7 +189,7 @@ u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
             if (size%4 == 0) 
             {
                 u32 pattern = tmp + (tmp<<8) + (tmp<<16) + (tmp<<24);
-                stosb(pattern,realdst,(size>>2));
+                stosd(pattern,realdst,(size>>2));
             }            
             else if (size%2 == 0)
             {
@@ -373,12 +373,14 @@ void VGA_wait_hretrace(void)
 
 void VGA_cursor_enable(void)
 {
-	u8 curs;
-	/* active le curseur hardware */
-	outb(CCRT, 10);
-	curs = inb(CCRT + 1) & ~32;
-	outb(CCRT + 1, curs);
-    infos.isgraphic=true;
+    if (!infos.isgraphic) {
+	    u8 curs;
+	    /* active le curseur hardware */
+	    outb(CCRT, 10);
+	    curs = inb(CCRT + 1) & ~32;
+	    outb(CCRT + 1, curs);
+        infos.iscursorvisible=true;
+    }
 }
 
 /*******************************************************************************/
@@ -386,12 +388,14 @@ void VGA_cursor_enable(void)
 
 void VGA_cursor_disable(void)
 {
-	u8 curs;
-	/* Desactive le curseur hardware */
-	outb(CCRT, 10);
-	curs = inb(CCRT + 1) | 32;
-	outb(CCRT + 1, curs);
-    infos.isgraphic=false;
+    if (!infos.isgraphic) {
+	    u8 curs;
+	    /* Desactive le curseur hardware */
+	    outb(CCRT, 10);
+	    curs = inb(CCRT + 1) | 32;
+	    outb(CCRT + 1, curs);
+        infos.iscursorvisible=false;
+    }
 }
 
 /*******************************************************************************/
@@ -415,17 +419,19 @@ void useplane(u8 plan)
 
 void VGA_cursor_set(u16 x, u16 y)
 {
-	u16 pos;
-	if (splitY == 0)
-		pos = (infos.currentshowedpage * infos.pagesize / 2 + x + y * infos.currentwidth);
-	else
-		pos = (x + y * infos.currentwidth);
-	outb(CCRT, 0x0F);
-	outb(CCRT + 1, (u8) (pos & 0x00FF));
-	outb(CCRT, 0x0E);
-	outb(CCRT + 1, (u8) ((pos & 0xFF00) >> 8));
-    infos.currentcursorX=x;
-    infos.currentcursorY=y;
+    if (!infos.isgraphic) {
+	    u16 pos;
+	    if (splitY == 0)
+		    pos = (infos.currentshowedpage * infos.pagesize / 2 + x + y * infos.currentwidth);
+	    else
+		    pos = (x + y * infos.currentwidth);
+	    outb(CCRT, 0x0F);
+	    outb(CCRT + 1, (u8) (pos & 0x00FF));
+	    outb(CCRT, 0x0E);
+	    outb(CCRT + 1, (u8) ((pos & 0xFF00) >> 8));
+        infos.currentcursorX=x;
+        infos.currentcursorY=y;
+    }
 }
 
 /*******************************************************************************/
@@ -486,12 +492,14 @@ u32 VGA_font_load(u8 * def, u8 size, u8 font)
 
 void VGA_font1_set(u8 num)
 {
-	num &= 0x07;
-	outb(SEQUENCER, 3);
-	outb(SEQUENCER + 1,
-	     (inb(SEQUENCER + 1) & 0xEC) | ((num & 0x03) +
-					    ((num & 0x04) << 2)));
-    infos.currentfont1=num;
+    if (!infos.isgraphic) {
+	    num &= 0x07;
+	    outb(SEQUENCER, 3);
+	    outb(SEQUENCER + 1,
+	         (inb(SEQUENCER + 1) & 0xEC) | ((num & 0x03) +
+					        ((num & 0x04) << 2)));
+        infos.currentfont1=num;
+    }
 }
 
 /*******************************************************************************/
@@ -499,12 +507,14 @@ void VGA_font1_set(u8 num)
 
 void VGA_font2_set(u8 num)
 {
-	num &= 0x07;
-	outb(SEQUENCER, 3);
-	outb(SEQUENCER + 1,
-	     (inb(SEQUENCER + 1) & 0xD3) | (((num & 0x03) << 2) +
-					    ((num & 0x04) << 3)));
-    infos.currentfont2=num;
+    if (!infos.isgraphic) {
+	    num &= 0x07;
+	    outb(SEQUENCER, 3);
+	    outb(SEQUENCER + 1,
+	         (inb(SEQUENCER + 1) & 0xD3) | (((num & 0x03) << 2) +
+					        ((num & 0x04) << 3)));
+        infos.currentfont2=num;
+    }
 }
 
 /*******************************************************************************/
@@ -512,9 +522,11 @@ void VGA_font2_set(u8 num)
 
 void VGA_blink_enable(void)
 {
-	outb(CCRT, 0x10);
-	outb(CCRT + 1, (inb(SEQUENCER + 1) | 0x04));
-    infos.isblinking=true;
+    if (!infos.isgraphic) {
+	    outb(CCRT, 0x10);
+	    outb(CCRT + 1, (inb(SEQUENCER + 1) | 0x04));
+        infos.isblinking=true;
+    }
 }
 
 /*******************************************************************************/
@@ -522,9 +534,11 @@ void VGA_blink_enable(void)
 
 void VGA_blink_disable(void)
 {
-	outb(CCRT, 0x10);
-	outb(CCRT + 1, (inb(SEQUENCER + 1) & ~0x04));
-    infos.isblinking=false;
+    if (!infos.isgraphic) {
+	    outb(CCRT, 0x10);
+	    outb(CCRT + 1, (inb(SEQUENCER + 1) & ~0x04));
+        infos.isblinking=false;
+    }
 }
 
 /*******************************************************************************/
