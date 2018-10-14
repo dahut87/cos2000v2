@@ -20,7 +20,7 @@ int info();
 int err();
 int view();
 int test(void);
-int disasm(u8* commandline);
+int disas(u8* commandline);
 int bpset(u8* commandline);
 int bpclr(u8* commandline);
 int help();

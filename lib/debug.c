@@ -58,15 +58,14 @@ void setdebugreg(u8 number,u8 *address, u8 type)
 }
 
 /*******************************************************************************/
-/* Fonctions de décodage associées à la fonction decode */
+/* Fonctions de déboguage */
 
-u16 decodeModSM(bool at,u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
+u16 decodeModSM(bool show, u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
     u32 len = 0;
     u32 reg = 0;
     u32 scale = 0;
     u8 *b = a;
     u8 *E, *G, *indx, *base, *disp = "\0"; 
-    u8 *F;
     u8 ebuf[32] = {0};
     
     setG();
@@ -75,195 +74,142 @@ u16 decodeModSM(bool at,u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
         switch(*b&0xc7){
             case 0x00:
                 E = "[bx+si]";
-                F = "(%%bx,%%si)";
                 break;
             case 0x01:
                 E = "[bx+di]";
-                F = "(%%bx,%%di)";
                 break;
             case 0x02:
                 E = "[bp+si]";
-                F = "(%%bx,%%si)";
                 break;
             case 0x03:
                 E = "[bp+di]";
-                F = "(%%bp,%%di)";
                 break;
             case 0x04:
                 E = "[si]";
-                F = "(%%si)";
                 break;
             case 0x05:
                 E = "[di]";
-                F = "(%%di)";
                 break;
             case 0x06:
                 snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%%ds:$%x", *(u16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x07:
                 E = "[bx]";
-                F = "(bx)";
                 break;
             case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x44:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s8 *)b); 
-                F = ebuf;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x84:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s8 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0xc0:
                 E = "al";
-                F = "%%al";
                 break;
             case 0xc1:
                 E = "cl";
-                F = "%%cl";
                 break;
             case 0xc2:
                 E = "dl";
-                F = "%%dl";
                 break;
             case 0xc3:
                 E = "bl";
-                F = "%%bl";
                 break;
             case 0xc4:
                 E = "ah";
-                F = "%%ah";
                 break;
             case 0xc5:
                 E = "ch";
-                F = "%%cl";
                 break;
             case 0xc6:
                 E = "dh";
-                F = "%%dh";
                 break;
             case 0xc7:
                 E = "bh";
-                F = "%%bh";
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }   
     } else{ 
         switch(*b & 0xc7){
             case 0x00:
                 E = "[eax]";
-                F = "(%%eax)";
                 break;
             case 0x01:
                 E = "[ecx]";
-                F = "(%%ecx)";
                 break;
             case 0x02:
                 E = "[edx]";
-                F = "(%%edx)";
                 break;
             case 0x03:
                 E = "[ebx]";
-                F = "(%%ebx)";
                 break;
             case 0x04:
                 ++b;
@@ -282,59 +228,33 @@ u16 decodeModSM(bool at,u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
                     snprintf(ebuf, sizeof(ebuf), "[%s+%s*%i]", base, indx, scale);
                 }
                 E = ebuf;
-                if(!indx){
-                    snprintf(ebuf, sizeof(ebuf), "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf, sizeof(ebuf), "(%s)", indx);
-                    } else{
-                        snprintf(ebuf, sizeof(ebuf), "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
                 break;
             case 0x05:
                 snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%%ds:$%x", *(u32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x06:
                 E = "[esi]";
-                F = "(%esi)";
                 break;
             case 0x07:
                 E = "[edi]";
-                F = "(%edi)";
                 break;
              case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(u8 *)b); 
-                F = ebuf;
             case 0x44:
                 ++b;
                 decodeSIB(); 
@@ -354,67 +274,36 @@ u16 decodeModSM(bool at,u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u8 *)++b);
                 E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(u8 *)b); 
-                F = ebuf;
                 break;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(s32 *)b); 
-                F = ebuf;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
              case 0x84:
@@ -435,124 +324,74 @@ u16 decodeModSM(bool at,u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
                 }
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u32 *)++b);
-                E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 b += 3;
+                E = ebuf;
                 break;
            case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
            case 0xc0:
                 E = Esz == 1 ? "ax": "eax";
-                F = Esz == 1 ? "%%ax": "%%eax";
                 break;
             case 0xc1:
                 E = Esz == 1 ? "cx": "ecx";
-                F = Esz == 1 ? "%%cx": "%%ecx";
                 break;
             case 0xc2:
                 E = Esz == 1 ? "dx": "edx";
-                F = Esz == 1 ? "%%dx": "%%edx";
                 break;
             case 0xc3:
                 E = Esz == 1 ? "bx": "ebx";
-                F = Esz == 1 ? "%%bx": "%%ebx";
                 break;
             case 0xc4:
                 E = Esz == 1 ? "sp": "esp";
-                F = Esz == 1 ? "%%sp": "%%esp";
                 break;
             case 0xc5:
                 E = Esz == 1 ? "bp": "ebp";
-                F = Esz == 1 ? "%%bp": "%%ebp";
                 break;
             case 0xc6:
                 E = Esz == 1 ? "si": "esi";
-                F = Esz == 1 ? "%%si": "%%esi";
                 break;
             case 0xc7:
                 E = Esz == 1 ? "di": "edi";
-                F = Esz == 1 ? "%%di": "%%edi";
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }
     }
 
-    if (at)
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", F);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s%%", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s%%, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", F);
+    if(order){
+        snprintf(op, opBufSz, "%s", E);
+        len = strlen(op);
+        if(Gsz){
+            snprintf(op+len, opBufSz-len, ", %s", G);
         }
-    }       
-    else 
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", E);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", E);
-        }
+    } else{
+        snprintf(op, opBufSz, "%s, ", G);
+        len = strlen(op);
+        snprintf(op+len, opBufSz-len, "%s", E);
     }
     return b-a;
 }
 
-u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
+u32 decodeModSM_float(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
     u32 len = 0;
     u32 reg = 0;
     u32 scale = 0;
     u8 *b = a;
     u8 *E, *G, *indx, *base, *disp = "\0"; 
-    u8 *F;
     u8 ebuf[32] = {0};
     
     setG();
@@ -561,33 +400,25 @@ u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
         switch(*b&0xc7){
             case 0x00:
                 E = "[bx+si]";
-                F = "(%%bx,%%si)";
                 break;
             case 0x01:
                 E = "[bx+di]";
-                F = "(%%bx,%%di)";
                 break;
             case 0x02:
                 E = "[bp+si]";
-                F = "(%%bp,%%si)";
                 break;
             case 0x03:
                 E = "[bp+di]";
-                F = "(%%bp,%%di)";
                 break;
             case 0x04:
                 E = "[si]";
-                F = "(%%si)";
                 break;
             case 0x05:
                 E = "[di]";
-                F = "(%%di)";
                 break;
             case 0x06:
                 snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%%ds:$%x", *(u16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x07:
@@ -596,159 +427,115 @@ u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
             case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x44:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s8 *)b); 
-                F = ebuf;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x84:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0xc0:
                 E = "st(0)";
-                F = "%%st(0)";
                 break;
             case 0xc1:
                 E = "st(1)";
-                F = "%%st(1)";
                 break;
             case 0xc2:
                 E = "st(2)";
-                F = "%%st(1)";
                 break;
             case 0xc3:
                 E = "st(3)";
-                F = "%%st(1)";
                 break;
             case 0xc4:
                 E = "st(4)";
-                F = "%%st(1)";
                 break;
             case 0xc5:
                 E = "st(5)";
-                F = "%%st(1)";
                 break;
             case 0xc6:
                 E = "st(6)";
-                F = "%%st(1)";
                 break;
             case 0xc7:
                 E = "st(7)";
-                F = "%%st(1)";
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }   
     } else{
         switch(*b & 0xc7){
             case 0x00:
                 E = "[eax]";
-                F = "(%%eax)";
                 break;
             case 0x01:
                 E = "[ecx]";
-                F = "(%%ecx)";
                 break;
             case 0x02:
                 E = "[edx]";
-                F = "(%%edx)";
                 break;
             case 0x03:
                 E = "[ebx]";
-                F = "(%%ebx)";
                 break;
             case 0x04:
                 ++b;
@@ -767,60 +554,33 @@ u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                     snprintf(ebuf, sizeof(ebuf), "[%s+%s*%i]", base, indx, scale);
                 }
                 E = ebuf;
-
-                if(!indx){
-                    snprintf(ebuf, sizeof(ebuf), "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf, sizeof(ebuf), "(%s)", indx);
-                    } else{
-                        snprintf(ebuf, sizeof(ebuf), "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
                 break;
             case 0x05:
-                snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u32 *)b); 
+                snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%%ds:$%x", *(u32 *)++b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x06:
                 E = "[esi]";
-               F = "(%%esi)";
                 break;
             case 0x07:
                 E = "[edi]";
-               F = "(%%edi)";
                 break;
              case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(s8 *)b); 
-                F = ebuf;
             case 0x44:
                 ++b;
                 decodeSIB(); 
@@ -840,68 +600,36 @@ u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u8 *)++b);
                 E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(s32 *)b); 
-                F = ebuf;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
              case 0x84:
@@ -922,124 +650,74 @@ u32 decodeModSM_float(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 }
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u32 *)++b);
-                E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 b += 3;
+                E = ebuf;
                 break;
            case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
            case 0xc0:
                 E = "st(0)";
-                F = "%%st(0)";
                 break;
             case 0xc1:
                 E = "st(1)";
-                F = "%%st(1)";
                 break;
             case 0xc2:
                 E = "st(2)";
-                F = "%%st(2)";
                 break;
             case 0xc3:
                 E = "st(3)";
-                F = "%%st(3)";
                 break;
             case 0xc4:
                 E = "st(4)";
-                F = "%%st(4)";
                 break;
             case 0xc5:
                 E = "st(5)";
-                F = "%%st(5)";
                 break;
             case 0xc6:
                 E = "st(6)";
-                F = "%%st(6)";
                 break;
             case 0xc7:
                 E = "st(7)";
-                F = "%%st(7)";
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }
     }
 
-    if (at)
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", F);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s%%", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s%%, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", F);
+    if(order){
+        snprintf(op, opBufSz, "%s", E);
+        len = strlen(op);
+        if(Gsz){
+            snprintf(op+len, opBufSz-len, ", %s", G);
         }
-    }       
-    else 
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", E);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", E);
-        }
+    } else{
+        snprintf(op, opBufSz, "%s, ", G);
+        len = strlen(op);
+        snprintf(op+len, opBufSz-len, "%s", E);
     }
     return b-a;
 }
 
-u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
+u32 decodeModSM_memonly(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
     u32 len = 0;
     u32 reg = 0;
     u32 scale = 0;
     u8 *b = a;
     u8 *E, *G, *indx, *base, *disp = "\0"; 
-    u8 *F;
     u8 ebuf[32] = {0};
     
     setG();
@@ -1048,163 +726,118 @@ u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
         switch(*b&0xc7){
             case 0x00:
                 E = "[bx+si]";
-                F = "(%%bx,%%si)";
                 break;
             case 0x01:
                 E = "[bx+di]";
-                F = "(%%bx,%%di)";
                 break;
             case 0x02:
                 E = "[bp+si]";
-                F = "(%%bp,%%si)";
                 break;
             case 0x03:
                 E = "[bp+di]";
-                F = "(%%bp,%%di)";
                 break;
             case 0x04:
                 E = "[si]";
-                F = "(%%si)";
                 break;
             case 0x05:
                 E = "[di]";
-                F = "(%%di)";
                 break;
             case 0x06:
                 snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%%ds:$%x", *(u16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x07:
                 E = "[bx]";
-                F = "(%%bx)";
                 break;
             case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x44:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s8 *)b); 
-                F = ebuf;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[bx+si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[bx+di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx,%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[bp+si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[bp+di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp,%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x84:
                 snprintf(ebuf, sizeof(ebuf), "[si+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%si)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[di+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%di)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[bp+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bp)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[bx+%x]", *(u16 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%bx)", *(s16 *)b); 
-                F = ebuf;
                 ++b;
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }   
     } else{ 
         switch(*b&0xc7){
             case 0x00:
                 E = "[eax]";
-                F = "(%%eax)";
                 break;
             case 0x01:
                 E = "[ecx]";
-                F = "(%%ecx)";
                 break;
             case 0x02:
                 E = "[edx]";
-                F = "(%%edx)";
                 break;
             case 0x03:
                 E = "[ebx]";
-                F = "(%%ebx)";
                 break;
             case 0x04:
                 ++b;
@@ -1223,28 +856,10 @@ u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                     snprintf(ebuf, sizeof(ebuf), "[%s+%s*%i]", base, indx, scale);
                 }
                 E = ebuf;
-
-                if(!indx){
-                    snprintf(ebuf, sizeof(ebuf), "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf, sizeof(ebuf), "(%s)", indx);
-                    } else{
-                        snprintf(ebuf, sizeof(ebuf), "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf, sizeof(ebuf), "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 break;
             case 0x05:
                 snprintf(ebuf, sizeof(ebuf), "ds:%x", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%ds:$%x", *(u32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x06:
@@ -1256,26 +871,18 @@ u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
              case 0x40:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x41:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x42:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x43:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(s8 *)b); 
-                F = ebuf;
             case 0x44:
                 ++b;
                 decodeSIB(); 
@@ -1295,68 +902,36 @@ u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u8 *)++b);
                 E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 break;
             case 0x45:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x46:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x47:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u8 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(s8 *)b); 
-                F = ebuf;
                 break;
             case 0x80:
                 snprintf(ebuf, sizeof(ebuf), "[eax+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%eax)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x81:
                 snprintf(ebuf, sizeof(ebuf), "[ecx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ecx)", *(s32 *)b); 
-                F = ebuf;
                 break;
             case 0x82:
                 snprintf(ebuf, sizeof(ebuf), "[edx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x83:
                 snprintf(ebuf, sizeof(ebuf), "[ebx+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebx)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
              case 0x84:
@@ -1377,98 +952,50 @@ u32 decodeModSM_memonly(bool at,u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 }
                 len = strlen(ebuf);
                 snprintf(ebuf+len, sizeof(ebuf)-len, "+%x]", *(u32 *)++b);
-                E = ebuf;
-
-                snprintf(ebuf, sizeof(ebuf), "%i", *(s8 *)b);
-                len = strlen(ebuf);
-                if(!indx){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", base);
-                } else if(!base){
-                    if(!scale){
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(%s)", indx);
-                    } else{
-                        snprintf(ebuf+len, sizeof(ebuf)-len, "(,%s,%i)", indx, scale);
-                    }
-                } else if(!scale){
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s)", base, indx);
-                } else{
-                    snprintf(ebuf+len, sizeof(ebuf)-len, "(%s,%s,%i)", base, indx, scale);
-                }
-                F = ebuf;
-
                 b += 3;
+                E = ebuf;
                 break;
            case 0x85:
                 snprintf(ebuf, sizeof(ebuf), "[ebp+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%ebp)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x86:
                 snprintf(ebuf, sizeof(ebuf), "[esi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%esi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             case 0x87:
                 snprintf(ebuf, sizeof(ebuf), "[edi+%x]", *(u32 *)++b); 
                 E = ebuf;
-                snprintf(ebuf, sizeof(ebuf), "%i(%%edi)", *(s32 *)b); 
-                F = ebuf;
                 b += 3;
                 break;
             default:
-                print("Invalid Mod R/M byte.\r\n");
+                if (show) print("Invalid Mod R/M byte.");
                 return;
         }
     }
 
-    if (at)
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", F);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s%%", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s%%, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", F);
+    if(order){
+        snprintf(op, opBufSz, "%s", E);
+        len = strlen(op);
+        if(Gsz){
+            snprintf(op+len, opBufSz-len, ", %s", G);
         }
-    }       
-    else 
-    {
-        if(order){
-            snprintf(op, opBufSz, "%s", E);
-            len = strlen(op);
-            if(Gsz) snprintf(op+len, opBufSz-len, ", %s", G);
-        } 
-        else
-        {
-            snprintf(op, opBufSz, "%s, ", G);
-            len = strlen(op);
-            snprintf(op+len, opBufSz-len, "%s", E);
-        }
+    } else{
+        snprintf(op, opBufSz, "%s, ", G);
+        len = strlen(op);
+        snprintf(op+len, opBufSz-len, "%s", E);
     }
     return b-a;
 }
 
 /*******************************************************************************/
-/* Desassemble une adresse mémoire au format at & t ou intel */
+/* Décode une adresse mémoire au format intel */
 
-u32 disas(u8 *a) {
-    return decode(true, a, true);
-}
-
-/*******************************************************************************/
-/* Desassemble une adresse mémoire au format at & t ou intel */
-
-u32 decode(bool at, u8 *a, bool show){
-    u8 *f_entry=0;
-    u16 entry=0;
+u32 disasm(u8 *a, u8 *string, bool show){
+    u8 *f_entry;
+    u16 entry;
     u8 *b = a;
     u32 len = 0;
     u32 flip_addr_sz = 0;
@@ -1526,7 +1053,7 @@ u32 decode(bool at, u8 *a, bool show){
 
     if(*b == 0x0f){ 
 
-        print("Extended opcodes not implimented.\r\n");
+        if (show) print("Extended opcodes not implimented.\r\n");
         return;
     
     } else{
@@ -1534,19 +1061,19 @@ u32 decode(bool at, u8 *a, bool show){
         switch(*b){
             case 0x00:
                 s = "add";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x01:
                 s = "add";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x02:
                 s = "add";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x03:
                 s = "add";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x04:
                 s = "add";
@@ -1571,19 +1098,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x08:
                 s = "or";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x09:
                 s = "or";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x0a:
                 s = "or";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x0b:
                 s = "or";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x0c:
                 s = "or";
@@ -1605,19 +1132,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x10:
                 s = "adc";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x11:
                 s = "adc";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x12:
                 s = "adc";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x13:
                 s = "adc";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x14:
                 s = "adc";
@@ -1642,19 +1169,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x18:
                 s = "sbb";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x19:
                 s = "sbb";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x1a:
                 s = "sbb";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x1b:
                 s = "sbb";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x1c:
                 s = "sbb";
@@ -1679,19 +1206,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x20:
                 s = "and";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x21:
                 s = "and";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x22:
                 s = "and";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x23:
                 s = "and";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x24:
                 s = "and";
@@ -1713,19 +1240,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x28:
                 s = "sub";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x29:
                 s = "sub";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x2a:
                 s = "sub";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x2b:
                 s = "sub";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x2c:
                 s = "sub";
@@ -1747,19 +1274,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x30:
                 s = "xor";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x31:
                 s = "xor";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x32:
                 s = "xor";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x33:
                 s = "xor";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x34:
                 s = "xor";
@@ -1781,19 +1308,19 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x38:
                 s = "cmp";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x39:
                 s = "cmp";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x3a:
                 s = "cmp";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x3b:
                 s = "cmp";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x3c:
                 s = "cmp";
@@ -1917,7 +1444,7 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x63:
                 s = "arpl";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x68:
                 s = "push";
@@ -1931,7 +1458,7 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x69:
                 s = "imul";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 len = strlen(op1);
                 if(flip_imm_sz){
                     snprintf(op1+len, sizeof(op1)-len, ", %x", *(u16 *)++b);
@@ -1947,7 +1474,7 @@ u32 decode(bool at, u8 *a, bool show){
                 snprintf(op1, sizeof(op1), "%x", (void *)*b);
             case 0x6b:
                 s = "imul";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
                break;
@@ -2051,7 +1578,7 @@ u32 decode(bool at, u8 *a, bool show){
                 snprintf(op1, sizeof(op1), "%x", (void *)entry+(u32)b-(u32)f_entry+*b+1);
                 break;
             case 0x80:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "add";
@@ -2078,14 +1605,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "cmp";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
                 break;
              case 0x81:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                  switch((*b&0x38)/8){
                     case 0:
                         s = "add";
@@ -2112,7 +1639,7 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "cmp";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
@@ -2125,7 +1652,7 @@ u32 decode(bool at, u8 *a, bool show){
                 }
                 break;
            case 0x82:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "add";
@@ -2152,14 +1679,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "cmp";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
                 break;
            case 0x83:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "add";
@@ -2186,7 +1713,7 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "cmp";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
@@ -2194,51 +1721,51 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0x84:
                 s = "test";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x85:
                 s = "test";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x86:
                 s = "xchg";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x87:
                 s = "xchg";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x88:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 1, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 1, flip_addr_sz);
                 break;
             case 0x89:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x8a:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 0, 1, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 1, flip_addr_sz);
                 break;
             case 0x8b:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x8c:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 1, 4, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 4, flip_addr_sz);
                 break;
             case 0x8d: 
                 s = "lea";
-                b += decodeModSM_memonly(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM_memonly(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0x8e:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 0, 4, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 0, 4, flip_addr_sz);
                 break;
             case 0x8f:
                 s = "pop";
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 break;
             case 0x90:
                 s = flip_imm_sz ? "xchg    ax, ax": "nop";
@@ -2501,7 +2028,7 @@ u32 decode(bool at, u8 *a, bool show){
                 }
                 break;
             case 0xc0:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2528,14 +2055,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
                 break;
             case 0xc1:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2562,7 +2089,7 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
@@ -2578,21 +2105,21 @@ u32 decode(bool at, u8 *a, bool show){
                 break;
             case 0xc4:
                 s = "les";
-                b += decodeModSM_memonly(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM_memonly(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0xc5: 
                 s = "lds";
-                b += decodeModSM_memonly(at, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
+                b += decodeModSM_memonly(show, ++b, op1, 0, flip_imm_sz ? 2: 3, flip_addr_sz);
                 break;
             case 0xc6:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
                 break;
             case 0xc7:
                 s = "mov";
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 len = strlen(op1);
                 if(flip_imm_sz){
                     snprintf(op1+len, sizeof(op1)-len, ", %x", *(u16 *)++b);
@@ -2633,7 +2160,7 @@ u32 decode(bool at, u8 *a, bool show){
                 s = "iret";
                 break;
             case 0xd0:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2660,14 +2187,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", 1");
                 break;
             case 0xd1:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2694,14 +2221,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", 1");
                 break;
             case 0xd2:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2728,14 +2255,14 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", cl");
                 break;
             case 0xd3:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "rol";
@@ -2762,7 +2289,7 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "sar";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 len = strlen(op1);
@@ -2793,38 +2320,38 @@ u32 decode(bool at, u8 *a, bool show){
                     switch((*b&0x38)>>3){
                         case 0:
                             s = "fadd";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 1:
                             s = "fmul";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 2:
                             s = "fcom";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 3:
                             s = "fcomp";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 4:
                             s = "fsub";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 5:
                             s = "fsubr";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 6:
                             s = "fdiv";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         case 7:
                             s = "fdivr";
-                            b += decodeModSM_float(at, b, op1, 1, 0, flip_addr_sz);
+                            b += decodeModSM_float(show, b, op1, 1, 0, flip_addr_sz);
                             break;
                         default:
-                            print("Invalid Mod R/M byte.\r\n");
+                            if (show) print("Invalid Mod R/M byte.");
                             return;
                     }
                 }
@@ -2926,7 +2453,7 @@ u32 decode(bool at, u8 *a, bool show){
                 s = "cmc";
                 break;
             case 0xf6:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "test";
@@ -2957,12 +2484,12 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "idiv    al, ah, ax, ";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 break;
             case 0xf7:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 switch((*b&0x38)/8){
                     case 0:
                         s = "test";
@@ -3005,7 +2532,7 @@ u32 decode(bool at, u8 *a, bool show){
                         s = "idiv    rdx, rax, ";
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 break;
@@ -3028,13 +2555,13 @@ u32 decode(bool at, u8 *a, bool show){
                 s = "std";
                 break;
             case 0xfe:
-                b += decodeModSM(at, ++b, op1, 1, 0, flip_addr_sz);
+                b += decodeModSM(show, ++b, op1, 1, 0, flip_addr_sz);
                 if(!((*b&0x38)/8)){
                     s = "inc";
                 } else if((*b&0x38)/8 == 1){
                     s = "dec";
                 } else{
-                    print("Invalid Mod R/M byte.\r\n");
+                    if (show) print("Invalid Mod R/M byte.");
                     return;
                 }
                 break;
@@ -3042,47 +2569,51 @@ u32 decode(bool at, u8 *a, bool show){
                 switch((*++b&0x38)>>3){
                     case 0:
                         s = "inc";
-                        b += decodeModSM(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 1:
                         s = "dec";
-                        b += decodeModSM(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 2:
                         s = "call";
-                        b += decodeModSM(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 3:  
                         s = "callf";
-                        b += decodeModSM_memonly(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM_memonly(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 4:
                         s = "jmp";
-                        b += decodeModSM(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 5:  
                         s = "jmpf";
-                        b += decodeModSM_memonly(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM_memonly(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     case 6:
                         s = "push";
-                        b += decodeModSM(at, b, op1, 1, 0, flip_addr_sz);
+                        b += decodeModSM(show, b, op1, 1, 0, flip_addr_sz);
                         break;
                     default:
-                        print("Invalid Mod R/M byte.\r\n");
+                        if (show) print("Invalid Mod R/M byte.");
                         return;
                 }
                 break;
             default:
-                print("invalid opcode\r\n");
+                if (show) print("invalid opcode\r\n");
                 return;
         }
-        if (show) {
             strcompressdelimiter(s,' ');
-            printf(" %X:  %s %s\r\n", (u32)a, s, op1);
-        }
+            if (show)
+                printf(" %X:  %s %s\r\n", (u32)a, s, op1);             
+            else
+                if (string!=NULL) sprintf(string, " %X:  %s %s\r\n", (u32)a, s, op1);
+            
         ++b;
 
     }
+
     return b-a;
 }
+

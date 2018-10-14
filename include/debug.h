@@ -48,5 +48,4 @@
 
 void setdebugreg(u8 number,u8 *address, u8 type);
 u8* getdebugreg(u8 number);
-u32 disas(u8 *a);
-u32 decode(bool at, u8 *a, bool show);
+u32 disasm(u8 *a, u8 *string, bool show);

@@ -27,7 +27,7 @@ static command commands[] = {
 	{"err"      , "", &err},
 	{"test"      , "", &test},
 	{"view"      , "", &view},
-	{"disasm"      , "", &disasm},
+	{"disasm"      , "", &disas},
 	{"bpset"      , "", &bpset},
 	{"bpclr"      , "", &bpclr},
 	{"help"      , "", &help},
@@ -141,7 +141,7 @@ int bpclr(u8* commandline)
 /*******************************************************************************/
 /* Desassemble une zone de mémoire donnée */
 
-int disasm(u8* commandline)
+int disas(u8* commandline)
 {
 	u8 arg[] = "       \000";
     u8* size;
@@ -159,7 +159,7 @@ int disasm(u8* commandline)
     size+=strtoint(&arg);
     while(pointer<size)
     {
-         pointer+=disas(pointer);
+         pointer+=disasm(pointer, NULL, true);
     }
 }
 

@@ -12,9 +12,9 @@ mkfs.ext2 ${lo}p2
 mount ${lo}p1 /mnt
 mkdir /mnt/grub
 echo -en "(hd0) ${lo}\n(hd0,1) ${lo}p1\n(hd0,2) ${lo}p2" > /mnt/grub/device.map
-grub-install --no-floppy --boot-directory=/mnt/ --efi-directory=/mnt/ ${lo} --install-modules="part_gpt ext2 configfile normal multiboot2" --locales=fr --target=x86_64-efi --no-nvram
+grub-install --no-floppy --boot-directory=/mnt/ --efi-directory=/mnt/ ${lo} --install-modules="part_gpt ext2 configfile normal multiboot2 video video_colors video_cirrus video_fb videotest" --locales=fr --target=x86_64-efi --no-nvram
 mkdir /mnt/EFI/BOOT
-grub-mkimage -d /usr/lib/grub/x86_64-efi -o /mnt/EFI/BOOT/bootx64.efi -p "(hd0,1)/grub/" -O x86_64-efi fat part_gpt ext2 configfile normal multiboot2
+grub-mkimage -d /usr/lib/grub/x86_64-efi -o /mnt/EFI/BOOT/bootx64.efi -p "(hd0,1)/grub/" -O x86_64-efi video video_fb part_gpt ext2 configfile normal multiboot2
 echo -en "set timeout=4\nset default=0\n\nmenuentry "cos2000" {\nmultiboot2 (hd0,2)/boot/system.sys\nboot\n}" > /mnt/grub/grub.cfg
 umount /mnt
 mount ${lo}p2 /mnt

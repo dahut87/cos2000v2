@@ -154,7 +154,7 @@ void show_lightcpu(save_stack *stack)
         size=pointer;
         size+=50;
         while(pointer<size) {
-            pointer+=decode(false, pointer,false);
+            pointer+=disasm(pointer, NULL, false);
             if (pointer==stack->eip) break;
         }
         if (pointer==stack->eip) break;
@@ -171,7 +171,7 @@ void show_lightcpu(save_stack *stack)
             print("\33[41m\33[1m");
         else
             print("\33[40m\33[0m");           
-         pointer+=disas(pointer); 
+         pointer+=disasm(pointer, NULL, true);
     }
 
 	printf("\33[0m\r\n\r\n\r\nSTACK\r\n");
