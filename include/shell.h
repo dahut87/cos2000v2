@@ -24,3 +24,4 @@ int disas(u8* commandline);
 int bpset(u8* commandline);
 int bpclr(u8* commandline);
 int help();
+int logo();

@@ -12,7 +12,6 @@
 #include "cpu.h"
 #include "string.h"
 #include "2d.h"
-#include "ansi.c"
 #include "gdt.h"
 #include "shell.h"
 #include "syscall.h"
@@ -56,7 +55,7 @@ int main(u32 magic, u32 addr)
 
 	/*  Efface l'ecran   */
 	print("\033[2J\r\n\000");
-	print(ansilogo);
+	logo();
 
 	print("\033[37m\033[0m -Chargement noyaux");
 	ok();

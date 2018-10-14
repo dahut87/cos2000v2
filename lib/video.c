@@ -1051,15 +1051,22 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
 		    pattern = font8x8[(thechar<<3) + y];
 		    for (x = 0; x < 8; x++) 
             {
+                rol(pattern);
                 set = pattern & 0x1;
 			    if (set == 0)
-                    color = egatovga((attrib & 0xF0) >> 8);
+                    if (vinfo->currentdepth==32)
+                        color = egatorgb((attrib & 0xF0) >> 8);
+                    else
+                        color = egatovga((attrib & 0xF0) >> 8);
 			    else
-                    color = egatovga(attrib & 0x0F);
-                if (vinfo->currentdepth==32)
-                    color = vgatorgb(color);
+                    if (vinfo->currentdepth==32)
+                        color = egatorgb(attrib & 0x0F);
+                    else
+                        color = egatovga(attrib & 0x0F);
+               
+
+
                 writepxl((coordx<<3) + x, (coordy<<3) + y, color);
-                rol(pattern);
             }
 		}
 	}
@@ -1078,13 +1085,11 @@ u8 egatovga(u8 ega)
 /******************************************************************************/
 /* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
 
-u32 vgatorgb(u8 vga)
+static convertrgb[]={0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,0x555555,0x5555FF,0x55FF55,0x55FFFF,0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF};
+
+u32 egatorgb(u8 vga)
 {
-    if (vga==0) return 0;
-    u8 red   = 85 * (((vga >> 4) & 2) | (vga >> 2) & 1);
-    u8 green = 85 * (((vga >> 3) & 2) | (vga >> 1) & 1);
-    u8 blue  = 85 * (((vga >> 2) & 2) |  vga       & 1);
-    return (red<<16)+(green<<8)+blue+(0x0<<24);
+    return convertrgb[vga & 0xF];
 }
 
 /******************************************************************************/

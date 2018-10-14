@@ -13,6 +13,7 @@
 #include "multiboot2.h"
 #include "math.h"
 #include "debug.h"
+#include "VGA/ansi.c"
 
 static command commands[] = {
 	{"reboot"    , "", &rebootnow},
@@ -31,6 +32,7 @@ static command commands[] = {
 	{"bpset"      , "", &bpset},
 	{"bpclr"      , "", &bpclr},
 	{"help"      , "", &help},
+	{"logo"      , "", &logo},
 };
 
 /*******************************************************************************/
@@ -68,6 +70,15 @@ int test(void)
 {
     print("Fonction de test !\r\n");
     return;
+}
+
+/*******************************************************************************/
+/* Affiche le logo */
+
+int logo()
+{
+	print(ansilogo);
+	return;
 }
 
 /*******************************************************************************/
