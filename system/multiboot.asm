@@ -19,7 +19,7 @@ SECTION .multiboot
 
 %define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
 
-%defstr arch ARCH
+%defstr vesa VESA
 
 multiboot_header:
 align MULTIBOOT_TAG_ALIGN
@@ -28,6 +28,9 @@ align MULTIBOOT_TAG_ALIGN
     dd multiboot_header_end - multiboot_header
     dd -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + (multiboot_header_end - multiboot_header))
 align MULTIBOOT_TAG_ALIGN
+%if vesa = "no"
+%warning "Avec la console VGA/EGA." 
+%else
 framebuffer_tag_start:
 %warning "Avec le FRAMEBUFFER VESA." 
     dw MULTIBOOT_HEADER_TAG_FRAMEBUFFER ; type
@@ -38,11 +41,11 @@ framebuffer_tag_start:
     dd 32                              ; depth
 align MULTIBOOT_TAG_ALIGN
 framebuffer_tag_end: 
+%endif
     dw MULTIBOOT_HEADER_TAG_END
     dw 0
     dd 8
 multiboot_header_end:
-
 SECTION .text
 
 global start

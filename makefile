@@ -91,7 +91,7 @@ qemu-floppy:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -fda ./final/floppy.img.final --enable-kvm -cpu host -s &)  
 	
 system/system.sys:
-	(cd system; make ARCH=$(ARCH))
+	(cd system; VESA=$(VESA) make)
 	
 boot/boot12.bin:
 	(cd boot; make)	

@@ -52,11 +52,11 @@ int main(u32 magic, u32 addr)
     registerdriver(&vgafonctions);
     registerdriver(&vesafonctions);
     apply_bestdriver();
-    changemode(0x0);
+    changemode(0x1);
 
 	/*  Efface l'ecran   */
 	print("\033[2J\r\n\000");
-	if (getwidth()==80) print(ansilogo);
+	print(ansilogo);
 
 	print("\033[37m\033[0m -Chargement noyaux");
 	ok();

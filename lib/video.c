@@ -1053,15 +1053,11 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
             {
                 set = pattern & 0x1;
 			    if (set == 0)
-                    if (vinfo->currentdepth>24)
-                        color = 0xFFFFFF;
-                    else
-                        color = ((attrib & 0xF0) >> 8);
+                    color = egatovga((attrib & 0xF0) >> 8);
 			    else
-				    if (vinfo->currentdepth>24)
-                        color = 0;
-                    else
-                        color = (attrib & 0x0F);
+                    color = egatovga(attrib & 0x0F);
+                if (vinfo->currentdepth==32)
+                    color = vgatorgb(color);
                 writepxl((coordx<<3) + x, (coordy<<3) + y, color);
                 rol(pattern);
             }
@@ -1069,7 +1065,27 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
 	}
 }
 
-                 
+/******************************************************************************/
+/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
+
+static convertega[]={0,1,2,3,4,5,20,7,56,57,58,59,60,61,62,63};
+
+u8 egatovga(u8 ega)
+{
+    return convertega[ega & 0xF];
+}
+
+/******************************************************************************/
+/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
+
+u32 vgatorgb(u8 vga)
+{
+    if (vga==0) return 0;
+    u8 red   = 85 * (((vga >> 4) & 2) | (vga >> 2) & 1);
+    u8 green = 85 * (((vga >> 3) & 2) | (vga >> 1) & 1);
+    u8 blue  = 85 * (((vga >> 2) & 2) |  vga       & 1);
+    return (red<<16)+(green<<8)+blue+(0x0<<24);
+}
 
 /******************************************************************************/
 /* Retourne le caractère du mode texte aux coordonnées spécifiées */

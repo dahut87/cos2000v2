@@ -12,7 +12,7 @@ system.o:
 	$(GCC) system.o system.c
 
 multiboot.o:
-	$(ASM) -f elf -o multiboot.o multiboot.asm -dARCH=$(ARCH)
+	$(ASM) -f elf -o multiboot.o multiboot.asm -dVESA=$(VESA)
 
 clean:
 	rm -f *.o
