@@ -1055,9 +1055,9 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
                 set = pattern & 0x1;
 			    if (set == 0)
                     if (vinfo->currentdepth==32)
-                        color = egatorgb((attrib & 0xF0) >> 8);
+                        color = egatorgb((attrib & 0xF0) >> 4);
                     else
-                        color = egatovga((attrib & 0xF0) >> 8);
+                        color = egatovga((attrib & 0xF0) >> 4);
 			    else
                     if (vinfo->currentdepth==32)
                         color = egatorgb(attrib & 0x0F);
