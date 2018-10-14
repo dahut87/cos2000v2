@@ -33,6 +33,7 @@ static command commands[] = {
 	{"bpclr"      , "", &bpclr},
 	{"help"      , "", &help},
 	{"logo"      , "", &logo},
+	{"font"      , "", &sfont},
 };
 
 /*******************************************************************************/
@@ -70,6 +71,20 @@ int test(void)
 {
     print("Fonction de test !\r\n");
     return;
+}
+
+
+/*******************************************************************************/
+/* Change la police courante */
+
+int sfont(u8* commandline)
+{
+    if (strgetnbitems(commandline, ' ') < 2)
+    {
+		print("Syntaxe de la commande FONT\r\nfont \33[32mpolice\r\n\r\n \33[32mpolice\33[0m\33[0m\33[25D\33[10C - \33[Nom de la police de caractere\r\n");
+        return;
+    }
+	setfont(strgetpointeritem(commandline, ' ', 1));
 }
 
 /*******************************************************************************/

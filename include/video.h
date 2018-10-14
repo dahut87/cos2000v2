@@ -8,9 +8,7 @@
 #include "stdarg.h"
 
 #define MAXDRIVERS 10
-
-#define FONT8X16 0
-#define FONT8X8  1
+#define MAXFONTS   10
 
 typedef struct videoinfos {
     u8      currentmode;
@@ -56,11 +54,17 @@ typedef struct videofonction {
     void (*blink_disable) ();
 } videofonction __attribute__ ((packed));
 
-
 typedef struct drivers {
     u8*             nom;
     videofonction*  pointer;
 } drivers __attribute__ ((packed));
+
+typedef struct font {
+    u8     nom[8];
+    u8*    pointer;
+    u8     width;
+    u8     height;
+} font __attribute__ ((packed));
 
 typedef struct capabilities {
     u8      modenumber;
@@ -103,6 +107,8 @@ void putchar(u8 thechar);
 void clearscreen(void);
 u16 getwidth(void);
 u16 getheight(void);
+void loadfont(u8 *name,font* pointer,u8 width, u8 height);
+void setfont(u8 *fontname);
 
 /* Fonctions de haut niveau */
 u32 print(u8* string);

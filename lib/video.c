@@ -4,14 +4,19 @@
 #include "asm.h"
 #include "video.h"
 #include "stdarg.h"
+#include "string.h"
 #include "VGA/8x8fnt.c"
 #include "VGA/8x16fnt.c"
 
 static drivers registred[MAXDRIVERS];
 
+static font fonts[MAXFONTS];
+
 static  videoinfos *vinfo;
 
 static width,height;
+
+static font* currentfont;
 
 static  console vc[8] = {
 	{0x07, 0, 0, 0, 0, 0, 0, 0, true}	,
@@ -202,8 +207,6 @@ void changemode(u8 mode)
     setvideo_mode(mode);
     vinfo=getvideo_info();
     if (!vinfo->isgraphic) {		
-        font_load(font8x8, 8, 1);
-		font_load(font8x16, 16, 0);
         width=vinfo->currentwidth;
         height=vinfo->currentheight;
     }
@@ -212,6 +215,11 @@ void changemode(u8 mode)
         width=(vinfo->currentwidth>>3);
         height=(vinfo->currentheight>>3);
     }
+    for(u32 i=0;i<MAXFONTS;i++) 
+          fonts[i].nom[0]=NULL;
+    loadfont("BIOS1",font8x8,8,8);
+    loadfont("BIOS0",font8x16,8,16);
+    setfont("BIOS1");
     clearscreen();
 }
 
@@ -1046,10 +1054,10 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
     }
     else
     {
-	    for (y = 0; y < 8; y++) 
+	    for (y = 0; y < currentfont->height; y++) 
         {
-		    pattern = font8x8[(thechar<<3) + y];
-		    for (x = 0; x < 8; x++) 
+		    pattern = currentfont->pointer[currentfont->height*thechar + y];
+		    for (x = 0; x < currentfont->width; x++) 
             {
                 rol(pattern);
                 set = pattern & 0x1;
@@ -1066,7 +1074,7 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
                
 
 
-                writepxl((coordx<<3) + x, (coordy<<3) + y, color);
+                writepxl(currentfont->width*coordx + x, currentfont->height*coordy + y, color);
             }
 		}
 	}
@@ -1148,3 +1156,40 @@ void writepxl (u16 x, u16 y, u32 color)
     }
 }
 
+/******************************************************************************/
+/* Chargement d'une police de caractère  */
+
+void loadfont(u8 *name,font* pointer,u8 width, u8 height)
+{
+   u32 i;  
+    for(i=0;i<MAXFONTS;i++) 
+         if (fonts[i].nom[0]!=NULL && fonts[i].pointer==pointer)
+            return;
+    i=0;
+    while (fonts[i].nom[0]!=NULL && i<MAXFONTS) 
+        i++;
+    fonts[i].pointer=pointer;
+    strcpy(name,fonts[i].nom);
+    fonts[i].width=width;
+    fonts[i].height=height;
+    if (fonts[i].nom[0]=='B' && fonts[i].nom[1]=='I' && fonts[i].nom[2]=='O' && fonts[i].nom[3]=='S')
+    {
+        u8 number=(fonts[i].nom[4]-'0');    
+        font_load(pointer, number, height);
+    }
+}
+
+/******************************************************************************/
+/* Changement de la police */
+
+void setfont(u8 *fontname)
+{
+    u32 i=0;
+    while (fonts[i].nom!=NULL && i<MAXFONTS) {
+        if (strcmp(fontname,fonts[i].nom)==0) {
+            currentfont=&fonts[i];
+            return;
+        }
+        i++;
+    }
+}
