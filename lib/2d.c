@@ -10,12 +10,12 @@
 /******************************************************************************/
 /* Affiche une ligne entre les points spécifiés */
 
-void linev(vertex2d * A, vertex2d * B, u8 color)
+void linev(vertex2d * A, vertex2d * B, u32 color)
 {
 	line(A->x, A->y, B->x, B->y, color);
 }
 
-void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
+void line(u32 x1, u32 y1, u32 x2, u32 y2, u32 color)
 {
 	s32 dx, dy, sdx, sdy;
 	u32 i, dxabs, dyabs, x, y, px, py;
@@ -60,7 +60,7 @@ void line(u32 x1, u32 y1, u32 x2, u32 y2, u8 color)
 /******************************************************************************/
 /* Affiche un triangle rempli entre les points spécifiés */
 
-void trianglefilled(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
+void trianglefilled(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
 {
 	vertex2d *A, *B, *C, *TEMP;
 	u32 a, b, y, last;
@@ -132,7 +132,7 @@ void swapvertex(vertex2d * A, vertex2d * B)
 /******************************************************************************/
 /* Affiche un triangle  entre les points spécifiés */
 
-void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u8 color)
+void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
 {
 	line(AA->x, AA->y, BB->x, BB->y, color);
 	line(BB->x, BB->y, CC->x, CC->y, color);

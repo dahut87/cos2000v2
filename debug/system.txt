@@ -2,7 +2,7 @@ target remote localhost:1234
 set disassembly-flavor intel
 set architecture i386
 symbol-file ./system/system.sys
-break main
+break system.c:50
 cont
-clear main
+clear system.c:50
 display/20i $pc

@@ -25,10 +25,10 @@ void cleardebugreg(u8* address)
 u8* getdebugreg(u8 number)
 {
     u8* address;
-    if (number==0) asm("mov %%eax,%%dr0; movl %%eax,%[address]":[address] "=m" (address)::);    
-    else if (number==1) asm("mov %%eax,%%dr1; movl %%eax,%[address]":[address] "=m" (address)::);
-    else if (number==2) asm("mov %%eax,%%dr2; movl %%eax,%[address]":[address] "=m" (address)::); 
-    else if (number==3) asm("mov %%eax,%%dr3; movl %%eax,%[address]":[address] "=m" (address)::); 
+    if (number==0) asm("mov %%dr0,%%eax; mov %%eax,%[address]":[address] "=m" (address)::);    
+    else if (number==1) asm("mov %%dr1,%%eax; movl %%eax,%[address]":[address] "=m" (address)::);
+    else if (number==2) asm("mov %%dr2,%%eax; movl %%eax,%[address]":[address] "=m" (address)::); 
+    else if (number==3) asm("mov %%dr0,%%eax; movl %%eax,%[address]":[address] "=m" (address)::); 
     return address;
 }
 
@@ -195,7 +195,7 @@ u16 decodeModSM(bool show, u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }   
     } else{ 
         switch(*b & 0xc7){
@@ -368,7 +368,7 @@ u16 decodeModSM(bool show, u8 *a, u8 *op, u16 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }
     }
 
@@ -521,7 +521,7 @@ u32 decodeModSM_float(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }   
     } else{
         switch(*b & 0xc7){
@@ -694,7 +694,7 @@ u32 decodeModSM_float(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }
     }
 
@@ -823,7 +823,7 @@ u32 decodeModSM_memonly(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }   
     } else{ 
         switch(*b&0xc7){
@@ -972,7 +972,7 @@ u32 decodeModSM_memonly(bool show, u8 *a, u8 *op, u32 order, u32 Gsz, u32 Esz){
                 break;
             default:
                 if (show) print("Invalid Mod R/M byte.");
-                return;
+                return 1000;
         }
     }
 
@@ -1054,7 +1054,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
     if(*b == 0x0f){ 
 
         if (show) print("Extended opcodes not implimented.\r\n");
-        return;
+        return 1000;
     
     } else{
         
@@ -1606,7 +1606,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
@@ -1640,7 +1640,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 if(flip_imm_sz){
@@ -1680,7 +1680,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
@@ -1714,7 +1714,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
@@ -2056,7 +2056,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
@@ -2090,7 +2090,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", %x", *(u8 *)++b);
@@ -2188,7 +2188,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", 1");
@@ -2222,7 +2222,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", 1");
@@ -2256,7 +2256,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", cl");
@@ -2290,7 +2290,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 len = strlen(op1);
                 snprintf(op1+len, sizeof(op1)-len, ", cl");
@@ -2352,7 +2352,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                             break;
                         default:
                             if (show) print("Invalid Mod R/M byte.");
-                            return;
+                            return 1000;
                     }
                 }
                 break;
@@ -2485,7 +2485,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 break;
             case 0xf7:
@@ -2533,7 +2533,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 break;
            case 0xf8:
@@ -2562,7 +2562,7 @@ u32 disasm(u8 *a, u8 *string, bool show){
                     s = "dec";
                 } else{
                     if (show) print("Invalid Mod R/M byte.");
-                    return;
+                    return 1000;
                 }
                 break;
             case 0xff:
@@ -2597,12 +2597,12 @@ u32 disasm(u8 *a, u8 *string, bool show){
                         break;
                     default:
                         if (show) print("Invalid Mod R/M byte.");
-                        return;
+                        return 1000;
                 }
                 break;
             default:
                 if (show) print("invalid opcode\r\n");
-                return;
+                return 1000;
         }
             strcompressdelimiter(s,' ');
             if (show)

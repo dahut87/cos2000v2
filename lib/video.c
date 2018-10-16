@@ -1133,7 +1133,7 @@ u8 getattrib (u16 coordx, u16 coordy)
 /******************************************************************************/
 /* Affiche une ligne horizontale entre les points spécifiés */
 
-void hline(u32 x1, u32 x2, u32 y, u8 color)
+void hline(u16 x1, u16 x2, u16 y, u32 color)
 {
     if (vinfo->isgraphic)
     {

@@ -185,20 +185,41 @@ void exception1()
     cli();
     dumpcpu();
     save_stack *dump = getESP();
-    exception_stack_noerror *current = getESP()+36;
+    exception_stack_noerror *current;
+    dump->eip=getdebugreg(0);
+    for(u32 *addr=dump;addr<KERNEL_STACK_ADDR;addr++)
+    {
+        if (*addr==dump->eip && *(addr+1)==SEL_KERNEL_CODE)
+        {
+            current = addr;
+            break;
+        }
+    }
     dump->eip=current->eip;
     dump->cs=current->cs;
     dump->oldesp=(current+1);
     changevc(6);
     clearscreen();
-    show_lightcpu(&dump);
-    setdebugreg(0,0, DBG_CLEAR);
+    show_lightcpu(dump);
+    printf("\r\n\033[7m[P]\033[0m PAS A PAS \033[7m D \033[0m PAS A PAS DETAILLE \033[7m C \033[0m CONTINUER \033[7m S \033[0m STOPPER \033[7m V \033[0m VOIR \033[7m S \033[0m SCINDER");
 	sti();
-    waitascii();
+    u8 ascii=waitascii();
     cli(); 
+    if (ascii=='P' || ascii=='p')
+          setdebugreg(0,current->eip+disasm(current->eip, NULL, false), DBG_EXEC);
+    if (ascii=='D' || ascii=='d')
+          setdebugreg(0,0, DBG_CLEAR);  
+    else if (ascii=='C' || ascii=='c')
+          setdebugreg(0,0, DBG_CLEAR);   
+    else if (ascii=='S' || ascii=='s')
+          {
+          changevc(0);
+          sti();
+          initselectors(retry_address);            
+    }
     changevc(0);
     restcpu();
-	asm("addl  $0x01C, %esp;");
+	asm("addl  $0x028, %esp;popl %ebx;");
     iret();
 }
 

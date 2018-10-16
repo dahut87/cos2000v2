@@ -113,8 +113,9 @@ void mouse(void)
 		if (mousey >= 65535) {
 			mousey = 65535;
 		}
-		u16 newx = (u32) mousex * getwidth() / 65536;
-		u16 newy = (u32) mousey * getheight() / 65536;
+        videoinfos *info=getvideo_info();
+		u16 newx = (u32) mousex * info->currentwidth / 65536;
+		u16 newy = (u32) mousey * info->currentheight / 65536;
 
 		// Retrieve mouse button status from packet
 		mousebut1 = mpacket[0] & 1;
@@ -123,14 +124,8 @@ void mouse(void)
 
 // printf("RX:%d\tRY:%d\tX:%d\tY:%d\tB1:%d\tB2:%d\tB3:%d\t\r\n",changex,changey,mousex,mousey,mousebut1,mousebut2,mousebut3);
 
-		if ((newx != oldx) || (newy != oldy)) {
-			showchar(oldx, oldy, oldchar, oldattr);
-			oldx = newx;
-			oldy = newy;
-			oldchar = getchar(oldx, oldy);
-			oldattr = getattrib(oldx, oldy);
+        if (!info->isgraphic)
 			showchar(newx, newy, 0xDB, 0x0F);
-		}
 	}
  endofint:
 	irqendmaster();

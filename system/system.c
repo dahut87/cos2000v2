@@ -103,5 +103,6 @@ int main(u32 magic, u32 addr)
 	ok();
   
 retry:
+    sti();
 	shell();
 }

@@ -26,8 +26,6 @@
 })
 
 #define dumpcpu() asm("\
-        mov $0x6666666, %%eax  \n \
-        mov $0x8888888, %%ebx  \n \
         pushal \n \
         pushf \n \
         pushl %%cs\n \

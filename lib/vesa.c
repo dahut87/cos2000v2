@@ -114,8 +114,7 @@ u32 VESA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
         case 32:
           if (!increment_src)
           {
-              u32 pattern = (u32) src;
-              stosd(pattern,realdst,size);  
+              stosd(src,realdst,size);  
             }
          else
             {
