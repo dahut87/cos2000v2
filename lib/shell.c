@@ -442,7 +442,8 @@ int test2d()
         else
             color=random(0,16);
 		trianglefilled(&a, &b, &c, color);
-		triangle(&a, &b, &c, color);
+        waitascii();
+		triangle(&a, &b, &c, egatorgb(4));
 	}
 	return 0;
 }

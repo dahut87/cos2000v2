@@ -1138,9 +1138,9 @@ void hline(u16 x1, u16 x2, u16 y, u32 color)
     if (vinfo->isgraphic)
     {
 	    if (x2 > x1)
-            mem_to_video(color,x1+vinfo->currentpitch*y,x2-x1,false);
+            mem_to_video(color,(vinfo->currentdepth>>3)*x1+vinfo->currentpitch*y,x2-x1,false);
         else
-            mem_to_video(color,x2+vinfo->currentpitch*y,x1-x2,false);
+            mem_to_video(color,(vinfo->currentdepth>>3)*x2+vinfo->currentpitch*y,x1-x2,false);
     }  
 }
 
