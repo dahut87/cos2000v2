@@ -3,6 +3,7 @@
 /*                                                                             */
 #include "types.h"
 #include "timer.h"
+#include "math.h"
 
 /*******************************************************************************/
 /* Arithmétique 64 bits  */
@@ -44,6 +45,90 @@ unsigned long long __udivdi3 (unsigned long long num, unsigned long long den)
 unsigned long long __umoddi3 (unsigned long long n, unsigned long long d) 
 {
   return n - d * __udivdi3 (n, d);
+}
+
+/******************************************************************************/ 
+/* Fonctions qui retournent le sinus et cosinus */ 
+
+double cos(double x){
+	if( x < 0.0 ) 
+		x = -x;
+	while( M_PI < x )
+		x -= M_2_PI;
+	return 1.0 - (x*x/2.0)*( 1.0 - (x*x/12.0) * ( 1.0 - (x*x/30.0) * (1.0 - x*x/56.0 )));
+}
+ 
+double sin(double x){
+    return cos(x-M_PI_2);
+}
+
+float cosf(float x){
+	if( x < 0.0f ) 
+		x = -x;
+	while( M_PI < x )
+		x -= M_2_PI;
+	return 1.0f - (x*x/2.0f)*( 1.0f - (x*x/12.0f) * ( 1.0f - (x*x/30.0f) * (1.0f - x*x/56.0f )));
+}
+ 
+float sinf(float x){
+    return cos(x-M_PI_2);
+}
+
+/******************************************************************************/ 
+/* Fonction qui retourne la valeur absolue */ 
+
+float fabsf(float n)
+{
+    return (*((int *) &n) &= 0x7fffffff);
+}
+
+double fabs(double n)
+{
+    return (*(((int *) &n) + 1) &= 0x7fffffff);
+}
+
+/******************************************************************************/ 
+/* Fonction qui retourne la racine */ 
+
+float sqrtf(float n)
+{
+
+    float x = n;
+    float y = 1;
+    double e = 0.000001;
+    while(x - y > e)
+    {
+        x = (x + y)/2;
+        y = n/x;
+    }
+    return x;
+}
+
+double sqrt(double n)
+{
+
+    double x = n;
+    double y = 1;
+    double e = 0.000001;
+    while(x - y > e)
+    {
+        x = (x + y)/2;
+        y = n/x;
+    }
+    return x;
+}
+
+/******************************************************************************/ 
+/* Fonction qui retourne l'inverse de la racine */ 
+
+float rsqrtf(float n)
+{
+    return 1 / sqrt(n);
+}
+
+double rsqrt(double n)
+{
+    return 1 / sqrt(n);
 }
 
 /******************************************************************************/ 

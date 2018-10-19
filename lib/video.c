@@ -1175,7 +1175,7 @@ void loadfont(u8 *name,font* pointer,u8 width, u8 height)
     if (fonts[i].nom[0]=='B' && fonts[i].nom[1]=='I' && fonts[i].nom[2]=='O' && fonts[i].nom[3]=='S')
     {
         u8 number=(fonts[i].nom[4]-'0');    
-        font_load(pointer, number, height);
+        font_load(pointer, height, number);  
     }
 }
 

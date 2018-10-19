@@ -133,10 +133,10 @@
 	asm volatile ("cld;rep stosb"::"c" (count), "D" (dst), "a" (pattern));
 
 #define stosw(pattern,dst,count) \
-	asm volatile ("cld;rep stosw"::"a" (pattern), "c" (count), "D" (dst));
+	asm volatile ("cld;rep stosw"::"c" (count), "D" (dst), "a" (pattern));
 
 #define stosd(pattern,dst,count) \
-	asm volatile ("cld;rep stosl"::"a" (pattern), "c" (count), "D" (dst));
+	asm volatile ("cld;rep stosl"::"c" (count), "D" (dst), "a" (pattern));
 
 #define rol(addr) \
 	asm volatile ("rolb $0x1,%0":"=m" (addr):);

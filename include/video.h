@@ -10,6 +10,12 @@
 #define MAXDRIVERS 10
 #define MAXFONTS   10
 
+typedef struct rgbcolor {
+    u8 R;
+    u8 G;
+    u8 B;
+} rgbcolor __attribute__ ((packed));
+
 typedef struct videoinfos {
     u8      currentmode;
     u16     currentwidth;

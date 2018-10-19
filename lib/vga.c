@@ -22,9 +22,8 @@ u8 *VGA_detect_hardware(void) {
 u32 getbase(void)
 {
 	u32 base;
-	/*outb(GRAPHICS, 6);
-	base = inb(GRAPHICS + 1);*/
-    base = modes[infos.currentmode].graphic.Miscellaneous_Graphics_Register;
+	outb(GRAPHICS, 6);
+	base = inb(GRAPHICS + 1);
 	base >>= 2;
 	base &= 3;
 	switch (base) {
@@ -185,7 +184,7 @@ u32 VGA_mem_to_video (void *src,u32 dst, u32 size, bool increment_src) {
     case 8:
         if (!increment_src)
           {
-            u8 tmp=(u8) src;
+            u8 tmp=(u8) (src);
             if (size%4 == 0) 
             {
                 u32 pattern = tmp + (tmp<<8) + (tmp<<16) + (tmp<<24);

@@ -428,7 +428,21 @@ int test2d()
 	struct vertex2d a, b, c;
 	randomize();
     u32 color;
-	for (int i = 0; i < 3000; i++) {
+    for (int i = 0; i < 2000; i++) {
+		a.x = random(0, vinfo->currentwidth);
+		a.y = random(0, vinfo->currentheight);
+		b.x = random(0, vinfo->currentwidth);
+		b.y = random(0, vinfo->currentheight);
+        if (vinfo->currentdepth>24)
+            color=egatorgb(random(0,16));
+        else if (vinfo->currentdepth==8)
+            color=random(0,63);
+        else
+            color=random(0,16);
+        linev(&a,&b,color);
+    }
+    waitascii();
+	for (int i = 0; i < 2000; i++) {
 		a.x = random(0, vinfo->currentwidth);
 		a.y = random(0, vinfo->currentheight);
 		b.x = random(0, vinfo->currentwidth);
@@ -438,11 +452,10 @@ int test2d()
         if (vinfo->currentdepth>24)
             color=egatorgb(random(0,16));
         else if (vinfo->currentdepth==8)
-            color=random(0,256);
+            color=random(0,63);
         else
             color=random(0,16);
 		trianglefilled(&a, &b, &c, color);
-        waitascii();
 		triangle(&a, &b, &c, egatorgb(4));
 	}
 	return 0;
