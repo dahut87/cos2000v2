@@ -10,6 +10,11 @@
 #define MAXDRIVERS 10
 #define MAXFONTS   10
 
+typedef struct vertex2d{
+	u16 x;	
+	u16 y;
+} vertex2d __attribute__ ((packed));
+
 typedef struct rgbcolor {
     u8 R;
     u8 G;
@@ -101,12 +106,16 @@ void scroll_disable(void);
 void showchar (u16 coordx, u16 coordy, u8 thechar, u8 attrib);
 u8 getchar (u16 coordx, u16 coordy);
 u8 getattrib (u16 coordx, u16 coordy);
+void v_writepxl (vertex2d *A, u32 color);
 void writepxl (u16 x, u16 y, u32 color);
 void line(u32 x1, u32 y1, u32 x2, u32 y2, u32 color);
 void hline(u16 x1, u16 x2, u16 y, u32 color);
 void changemode(u8 mode);
 u32 egatorgb(u8 ega);
 u8 egatovga(u8 ega);
+void v_line(vertex2d *A, vertex2d *B, u32 color);
+void trianglefilled(vertex2d *A, vertex2d *B, vertex2d *C, u32 color);
+void triangle(vertex2d *A, vertex2d *B, vertex2d *C, u32 color);
 
 /* Fonctions de console */
 void changevc(u8 vc);

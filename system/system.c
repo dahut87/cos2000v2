@@ -11,7 +11,6 @@
 #include "asm.h"
 #include "cpu.h"
 #include "string.h"
-#include "2d.h"
 #include "gdt.h"
 #include "shell.h"
 #include "syscall.h"

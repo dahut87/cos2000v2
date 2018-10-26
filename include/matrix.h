@@ -2,26 +2,29 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 
-typedef struct vector4
-{
-    float x, y, z, w;
-} vector4;
+#ifndef MATRIX
+# define MATRIX
 
-typedef struct vector3
-{
-    float x, y, z;
-} vector3;
+typedef struct vector4{
+  union {
+    struct {
+        float x;	
+	    float y;
+	    float z;
+	    float w;
+   };
+    float v[4];
+  };
+} vector4 __attribute__ ((packed));
 
-typedef struct vector2
-{
-    float x, y;
-} vector2;
-
-
-typedef struct matrix44
-{
-    vector4 V[4];
-} matrix44;
+typedef struct matrix44{
+  union {
+    struct {
+        vector4 V[4];
+   };
+    float v[16];
+  };
+} matrix44 __attribute__ ((packed));
 
 void vector4_show(vector4 src);
 void vector4_create(float x, float y, float z, float w, vector4 *dst);
@@ -63,12 +66,9 @@ void matrix44_invert(matrix44 *matrix);
 void matrix44_transpose(matrix44 *matrix);
 void matrix44_lookat(vector4 eye, vector4 dst, vector4 up, matrix44 *matrix);
 int matrix44_isequals(matrix44 *m1, matrix44 *m2);
-void toarray(matrix44 *m, float *array);
+float *toarray(matrix44 *m);
 
-
-
-
-
+#endif
 
 
 

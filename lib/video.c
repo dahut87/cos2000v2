@@ -2,11 +2,15 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "asm.h"
+#include "math.h"
 #include "video.h"
 #include "stdarg.h"
 #include "string.h"
 #include "VGA/8x8fnt.c"
 #include "VGA/8x16fnt.c"
+
+/******************************************************************************/
+/* VARIABLES */
 
 static drivers registred[MAXDRIVERS];
 
@@ -30,6 +34,9 @@ static  console vc[8] = {
 };
 
 static u8 usedvc = 0;
+
+/******************************************************************************/
+/* FONCTIONS CONSOLE */
 
 /*******************************************************************************/
 /* Fixe l'attribut courant */
@@ -201,65 +208,6 @@ bool makeansi(u8 c)
 }
 
 /*******************************************************************************/
-/* Change de mode video */
-void changemode(u8 mode)
-{
-    setvideo_mode(mode);
-    vinfo=getvideo_info();
-    if (!vinfo->isgraphic) {		
-        width=vinfo->currentwidth;
-        height=vinfo->currentheight;
-    }
-    else
-    {
-        width=(vinfo->currentwidth>>3);
-        height=(vinfo->currentheight>>3);
-    }
-    for(u32 i=0;i<MAXFONTS;i++) 
-          fonts[i].nom[0]=NULL;
-    loadfont("BIOS1",font8x8,8,8);
-    loadfont("BIOS0",font8x16,8,16);
-    setfont("BIOS1");
-    clearscreen();
-}
-
-/*******************************************************************************/
-/* Renvoie la taille horizontale */
-u16 getwidth(void)
-{
-    return width;
-}
-
-/*******************************************************************************/
-/* Renvoie la taille verticale */
-u16 getheight(void)
-{
-    return height;
-}
-
-
-/*******************************************************************************/
-/* Efface la console en cours d'utilisation */
-void clearscreen(void)
-{
-    fill(vc[usedvc].attrib);
-    vc[usedvc].cursX=0;
-    vc[usedvc].cursY=0;
-    cursor_set(0,0);
-}
-
-/*******************************************************************************/
-/* Change la console en cours d'utilisation */
-
-void changevc(u8 avc)
-{
-	usedvc = avc;
-	page_show(usedvc);
-	page_set(usedvc);
-	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
-}
-
-/*******************************************************************************/
 /* affiche un caractère a l'écran */
 
 void putchar(u8 thechar)
@@ -335,6 +283,547 @@ void putchar(u8 thechar)
 	}
 	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
 }
+
+/*******************************************************************************/
+/* Change la console en cours d'utilisation */
+
+void changevc(u8 avc)
+{
+	usedvc = avc;
+	page_show(usedvc);
+	page_set(usedvc);
+	cursor_set(vc[usedvc].cursX, vc[usedvc].cursY);
+}
+
+/*******************************************************************************/
+/* Renvoie la taille horizontale */
+u16 getwidth(void)
+{
+    return width;
+}
+
+/*******************************************************************************/
+/* Renvoie la taille verticale */
+u16 getheight(void)
+{
+    return height;
+}
+
+/*******************************************************************************/
+/* Efface la console en cours d'utilisation */
+void clearscreen(void)
+{
+    fill(vc[usedvc].attrib);
+    vc[usedvc].cursX=0;
+    vc[usedvc].cursY=0;
+    cursor_set(0,0);
+}
+
+/******************************************************************************/
+/* Active le scrolling */
+
+void scroll_enable(void) 
+{
+    vc[usedvc].scroll=true;
+}
+
+/******************************************************************************/
+/* Désactive le scrolling */
+
+void scroll_disable(void) 
+{
+    vc[usedvc].scroll=false;
+}
+
+/******************************************************************************/
+/* FONCTIONS VIDEO BASIQUES */
+
+/*******************************************************************************/
+/* initialise le tableau des pilotes vidéo */
+void initdriver() {
+    for(u32 i=0;i<MAXDRIVERS;i++) 
+          registred[i].nom=NULL;
+}
+
+/*******************************************************************************/
+/* Enregistre un pilote dans le tableau des pilotes vidéo */
+void registerdriver(videofonction *pointer)
+{
+    u32 i;  
+    for(i=0;i<MAXDRIVERS;i++) 
+         if (registred[i].pointer==pointer)
+            return;
+    i=0;
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) 
+        i++;
+    if (pointer->detect_hardware()!=NULL)
+    {
+        registred[i].pointer=pointer;
+        registred[i].nom=pointer->getvideo_drivername();
+    }
+}
+/*******************************************************************************/
+/* Choisi le meilleur driver en terme d'affichage */
+void apply_bestdriver(void) {
+    u32 i=0,j=0;  
+    u8 bestdepth=0x0;
+    u8 bestresol=0x0;
+    u8 bestmode=0x0;
+    u8* bestdriver=NULL;
+    capabilities *cap;
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
+        cap=registred[i].pointer->getvideo_capabilities();
+        while(cap[j].modenumber!=0xFF) {
+            if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
+            {
+                bestdepth=cap[j].depth;
+                bestresol=cap[j].width*cap[j].height;
+                bestmode=cap[j].modenumber;
+                bestdriver=registred[i].pointer->getvideo_drivername();
+            }
+            j++;
+        }
+        i++;
+    }
+    if (bestdriver!=NULL) apply_driver(bestdriver);
+    setvideo_mode(bestmode);
+}
+
+/*******************************************************************************/
+/* Choisi le meilleur driver spécifié par le nom */
+void apply_driver(u8* name)
+{
+    u32 i=0;
+    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
+        if (strcmp(name,registred[i].nom)==0) {
+                detect_hardware=registred[i].pointer->detect_hardware;
+                setvideo_mode=registred[i].pointer->setvideo_mode;
+                getvideo_drivername=registred[i].pointer->getvideo_drivername;
+                getvideo_capabilities=registred[i].pointer->getvideo_capabilities;
+                getvideo_info=registred[i].pointer->getvideo_info;
+                mem_to_video=registred[i].pointer->mem_to_video;
+                video_to_mem=registred[i].pointer->video_to_mem;
+                video_to_video=registred[i].pointer->video_to_video;
+                wait_vretrace=registred[i].pointer->wait_vretrace;
+                wait_hretrace=registred[i].pointer->wait_hretrace;
+                page_set=registred[i].pointer->page_set;
+                page_show=registred[i].pointer->page_show;
+                page_split=registred[i].pointer->page_split;
+                cursor_enable=registred[i].pointer->cursor_enable;
+                cursor_disable=registred[i].pointer->cursor_disable;
+                cursor_set=registred[i].pointer->cursor_set;
+                font_load=registred[i].pointer->font_load;
+                font1_set=registred[i].pointer->font1_set;
+                font2_set=registred[i].pointer->font2_set;
+                blink_enable=registred[i].pointer->blink_enable;
+                blink_disable=registred[i].pointer->blink_disable;
+                changemode(0x0);
+                return;
+        }
+        i++;
+    }
+}
+/*******************************************************************************/
+/* Applique le driver suivant */
+
+void apply_nextdriver(void) {
+    u32 i=0;
+    while (registred[i].nom!=NULL && i<MAXDRIVERS)
+        if (strcmp(getvideo_drivername(),registred[i].nom)==0) {
+            i++;
+            if (registred[i].nom!=NULL) i=0;
+            apply_driver(registred[i].nom);
+            return;
+        }
+        i++;
+}
+
+/*******************************************************************************/
+/* Applique le mode suivant (le driver suivant si dernier mode) */
+
+void apply_nextvideomode(void) {
+    capabilities *cap=getvideo_capabilities();
+    videoinfos *info=getvideo_info();
+    u32 mode=info->currentmode;
+    u8 index=0;
+    while(cap[index].modenumber!=0xFF) {
+        if (cap[index].modenumber==mode) {    
+            index++;
+            if (cap[index].modenumber==0xFF)
+                apply_nextdriver();
+            else
+                changemode(cap[index].modenumber);
+                return;
+        }
+        index++;
+    }
+}
+
+/*******************************************************************************/
+/* Change de mode video */
+
+void changemode(u8 mode)
+{
+    setvideo_mode(mode);
+    vinfo=getvideo_info();
+    if (!vinfo->isgraphic) {		
+        width=vinfo->currentwidth;
+        height=vinfo->currentheight;
+    }
+    else
+    {
+        width=(vinfo->currentwidth>>3);
+        height=(vinfo->currentheight>>3);
+    }
+    for(u32 i=0;i<MAXFONTS;i++) 
+          fonts[i].nom[0]=NULL;
+    loadfont("BIOS1",font8x8,8,8);
+    loadfont("BIOS0",font8x16,8,16);
+    setfont("BIOS1");
+    clearscreen();
+}
+
+/******************************************************************************/
+/* Rempli l'écran avec un attribut donné et des espaces vides */
+
+static u8 space=' ';
+
+void fill(u8 attrib) 
+{
+    if (!vinfo->isgraphic)
+    {
+        mem_to_video(space ,0,vinfo->pagesize>>1, false);
+        mem_to_video(attrib,1,vinfo->pagesize>>1, false);
+    }
+    else
+    {
+        mem_to_video(0x0,0,vinfo->pagesize, false);
+    }
+}
+
+/******************************************************************************/
+/* Défile l'écran de N ligne si le scrolling est activé */
+
+void scroll (u8 lines, u8 attrib) 
+{
+    if (vc[usedvc].scroll) {
+        if (!vinfo->isgraphic)
+        {
+            u32 gain=vinfo->currentpitch*lines;
+            video_to_video(gain,0,vinfo->pagesize-gain);
+            mem_to_video(space ,vinfo->pagesize-gain-2,gain, false);
+            mem_to_video(attrib,vinfo->pagesize-gain-1,gain, false);
+        }
+        else
+        {
+            u32 gain=vinfo->currentpitch*(lines<<3);
+            video_to_video(gain,0,vinfo->pagesize-gain);
+            mem_to_video(0x0 ,vinfo->pagesize-gain-2,gain, false);
+        }
+    }
+    else
+    {
+        clearscreen();
+    }
+}
+
+/******************************************************************************/
+/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
+
+static convertega[]={0,1,2,3,4,5,20,7,56,57,58,59,60,61,62,63};
+
+u8 egatovga(u8 ega)
+{
+    return convertega[ega & 0xF];
+}
+
+/******************************************************************************/
+/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
+
+static convertrgb[]={0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,0x555555,0x5555FF,0x55FF55,0x55FFFF,0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF};
+
+u32 egatorgb(u8 vga)
+{
+    return convertrgb[vga & 0xF];
+}
+
+/******************************************************************************/
+/* Retourne le caractère du mode texte aux coordonnées spécifiées */
+
+u8 getchar (u16 coordx, u16 coordy) 
+{
+    u8 thechar=0;
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        video_to_mem(addr,&thechar,1);
+    }
+    return thechar;
+}
+
+/******************************************************************************/
+/* Retourne l'attribut du mode texte aux coordonnées spécifiées */
+
+u8 getattrib (u16 coordx, u16 coordy) 
+{
+    u8 attrib=0;
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        video_to_mem(addr+1,&attrib,1);  
+    }
+    return attrib;
+}
+
+/******************************************************************************/
+/* Chargement d'une police de caractère  */
+
+void loadfont(u8 *name,font* pointer,u8 width, u8 height)
+{
+   u32 i;  
+    for(i=0;i<MAXFONTS;i++) 
+         if (fonts[i].nom[0]!=NULL && fonts[i].pointer==pointer)
+            return;
+    i=0;
+    while (fonts[i].nom[0]!=NULL && i<MAXFONTS) 
+        i++;
+    fonts[i].pointer=pointer;
+    strcpy(name,fonts[i].nom);
+    fonts[i].width=width;
+    fonts[i].height=height;
+    if (fonts[i].nom[0]=='B' && fonts[i].nom[1]=='I' && fonts[i].nom[2]=='O' && fonts[i].nom[3]=='S')
+    {
+        u8 number=(fonts[i].nom[4]-'0');    
+        font_load(pointer, height, number);  
+    }
+}
+
+/******************************************************************************/
+/* Changement de la police */
+
+void setfont(u8 *fontname)
+{
+    u32 i=0;
+    while (fonts[i].nom!=NULL && i<MAXFONTS) {
+        if (strcmp(fontname,fonts[i].nom)==0) {
+            currentfont=&fonts[i];
+            return;
+        }
+        i++;
+    }
+}
+
+/******************************************************************************/
+/* FONCTIONS VIDEO GRAPHIQUES */
+
+/******************************************************************************/
+/* Affiche un caractère */
+
+void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
+{
+	u8 x, y, pattern, set;
+    u32 color;
+    if (!vinfo->isgraphic)
+    {
+        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
+        mem_to_video(thechar,addr  , 1, false);
+        mem_to_video(attrib, addr+1, 1, false);  
+    }
+    else
+    {
+	    for (y = 0; y < currentfont->height; y++) 
+        {
+		    pattern = currentfont->pointer[currentfont->height*thechar + y];
+		    for (x = 0; x < currentfont->width; x++) 
+            {
+                rol(pattern);
+                set = pattern & 0x1;
+			    if (set == 0)
+                    if (vinfo->currentdepth==32)
+                        color = egatorgb((attrib & 0xF0) >> 4);
+                    else
+                        color = egatovga((attrib & 0xF0) >> 4);
+			    else
+                    if (vinfo->currentdepth==32)
+                        color = egatorgb(attrib & 0x0F);
+                    else
+                        color = egatovga(attrib & 0x0F);
+               
+
+
+                writepxl(currentfont->width*coordx + x, currentfont->height*coordy + y, color);
+            }
+		}
+	}
+}
+
+/******************************************************************************/
+/* Affiche une ligne horizontale entre les points spécifiés */
+
+void hline(u16 x1, u16 x2, u16 y, u32 color)
+{
+    if (vinfo->isgraphic)
+    {
+	    if (x2 > x1)
+            mem_to_video(color,(vinfo->currentdepth>>3)*x1+vinfo->currentpitch*y,x2-x1,false);
+        else
+            mem_to_video(color,(vinfo->currentdepth>>3)*x2+vinfo->currentpitch*y,x1-x2,false);
+    }  
+}
+
+
+/******************************************************************************/
+/* Affiche un pixel à l'écran */
+
+void v_writepxl(vertex2d *A, u32 color)
+{
+    writepxl(A->x, A->y, color);
+}
+
+void writepxl(u16 x, u16 y, u32 color)
+{
+    if (vinfo->isgraphic)
+    {
+        u32 addr=(vinfo->currentdepth>>3)*x+vinfo->currentpitch*y;
+        mem_to_video(color,addr,1,false);
+    }
+}
+
+/******************************************************************************/
+/* Affiche une ligne entre les points spécifiés */
+
+void v_line(vertex2d *A, vertex2d *B, u32 color)
+{
+	line(A->x, A->y, B->x, B->y, color);
+}
+
+void line(u32 x1, u32 y1, u32 x2, u32 y2, u32 color)
+{
+	s32 dx, dy, sdx, sdy;
+	u32 i, dxabs, dyabs, x, y, px, py;
+
+	dx = x2 - x1;		/*  distance horizontale de la line */
+	dy = y2 - y1;		/* distance verticale de la line * */
+	dxabs = abs(dx);
+	dyabs = abs(dy);
+	sdx = sgn(dx);
+	sdy = sgn(dy);
+	x = dyabs >> 1;
+	y = dxabs >> 1;
+	px = x1;
+	py = y1;
+
+	writepxl(px, py, color);
+
+	if (dxabs >= dyabs) {	/* la ligne est plus horizontale que verticale */
+		for (i = 0; i < dxabs; i++) {
+			y += dyabs;
+			if (y >= dxabs) {
+				y -= dxabs;
+				py += sdy;
+			}
+			px += sdx;
+			writepxl(px, py, color);
+		}
+	} else {		/* la ligne est plus verticale que horizontale */
+
+		for (i = 0; i < dyabs; i++) {
+			x += dxabs;
+			if (x >= dyabs) {
+				x -= dyabs;
+				px += sdx;
+			}
+			py += sdy;
+			writepxl(px, py, color);
+		}
+	}
+}
+
+/******************************************************************************/
+/* Affiche un triangle rempli entre les points spécifiés */
+
+void trianglefilled(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
+{
+	vertex2d *A, *B, *C, *TEMP;
+	u32 a, b, y, last;
+	int dx1, dx2, dx3, dy1, dy2, dy3, sa, sb;
+	A = AA;
+	B = BB;
+	C = CC;
+	while (A->y > B->y || B->y > C->y || A->y == C->y) {
+		if (A->y > B->y)
+			swapvertex(A, B);
+		if (B->y > C->y)
+			swapvertex(B, C);
+		if (A->y > C->y)
+			swapvertex(A, C);
+	}
+	if (A->y == C->y) {	//meme ligne
+		a = b = A->x;
+		if (B->x < a)
+			a = B->x;
+		else if (B->x > b)
+			b = B->x;
+		if (C->x < a)
+			a = C->x;
+		else if (C->x > b)
+			b = C->x;
+		hline(a, b, A->y, color);
+		return;
+	}
+	dx1 = B->x - A->x;
+	dy1 = B->y - A->y;
+	dx2 = C->x - A->x;
+	dy2 = C->y - A->y;
+	dx3 = C->x - B->x;
+	dy3 = C->y - B->y;
+	sa = 0;
+	sb = 0;
+
+	if (B->y == C->y)
+		last = B->y;
+	else
+		last = B->y - 1;
+
+	for (y = A->y; y <= last; y++) {
+		a = A->x + sa / dy1;
+		b = A->x + sb / dy2;
+		sa += dx1;
+		sb += dx2;
+		hline(a, b, y, color);
+	}
+
+	sa = dx3 * (y - B->y);
+	sb = dx2 * (y - A->y);
+	for (; y <= C->y; y++) {
+		a = B->x + sa / dy3;
+		b = A->x + sb / dy2;
+		sa += dx3;
+		sb += dx2;
+		hline(a, b, y, color);
+	}
+}
+
+void swapvertex(vertex2d * A, vertex2d * B)
+{
+	vertex2d temp = *A;
+	*A = *B;
+	*B = temp;
+}
+
+/******************************************************************************/
+/* Affiche un triangle  entre les points spécifiés */
+
+void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
+{
+	v_line(AA, BB, color);
+	v_line(BB, CC, color);
+	v_line(CC, AA, color);
+}
+
+
+/******************************************************************************/
+/* FONCTIONS VIDEO TEXTE AFFICHAGE */
 
 /*******************************************************************************/
 /* affiche une chaine de caractère a l'écran */
@@ -857,339 +1346,4 @@ u8 *sitoa(u64 num, u8 * str, u64 dim)
 	*pointer = '\000';
 	strinvert(str);
 	return pointer;
-}
-/*******************************************************************************/
-/* initialise le tableau des pilotes vidéo */
-void initdriver() {
-    for(u32 i=0;i<MAXDRIVERS;i++) 
-          registred[i].nom=NULL;
-}
-
-/*******************************************************************************/
-/* Enregistre un pilote dans le tableau des pilotes vidéo */
-void registerdriver(videofonction *pointer)
-{
-    u32 i;  
-    for(i=0;i<MAXDRIVERS;i++) 
-         if (registred[i].pointer==pointer)
-            return;
-    i=0;
-    while (registred[i].nom!=NULL && i<MAXDRIVERS) 
-        i++;
-    if (pointer->detect_hardware()!=NULL)
-    {
-        registred[i].pointer=pointer;
-        registred[i].nom=pointer->getvideo_drivername();
-    }
-}
-/*******************************************************************************/
-/* Choisi le meilleur driver en terme d'affichage */
-void apply_bestdriver(void) {
-    u32 i=0,j=0;  
-    u8 bestdepth=0x0;
-    u8 bestresol=0x0;
-    u8 bestmode=0x0;
-    u8* bestdriver=NULL;
-    capabilities *cap;
-    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
-        cap=registred[i].pointer->getvideo_capabilities();
-        while(cap[j].modenumber!=0xFF) {
-            if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
-            {
-                bestdepth=cap[j].depth;
-                bestresol=cap[j].width*cap[j].height;
-                bestmode=cap[j].modenumber;
-                bestdriver=registred[i].pointer->getvideo_drivername();
-            }
-            j++;
-        }
-        i++;
-    }
-    if (bestdriver!=NULL) apply_driver(bestdriver);
-    setvideo_mode(bestmode);
-}
-
-/*******************************************************************************/
-/* Choisi le meilleur driver spécifié par le nom */
-void apply_driver(u8* name)
-{
-    u32 i=0;
-    while (registred[i].nom!=NULL && i<MAXDRIVERS) {
-        if (strcmp(name,registred[i].nom)==0) {
-                detect_hardware=registred[i].pointer->detect_hardware;
-                setvideo_mode=registred[i].pointer->setvideo_mode;
-                getvideo_drivername=registred[i].pointer->getvideo_drivername;
-                getvideo_capabilities=registred[i].pointer->getvideo_capabilities;
-                getvideo_info=registred[i].pointer->getvideo_info;
-                mem_to_video=registred[i].pointer->mem_to_video;
-                video_to_mem=registred[i].pointer->video_to_mem;
-                video_to_video=registred[i].pointer->video_to_video;
-                wait_vretrace=registred[i].pointer->wait_vretrace;
-                wait_hretrace=registred[i].pointer->wait_hretrace;
-                page_set=registred[i].pointer->page_set;
-                page_show=registred[i].pointer->page_show;
-                page_split=registred[i].pointer->page_split;
-                cursor_enable=registred[i].pointer->cursor_enable;
-                cursor_disable=registred[i].pointer->cursor_disable;
-                cursor_set=registred[i].pointer->cursor_set;
-                font_load=registred[i].pointer->font_load;
-                font1_set=registred[i].pointer->font1_set;
-                font2_set=registred[i].pointer->font2_set;
-                blink_enable=registred[i].pointer->blink_enable;
-                blink_disable=registred[i].pointer->blink_disable;
-                changemode(0x0);
-                return;
-        }
-        i++;
-    }
-}
-/*******************************************************************************/
-/* Applique le driver suivant */
-
-void apply_nextdriver(void) {
-    u32 i=0;
-    while (registred[i].nom!=NULL && i<MAXDRIVERS)
-        if (strcmp(getvideo_drivername(),registred[i].nom)==0) {
-            i++;
-            if (registred[i].nom!=NULL) i=0;
-            apply_driver(registred[i].nom);
-            return;
-        }
-        i++;
-}
-
-/*******************************************************************************/
-/* Applique le mode suivant (le driver suivant si dernier mode) */
-
-void apply_nextvideomode(void) {
-    capabilities *cap=getvideo_capabilities();
-    videoinfos *info=getvideo_info();
-    u32 mode=info->currentmode;
-    u8 index=0;
-    while(cap[index].modenumber!=0xFF) {
-        if (cap[index].modenumber==mode) {    
-            index++;
-            if (cap[index].modenumber==0xFF)
-                apply_nextdriver();
-            else
-                changemode(cap[index].modenumber);
-                return;
-        }
-        index++;
-    }
-}
-
-/******************************************************************************/
-/* Rempli l'écran avec un attribut donné et des espaces vides */
-
-static u8 space=' ';
-
-void fill(u8 attrib) 
-{
-    if (!vinfo->isgraphic)
-    {
-        mem_to_video(space ,0,vinfo->pagesize>>1, false);
-        mem_to_video(attrib,1,vinfo->pagesize>>1, false);
-    }
-    else
-    {
-        mem_to_video(0x0,0,vinfo->pagesize, false);
-    }
-}
-
-/******************************************************************************/
-/* Défile l'écran de N ligne si le scrolling est activé */
-
-void scroll (u8 lines, u8 attrib) 
-{
-    if (vc[usedvc].scroll) {
-        if (!vinfo->isgraphic)
-        {
-            u32 gain=vinfo->currentpitch*lines;
-            video_to_video(gain,0,vinfo->pagesize-gain);
-            mem_to_video(space ,vinfo->pagesize-gain-2,gain, false);
-            mem_to_video(attrib,vinfo->pagesize-gain-1,gain, false);
-        }
-        else
-        {
-            u32 gain=vinfo->currentpitch*(lines<<3);
-            video_to_video(gain,0,vinfo->pagesize-gain);
-            mem_to_video(0x0 ,vinfo->pagesize-gain-2,gain, false);
-        }
-    }
-    else
-    {
-        clearscreen();
-    }
-}
-
-/******************************************************************************/
-/* Active le scrolling */
-
-void scroll_enable(void) 
-{
-    vc[usedvc].scroll=true;
-}
-
-/******************************************************************************/
-/* Désactive le scrolling */
-
-void scroll_disable(void) 
-{
-    vc[usedvc].scroll=false;
-}
-
-/******************************************************************************/
-/* Affiche un caractère */
-
-void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib) 
-{
-	u8 x, y, pattern, set;
-    u32 color;
-    if (!vinfo->isgraphic)
-    {
-        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
-        mem_to_video(thechar,addr  , 1, false);
-        mem_to_video(attrib, addr+1, 1, false);  
-    }
-    else
-    {
-	    for (y = 0; y < currentfont->height; y++) 
-        {
-		    pattern = currentfont->pointer[currentfont->height*thechar + y];
-		    for (x = 0; x < currentfont->width; x++) 
-            {
-                rol(pattern);
-                set = pattern & 0x1;
-			    if (set == 0)
-                    if (vinfo->currentdepth==32)
-                        color = egatorgb((attrib & 0xF0) >> 4);
-                    else
-                        color = egatovga((attrib & 0xF0) >> 4);
-			    else
-                    if (vinfo->currentdepth==32)
-                        color = egatorgb(attrib & 0x0F);
-                    else
-                        color = egatovga(attrib & 0x0F);
-               
-
-
-                writepxl(currentfont->width*coordx + x, currentfont->height*coordy + y, color);
-            }
-		}
-	}
-}
-
-/******************************************************************************/
-/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
-
-static convertega[]={0,1,2,3,4,5,20,7,56,57,58,59,60,61,62,63};
-
-u8 egatovga(u8 ega)
-{
-    return convertega[ega & 0xF];
-}
-
-/******************************************************************************/
-/* Retourne une couleur RGB 32 bits depuis une couleur EGA/VGA */
-
-static convertrgb[]={0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,0x555555,0x5555FF,0x55FF55,0x55FFFF,0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF};
-
-u32 egatorgb(u8 vga)
-{
-    return convertrgb[vga & 0xF];
-}
-
-/******************************************************************************/
-/* Retourne le caractère du mode texte aux coordonnées spécifiées */
-
-u8 getchar (u16 coordx, u16 coordy) 
-{
-    u8 thechar=0;
-    if (!vinfo->isgraphic)
-    {
-        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
-        video_to_mem(addr,&thechar,1);
-    }
-    return thechar;
-}
-
-
-/******************************************************************************/
-/* Retourne l'attribut du mode texte aux coordonnées spécifiées */
-
-u8 getattrib (u16 coordx, u16 coordy) 
-{
-    u8 attrib=0;
-    if (!vinfo->isgraphic)
-    {
-        u32 addr=(coordx<<1)+vinfo->currentpitch*coordy;
-        video_to_mem(addr+1,&attrib,1);  
-    }
-    return attrib;
-}
-
-
-/******************************************************************************/
-/* Affiche une ligne horizontale entre les points spécifiés */
-
-void hline(u16 x1, u16 x2, u16 y, u32 color)
-{
-    if (vinfo->isgraphic)
-    {
-	    if (x2 > x1)
-            mem_to_video(color,(vinfo->currentdepth>>3)*x1+vinfo->currentpitch*y,x2-x1,false);
-        else
-            mem_to_video(color,(vinfo->currentdepth>>3)*x2+vinfo->currentpitch*y,x1-x2,false);
-    }  
-}
-
-
-/******************************************************************************/
-/* Affiche un pixel à l'écran */
-void writepxl (u16 x, u16 y, u32 color)
-{
-    if (vinfo->isgraphic)
-    {
-        u32 addr=(vinfo->currentdepth>>3)*x+vinfo->currentpitch*y;
-        mem_to_video(color,addr,1,false);
-    }
-}
-
-/******************************************************************************/
-/* Chargement d'une police de caractère  */
-
-void loadfont(u8 *name,font* pointer,u8 width, u8 height)
-{
-   u32 i;  
-    for(i=0;i<MAXFONTS;i++) 
-         if (fonts[i].nom[0]!=NULL && fonts[i].pointer==pointer)
-            return;
-    i=0;
-    while (fonts[i].nom[0]!=NULL && i<MAXFONTS) 
-        i++;
-    fonts[i].pointer=pointer;
-    strcpy(name,fonts[i].nom);
-    fonts[i].width=width;
-    fonts[i].height=height;
-    if (fonts[i].nom[0]=='B' && fonts[i].nom[1]=='I' && fonts[i].nom[2]=='O' && fonts[i].nom[3]=='S')
-    {
-        u8 number=(fonts[i].nom[4]-'0');    
-        font_load(pointer, height, number);  
-    }
-}
-
-/******************************************************************************/
-/* Changement de la police */
-
-void setfont(u8 *fontname)
-{
-    u32 i=0;
-    while (fonts[i].nom!=NULL && i<MAXFONTS) {
-        if (strcmp(fontname,fonts[i].nom)==0) {
-            currentfont=&fonts[i];
-            return;
-        }
-        i++;
-    }
 }

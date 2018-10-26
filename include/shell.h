@@ -10,6 +10,7 @@ int (*function)()
 
 int rebootnow();
 int test2d();
+int test3d();
 int readidt();
 int readgdt();
 int detectcpu();

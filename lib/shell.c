@@ -2,12 +2,13 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "vga.h"
+#include "3d.h"
+#include "matrix.h"
 #include "video.h"
 #include "interrupts.h"
 #include "asm.h"
 #include "cpu.h"
 #include "string.h"
-#include "2d.h"
 #include "gdt.h"
 #include "shell.h"
 #include "multiboot2.h"
@@ -34,6 +35,7 @@ static command commands[] = {
 	{"help"      , "", &help},
 	{"logo"      , "", &logo},
 	{"font"      , "", &sfont},
+	{"test3d"      , "", &test3d},
 };
 
 /*******************************************************************************/
@@ -416,7 +418,73 @@ int rebootnow()
 }
 
 /*******************************************************************************/
-/* Test les fonctionnalité 2D graphiques */
+/* Teste les fonctionnalités 3D */
+
+int test3d()
+{
+    videoinfos *vinfo=getvideo_info();
+    if (!vinfo->isgraphic) {
+        print("Mode graphique necessaire afin de lancer ce programme\r\n");
+        return 1;
+    }
+    vector4 list3d[8];
+    vertex2d list2d[8];
+    matrix44 rotatex,rotatey,rotatez,mrotatex,mrotatey,mrotatez;
+    matrix44* transformation;
+    matrix44_rotation_x(0.1f, &rotatex);
+    matrix44_rotation_y(0.1f, &rotatey);
+    matrix44_rotation_z(0.1f, &rotatez);
+    matrix44_rotation_x(-0.1f, &mrotatex);
+    matrix44_rotation_y(-0.1f, &mrotatey);
+    matrix44_rotation_z(-0.1f, &mrotatez);
+    vector4 origin={0.0f,0.0f,0.0f,0.0f};
+    vector4 cubeorigin={0.0f,0.0f,0.0f,0.0f};    
+    origin.x=vinfo->currentwidth/2.0f;
+    origin.y=vinfo->currentheight/2.0f;
+    origin.z=70.0f;
+    cube(&list3d, &cubeorigin, 35.0f);
+    u8 achar=' ';
+    u8 i;
+    while(achar!='a')
+    {
+        clearscreen();
+        proj(&list3d, &list2d, &origin, 8, 100.0f);
+        for (i = 0; i < 8; i++) 
+        {
+            v_writepxl(&list2d[i], egatorgb(4));
+        }
+        achar=waitascii();
+        switch(achar) {
+            case 17:
+                transformation=&rotatex;
+                break;
+            case 18:
+                transformation=&mrotatex;
+                break;
+            case 19:
+                transformation=&rotatey;
+                break;
+            case 20:
+                transformation=&mrotatey;
+                break;
+            case 2:
+                transformation=&rotatez;
+                break;
+            case 3:
+                transformation=&mrotatez;
+                break;
+        }
+        for (i = 0; i < 8; i++) 
+        {
+            matrix44_transform(transformation, &list3d[i]);
+        }
+
+    }
+	return 0;
+}
+
+/*******************************************************************************/
+/* Teste les fonctionnalités 2D graphiques */
 
 int test2d()
 {
@@ -439,7 +507,7 @@ int test2d()
             color=random(0,63);
         else
             color=random(0,16);
-        linev(&a,&b,color);
+        v_line(&a,&b,color);
     }
     waitascii();
 	for (int i = 0; i < 2000; i++) {

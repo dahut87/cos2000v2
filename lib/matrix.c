@@ -5,10 +5,16 @@
 #include "types.h"
 #include "math.h"
 
+/*******************************************************************************/
+/* Affiche un vecteur de 4 composantes */
+
 void vector4_show(vector4 src)
 {
     printf("vecteur: X=%f Y=%f Z=%f W=%f \r\n", src.x, src.y, src.z, src.w);
 }
+
+/*******************************************************************************/
+/* Créé un vecteur de 4 composantes */
 
 void vector4_create(float x, float y, float z, float w, vector4 *dst)
 {
@@ -18,10 +24,16 @@ void vector4_create(float x, float y, float z, float w, vector4 *dst)
     dst->w = w;
 }
 
+/*******************************************************************************/
+/* Copie un vecteur de 4 composantes */
+
 void vector4_copy(vector4 src, vector4 *dst)
 {
     vector4_create(src.x, src.y, src.z, src.w, dst);
 }
+
+/*******************************************************************************/
+/* Ajoute deux vecteurs de 4 composantes */
 
 void vector4_add(vector4 v1, vector4 v2, vector4 *dst)
 {
@@ -30,12 +42,18 @@ void vector4_add(vector4 v1, vector4 v2, vector4 *dst)
     dst->z = v1.z + v2.z;
 }
 
+/*******************************************************************************/
+/* Soustrait un vecteur de 4 composantes depuis un autre*/
+
 void vector4_sub(vector4 v1, vector4 v2, vector4 *dst)
 {
     dst->x = v1.x - v2.x;
     dst->y = v1.y - v2.y;
     dst->z = v1.z - v2.z;
 }
+
+/*******************************************************************************/
+/* Redimensionne un vecteur de 4 composantes */
 
 void vector4_scale(vector4 *dst, float factor)
 {
@@ -45,12 +63,18 @@ void vector4_scale(vector4 *dst, float factor)
     dst->w *= factor;
 }
 
+/*******************************************************************************/
+/* Calcule le produit vectoriel de deux vecteurs de 4 composantes */
+
 void vector4_crossproduct(vector4 v1, vector4 v2, vector4 *dst)
 {
     dst->x = v1.y * v2.z - v1.z * v2.y;
     dst->y = v1.z * v2.x - v1.x * v2.z;
     dst->z = v1.x * v2.y - v1.y * v2.x;
 }
+
+/*******************************************************************************/
+/* Normalise un vecteur de 4 composantes */
 
 void vector4_normalize(vector4 *dst)
 {
@@ -67,12 +91,18 @@ void vector4_normalize(vector4 *dst)
     }
 }
 
+/*******************************************************************************/
+/* Divise un vecteur de 4 composantes depuis un autre*/
+
 void vector4_divide(vector4 *v1, vector4 v2, vector4 *dst)
 {
     dst->x = v1->x / v2.x;
     dst->y = v1->y / v2.y;
     dst->z = v1->z / v2.z;
 }
+
+/*******************************************************************************/
+/* Détermine le 3ème vecteur perpendiculaire au 2 autres */
 
 void vector4_perpendicular(vector4 v1, vector4 v2, vector4 *dst)
 {
@@ -82,12 +112,15 @@ void vector4_perpendicular(vector4 v1, vector4 v2, vector4 *dst)
     dst->z = v1.z - dot * v2.z;
 }
 
+/*******************************************************************************/
+/* Tourne un vecteur à 4 composantes autour de X */
+
 void vector4_rotate_x(vector4 *dst, float angle)
 {
     vector4 origin;
     float sinus, cosinus;
-    sinus = sin(angle);
-    cosinus = cos(angle);
+    sinus = sinf(angle);
+    cosinus = cosf(angle);
     origin.x = dst->x;
     origin.y = dst->y;
     origin.z = dst->z;
@@ -95,12 +128,15 @@ void vector4_rotate_x(vector4 *dst, float angle)
     dst->z = cosinus * origin.z - sinus * origin.y;
 }
 
+/*******************************************************************************/
+/* Tourne un vecteur à 4 composantes autour de Y */
+
 void vector4_rotate_y(vector4 *dst, float angle)
 {
     vector4 origin;
     float sinus, cosinus;
-    sinus = sin(angle);
-    cosinus = cos(angle);
+    sinus = sinf(angle);
+    cosinus = cosf(angle);
     origin.x = dst->x;
     origin.y = dst->y;
     origin.z = dst->z;
@@ -108,18 +144,24 @@ void vector4_rotate_y(vector4 *dst, float angle)
     dst->z = cosinus * origin.z - sinus * origin.x;
 }
 
+/*******************************************************************************/
+/* Tourne un vecteur à 4 composantes autour de Z */
+
 void vector4_rotate_z(vector4 *dst, float angle)
 {
     vector4 origin;
     float sinus, cosinus;
-    sinus = sin(angle);
-    cosinus = cos(angle);
+    sinus = sinf(angle);
+    cosinus = cosf(angle);
     origin.x = dst->x;
     origin.y = dst->y;
     origin.z = dst->z;
     dst->x = cosinus * origin.x + sinus * origin.y;
     dst->y = cosinus * origin.y - sinus * origin.x;
 }
+
+/*******************************************************************************/
+/* Donne la longueur d'un vecteur à 4 composantes */
 
 float vector4_len(vector4 src)
 {
@@ -128,10 +170,16 @@ float vector4_len(vector4 src)
                 (src.z * src.z));
 }
 
+/*******************************************************************************/
+/* Retourne le produit scalaire de deux vecteurs à 4 composantes */
+
 float vector4_dotproduct(vector4 v1, vector4 v2)
 {
     return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 }
+
+/*******************************************************************************/
+/* Retourne la norme d'un vecteur à 4 composantes */
 
 float vector4_norm(vector4 src)
 {
@@ -140,12 +188,18 @@ float vector4_norm(vector4 src)
                  (src.z * src.z));
 }
 
+/*******************************************************************************/
+/* Retourne la distance de deux vecteurs à 4 composantes */
+
 float vector4_distance(vector4 v1, vector4 v2)
 {
     return sqrt(pow(v2.x - v1.x, 2) +
                 pow(v2.y - v1.y, 2) +
                 pow(v2.z - v1.z, 2));
 }
+
+/*******************************************************************************/
+/* Compare deux vecteurs à 4 composantes */
 
 int vector4_isequals(vector4 v1, vector4 v2)
 {
@@ -156,6 +210,9 @@ int vector4_isequals(vector4 v1, vector4 v2)
     return (x < 0.000001 && y < 0.000001 && z < 0.000001);
 }
 
+/*******************************************************************************/
+/* Définie le plan normal à 3 vecteurs à 4 composantes */
+
 void vector4_planenormal(vector4 v1, vector4 v2, vector4 v3, vector4 *dst)
 {
     vector4 temp1, temp2;
@@ -165,6 +222,9 @@ void vector4_planenormal(vector4 v1, vector4 v2, vector4 v3, vector4 *dst)
     vector4_normalize(dst);
 }
 
+/*******************************************************************************/
+/* Créé une matrice d'identité */
+
 void matrix44_homogen(matrix44 *matrix)
 {
     vector4_create(1, 0, 0, 0, &matrix->V[0]);
@@ -172,6 +232,9 @@ void matrix44_homogen(matrix44 *matrix)
     vector4_create(0, 0, 1, 0, &matrix->V[2]);
     vector4_create(0, 0, 0, 1, &matrix->V[3]);
 }
+
+/*******************************************************************************/
+/* Créé une matrice vide */
 
 void matrix44_empty(matrix44 *matrix)
 {
@@ -181,6 +244,9 @@ void matrix44_empty(matrix44 *matrix)
     vector4_create(0, 0, 0, 0, &matrix->V[3]);
 }
 
+/*******************************************************************************/
+/* Créé une matrice de redimensionnement (par un vecteur) */
+
 void matrix44_scaling(vector4 v, matrix44 *dst)
 {
     matrix44_homogen(dst);
@@ -188,6 +254,9 @@ void matrix44_scaling(vector4 v, matrix44 *dst)
     dst->V[1].y = v.y;
     dst->V[2].z = v.z;
 }
+
+/*******************************************************************************/
+/* Créé une matrice de déplacement */
 
 void matrix44_translation(vector4 v, matrix44 *dst)
 {
@@ -197,6 +266,9 @@ void matrix44_translation(vector4 v, matrix44 *dst)
     dst->V[2].z = v.z;
 }
 
+/*******************************************************************************/
+/* Créé une matrice de redimensionnement (par un facteur) */
+
 void matrix44_scale(matrix44 *dst, float factor)
 {
     vector4_scale(&dst->V[0], factor);
@@ -204,6 +276,9 @@ void matrix44_scale(matrix44 *dst, float factor)
     vector4_scale(&dst->V[2], factor);
     vector4_scale(&dst->V[3], factor);
 }
+
+/*******************************************************************************/
+/* Créé une matrice de redimensionnement et de déplacement */
 
 void matrix44_scale_translation(vector4 scale, vector4 translation, matrix44 *dst)
 {
@@ -216,11 +291,14 @@ void matrix44_scale_translation(vector4 scale, vector4 translation, matrix44 *ds
     dst->V[3].z = translation.z;
 }
 
+/*******************************************************************************/
+/* Créé une matrice de rotation autour de X */
+
 void matrix44_rotation_x(float angle, matrix44 *dst)
 {
     float sinus,cosinus;
-    cosinus = cos(angle);
-    sinus = sin(angle);
+    cosinus = cosf(angle);
+    sinus = sinf(angle);
     matrix44_empty(dst);
     dst->V[0].x = 1;
     dst->V[1].y = cosinus;
@@ -230,11 +308,14 @@ void matrix44_rotation_x(float angle, matrix44 *dst)
     dst->V[3].w = 1;
 }
 
+/*******************************************************************************/
+/* Créé une matrice de rotation autour de Y */
+
 void matrix44_rotation_y(float angle, matrix44 *dst)
 {
     float sinus,cosinus;
-    cosinus = cos(angle);
-    sinus = sin(angle);
+    cosinus = cosf(angle);
+    sinus = sinf(angle);
     matrix44_empty(dst);
     dst->V[0].x = cosinus;
     dst->V[0].z = -1 * sinus;
@@ -244,11 +325,14 @@ void matrix44_rotation_y(float angle, matrix44 *dst)
     dst->V[3].w = 1;
 }
 
+/*******************************************************************************/
+/* Créé une matrice de rotation autour de Z */
+
 void matrix44_rotation_z(float angle, matrix44 *dst)
 {
     float sinus,cosinus;
-    cosinus = cos(angle);
-    sinus = sin(angle);
+    cosinus = cosf(angle);
+    sinus = sinf(angle);
     matrix44_empty(dst);
     dst->V[0].x = cosinus;
     dst->V[0].y = sinus;
@@ -257,6 +341,9 @@ void matrix44_rotation_z(float angle, matrix44 *dst)
     dst->V[2].z = 1;
     dst->V[3].w = 1;
 }
+
+/*******************************************************************************/
+/* Créé une matrice de rotation multiple */
 
 void matrix44_rotation(vector4 axis, float angle, matrix44 *dst)
 {
@@ -286,6 +373,9 @@ void matrix44_rotation(vector4 axis, float angle, matrix44 *dst)
     dst->V[3].z = 0;
     dst->V[3].w = 1;
 }
+
+/*******************************************************************************/
+/* Multiplie deux matrices */
 
 void matrix44_multiply(matrix44 *m1, matrix44 *m2, matrix44 *dst)
 {
@@ -323,6 +413,9 @@ void matrix44_multiply(matrix44 *m1, matrix44 *m2, matrix44 *dst)
                    m1->V[3].z * m2->V[2].w + m1->V[3].w * m2->V[3].w);
 }
 
+/*******************************************************************************/
+/* Transforme une matrice avec un vecteur à 4 composantes */
+
 void matrix44_transform(matrix44 *matrix, vector4 *dst)
 {
     vector4 origin;
@@ -335,6 +428,9 @@ void matrix44_transform(matrix44 *matrix, vector4 *dst)
     dst->z = origin.x * matrix->V[0].z + origin.y * matrix->V[1].z + origin.z * matrix->V[2].z + origin.w * matrix->V[3].z;
     dst->w = origin.x * matrix->V[0].w + origin.y * matrix->V[1].w + origin.z * matrix->V[2].w + origin.w * matrix->V[3].w;
 }
+
+/*******************************************************************************/
+/* Calcule le déterminant d'une matrice */
 
 float matrix44_determinant(matrix44 *matrix)
 {
@@ -358,6 +454,9 @@ float todeterminant(float a1, float a2, float a3, float b1, float b2, float b3, 
 {
     return (a1 * ((b2 * c3) - (b3 * c2))) - (b1 * ((a2 * c3) - (a3 * c2))) + (c1 * ((a2 * b3) - (a3 * b2)));
 }
+
+/*******************************************************************************/
+/* Crée une matrice adjointe */
 
 void matrix44_adjoint(matrix44 *matrix)
 {
@@ -403,12 +502,18 @@ void matrix44_adjoint(matrix44 *matrix)
     matrix->V[3].w = todeterminant(a1, a2, a3, b1, b2, b3, c1, c2, c3);
 }
 
+/*******************************************************************************/
+/* Affiche une matrice */
+
 void matrix44_show(matrix44 *matrix)
 {
     printf("Matrice: X=%f Y=%f Z=%f W=%f \r\n", matrix->V[0].x, matrix->V[1].y, matrix->V[2].z, matrix->V[3].w);
     printf("         X=%f Y=%f Z=%f W=%f \r\n", matrix->V[0].x, matrix->V[1].y, matrix->V[2].z, matrix->V[3].w);
     printf("         X=%f Y=%f Z=%f W=%f \r\n", matrix->V[0].x, matrix->V[1].y, matrix->V[2].z, matrix->V[3].w);
 }
+
+/*******************************************************************************/
+/* Inverse une matrice */
 
 void matrix44_invert(matrix44 *matrix)
 {
@@ -424,6 +529,9 @@ void matrix44_invert(matrix44 *matrix)
         matrix44_scale(matrix, 1.0 / det);
     }
 }
+
+/*******************************************************************************/
+/* Transpose une matrice */
 
 void matrix44_transpose(matrix44 *matrix)
 {
@@ -453,6 +561,9 @@ void matrix44_transpose(matrix44 *matrix)
     matrix->V[3].z = f;
 }
 
+/*******************************************************************************/
+/* Crée une matrice de camera */
+
 void matrix44_lookat(vector4 eye, vector4 dst, vector4 up, matrix44 *matrix)
 {
     vector4 xaxis, yaxis, zaxis, negeye;
@@ -481,28 +592,19 @@ void matrix44_lookat(vector4 eye, vector4 dst, vector4 up, matrix44 *matrix)
     vector4_copy(negeye, &matrix->V[3]);
 }
 
+/*******************************************************************************/
+/* Vérifie que deux matrices sont égales */
+
 int matrix44_isequals(matrix44 *m1, matrix44 *m2)
 {
     return vector4_isequals(m1->V[0], m2->V[0]) && vector4_isequals(m1->V[1], m2->V[1]) &&
            vector4_isequals(m1->V[2], m2->V[2]) && vector4_isequals(m1->V[3], m2->V[3]);
 }
 
-void toarray(matrix44 *m, float *array)
+/*******************************************************************************/
+/* Transforme une matrice en tableau */
+
+float *toarray(matrix44 *m)
 {
-    array[0] = m->V[0].x;
-    array[1] = m->V[0].y;
-    array[2] = m->V[0].z;
-    array[3] = m->V[0].w;
-    array[4] = m->V[1].x;
-    array[5] = m->V[1].y;
-    array[6] = m->V[1].z;
-    array[7] = m->V[1].w;
-    array[8] = m->V[2].x;
-    array[9] = m->V[2].y;
-    array[10] = m->V[2].z;
-    array[11] = m->V[2].w;
-    array[12] = m->V[3].x;
-    array[13] = m->V[3].y;
-    array[14] = m->V[3].z;
-    array[15] = m->V[3].w;
+    return &m->v;
 }

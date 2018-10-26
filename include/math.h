@@ -9,6 +9,10 @@
 #define degtorad(deg) (deg * PI / 180.0)
 #define radtodeg(rad) (rad * 180.0 / PI)
 
+double cos(double x);
+double sin(double x);
+float cosf(float x);
+float sinf(float x);
 float fabsf(float n);
 double fabs(double n);
 float sqrtf(float n);        

@@ -55,7 +55,8 @@ double cos(double x){
 		x = -x;
 	while( M_PI < x )
 		x -= M_2_PI;
-	return 1.0 - (x*x/2.0)*( 1.0 - (x*x/12.0) * ( 1.0 - (x*x/30.0) * (1.0 - x*x/56.0 )));
+    double result=1.0 - (x*x/2.0)*( 1.0 - (x*x/12.0) * ( 1.0 - (x*x/30.0) * (1.0 - x*x/56.0 )));
+	return result;
 }
  
 double sin(double x){
@@ -67,11 +68,12 @@ float cosf(float x){
 		x = -x;
 	while( M_PI < x )
 		x -= M_2_PI;
-	return 1.0f - (x*x/2.0f)*( 1.0f - (x*x/12.0f) * ( 1.0f - (x*x/30.0f) * (1.0f - x*x/56.0f )));
+	float result=1.0f - (x*x/2.0f)*( 1.0f - (x*x/12.0f) * ( 1.0f - (x*x/30.0f) * (1.0f - x*x/56.0f )));
+	return result;    
 }
  
 float sinf(float x){
-    return cos(x-M_PI_2);
+    return cosf(x-M_PI_2);
 }
 
 /******************************************************************************/ 
