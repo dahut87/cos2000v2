@@ -54,3 +54,39 @@ void cube(vector4 list[], vector4 *origin, u16 size)
     list[7].z=origin->z+size;    
     list[7].w=1.0f;
 }
+
+/*******************************************************************************/
+/* Charge un fichier 3DS */
+
+void load3ds(u8 *pointer, model3d *model)
+{
+    u16 chunk;
+    u32 size;
+    bool formatok;
+    while(true) {
+        chunk=(u16) *(pointer);
+        pointer+=2;
+        size=(u32) *(pointer);
+        pointer+=4;
+        switch(chunk)
+        {
+            case MAIN3DS:
+                break;
+            case EDIT3DS:
+                break;
+            case EDIT_OBJECT:
+                break;
+            case OBJ_TRIMESH:
+                break;
+            case TRI_VERTEXL:
+                break;
+            case TRI_FACEL1:
+                break;
+            case TRI_LOCAL:
+                break;
+            default:
+                break;
+        }
+    }
+}
+

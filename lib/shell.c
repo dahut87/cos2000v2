@@ -15,6 +15,7 @@
 #include "math.h"
 #include "debug.h"
 #include "VGA/ansi.c"
+#include "3D/sphere.c"
 
 static command commands[] = {
 	{"reboot"    , "", &rebootnow},
@@ -427,6 +428,8 @@ int test3d()
         print("Mode graphique necessaire afin de lancer ce programme\r\n");
         return 1;
     }
+    model3d model;
+    load3ds(&sphere, &model);
     vector4 list3d[8];
     vertex2d list2d[8];
     matrix44 rotatex,rotatey,rotatez,mrotatex,mrotatey,mrotatez;
