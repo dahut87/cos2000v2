@@ -5,12 +5,18 @@
 #include "matrix.h"
 #include "video.h"
 
+typedef struct triface {
+    u16 V1;	
+    u16 V2;
+    u16 V3;
+} triface __attribute__ ((packed));
+
 typedef struct model3d {
     u8 name[12];
     matrix44 view;
     vector4 *vertexlist;
     u16 vertexnb;
-    u16 *facelist;
+    triface *facelist;
     u16 facenb;    
 } model3d __attribute__ ((packed));
 
@@ -25,10 +31,20 @@ typedef struct vertex3d {
   };
 } vertex3d __attribute__ ((packed));
 
+typedef enum type3D
+{
+	TYPE3D_POINTS,
+	TYPE3D_LINES,
+	TYPE3D_FACES,
+	TYPE3D_FLAT,
+	TYPE3D_TEXTURE,
+} type3D  __attribute__ ((packed));
+
 
 void proj(vector4 list[], vertex2d plane[], vector4 origin[], u16 number, float factor);
-void cube(vector4 list[], vector4 *origin, u16 size);
+void cube(model3d *model, vector4 *origin, u16 size);
 int load3ds(u8 *pointer,u32 size, model3d *model);
+void show3dmodel(model3d *model, matrix44 *transformation, vector4 origin[], float factor, type3D type);
 
 /*******************************************************************************/
 /* Fichier 3DS */

@@ -16,6 +16,7 @@
 #include "debug.h"
 #include "VGA/ansi.c"
 #include "3D/sphere.c"
+#include "3D/man.c"
 
 static command commands[] = {
 	{"reboot"    , "", &rebootnow},
@@ -429,35 +430,37 @@ int test3d()
         return 1;
     }
     model3d model;
-    load3ds(&sphere, sizeof(sphere), &model);
-    vector4 list3d[8];
-    vertex2d list2d[8];
-    matrix44 rotatex,rotatey,rotatez,mrotatex,mrotatey,mrotatez;
-    matrix44* transformation;
+    float factor=100.0f;
+    type3D type=TYPE3D_POINTS;
+    matrix44 rotatex,rotatey,rotatez,mrotatex,mrotatey,mrotatez,identity;
+    matrix44_homogen(&identity);
     matrix44_rotation_x(0.1f, &rotatex);
     matrix44_rotation_y(0.1f, &rotatey);
     matrix44_rotation_z(0.1f, &rotatez);
     matrix44_rotation_x(-0.1f, &mrotatex);
     matrix44_rotation_y(-0.1f, &mrotatey);
     matrix44_rotation_z(-0.1f, &mrotatez);
+    matrix44* transformation=&identity;
     vector4 origin={0.0f,0.0f,0.0f,0.0f};
     vector4 cubeorigin={0.0f,0.0f,0.0f,0.0f};    
     origin.x=vinfo->currentwidth/2.0f;
     origin.y=vinfo->currentheight/2.0f;
     origin.z=70.0f;
-    cube(&list3d, &cubeorigin, 35.0f);
+    cube(&model, &cubeorigin, 35.0f);
     u8 achar=' ';
     u8 i;
-    while(achar!='a')
+    while(achar!='q' && achar!='Q')
     {
         clearscreen();
-        proj(&list3d, &list2d, &origin, 8, 100.0f);
-        for (i = 0; i < 8; i++) 
-        {
-            v_writepxl(&list2d[i], egatorgb(4));
-        }
+        show3dmodel(&model, transformation, &origin, factor, type);
         achar=waitascii();
         switch(achar) {
+            case '1':
+                load3ds(&man, sizeof(man), &model);
+                break;
+            case '2':
+                load3ds(&sphere, sizeof(sphere), &model);
+                break;
             case 17:
                 transformation=&rotatex;
                 break;
@@ -476,10 +479,22 @@ int test3d()
             case 3:
                 transformation=&mrotatez;
                 break;
-        }
-        for (i = 0; i < 8; i++) 
-        {
-            matrix44_transform(transformation, &list3d[i]);
+            case '-':
+                factor-=10.0;
+                break;
+            case '+':
+                factor+=10.0;
+                break;
+            case '*':
+                switch(type) {
+                    case TYPE3D_POINTS:
+	                    type=TYPE3D_LINES;
+                        break;
+	                case TYPE3D_LINES:
+	                    type=TYPE3D_POINTS;
+                        break;
+                }
+                break;
         }
 
     }

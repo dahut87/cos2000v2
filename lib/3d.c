@@ -20,40 +20,114 @@ void proj(vector4 list[], vertex2d plane[], vector4 origin[], u16 number, float 
 /*******************************************************************************/
 /* Crée une liste de vertex3D pour un cube */
 
-void cube(vector4 list[], vector4 *origin, u16 size)
+void cube(model3d *model, vector4 *origin, u16 size)
 {
-    list[0].x=origin->x;
-    list[0].y=origin->y;
-    list[0].z=origin->z;
-    list[0].w=1.0f;
-    list[1].x=origin->x+size;
-    list[1].y=origin->y;
-    list[1].z=origin->z;
-    list[1].w=1.0f;
-    list[2].x=origin->x;
-    list[2].y=origin->y+size;
-    list[2].z=origin->z;
-    list[2].w=1.0f;
-    list[3].x=origin->x+size;
-    list[3].y=origin->y+size;
-    list[3].z=origin->z;
-    list[3].w=1.0f;
-    list[4].x=origin->x;
-    list[4].y=origin->y;
-    list[4].z=origin->z+size;
-    list[4].w=1.0f;
-    list[5].x=origin->x+size;
-    list[5].y=origin->y;
-    list[5].z=origin->z+size;
-    list[5].w=1.0f;
-    list[6].x=origin->x;
-    list[6].y=origin->y+size;
-    list[6].z=origin->z+size;
-    list[6].w=1.0f;
-    list[7].x=origin->x+size;
-    list[7].y=origin->y+size;
-    list[7].z=origin->z+size;    
-    list[7].w=1.0f;
+    strcpy("cube",model->name);
+    model->vertexnb=8;
+    model->vertexlist=0x00300000;
+    model->vertexlist[0].x=origin->x;
+    model->vertexlist[0].y=origin->y;
+    model->vertexlist[0].z=origin->z;
+    model->vertexlist[0].w=1.0f;
+    model->vertexlist[1].x=origin->x+size;
+    model->vertexlist[1].y=origin->y;
+    model->vertexlist[1].z=origin->z;
+    model->vertexlist[1].w=1.0f;
+    model->vertexlist[2].x=origin->x;
+    model->vertexlist[2].y=origin->y+size;
+    model->vertexlist[2].z=origin->z;
+    model->vertexlist[2].w=1.0f;
+    model->vertexlist[3].x=origin->x+size;
+    model->vertexlist[3].y=origin->y+size;
+    model->vertexlist[3].z=origin->z;
+    model->vertexlist[3].w=1.0f;
+    model->vertexlist[4].x=origin->x;
+    model->vertexlist[4].y=origin->y;
+    model->vertexlist[4].z=origin->z+size;
+    model->vertexlist[4].w=1.0f;
+    model->vertexlist[5].x=origin->x+size;
+    model->vertexlist[5].y=origin->y;
+    model->vertexlist[5].z=origin->z+size;
+    model->vertexlist[5].w=1.0f;
+    model->vertexlist[6].x=origin->x;
+    model->vertexlist[6].y=origin->y+size;
+    model->vertexlist[6].z=origin->z+size;
+    model->vertexlist[6].w=1.0f;
+    model->vertexlist[7].x=origin->x+size;
+    model->vertexlist[7].y=origin->y+size;
+    model->vertexlist[7].z=origin->z+size;    
+    model->vertexlist[7].w=1.0f;
+    model->facelist=0x00310000;
+    model->facelist[0].V1=0;
+    model->facelist[0].V2=1;
+    model->facelist[0].V3=3;
+    model->facelist[1].V1=0;
+    model->facelist[1].V2=2;
+    model->facelist[1].V3=3;
+    model->facelist[2].V1=4;
+    model->facelist[2].V2=5;
+    model->facelist[2].V3=7;
+    model->facelist[3].V1=4;
+    model->facelist[3].V2=6;
+    model->facelist[3].V3=7;
+    model->facelist[4].V1=0;
+    model->facelist[4].V2=1;
+    model->facelist[4].V3=5;
+    model->facelist[5].V1=0;
+    model->facelist[5].V2=4;
+    model->facelist[5].V3=5;
+    model->facelist[6].V1=0;
+    model->facelist[6].V2=0;
+    model->facelist[6].V3=0;
+    model->facelist[7].V1=0;
+    model->facelist[7].V2=0;
+    model->facelist[7].V3=0;
+    model->facelist[8].V1=0;
+    model->facelist[8].V2=0;
+    model->facelist[8].V3=0;
+    model->facelist[9].V1=0;
+    model->facelist[9].V2=0;
+    model->facelist[9].V3=0;
+    model->facelist[10].V1=0;
+    model->facelist[10].V2=0;
+    model->facelist[10].V3=0;
+    model->facelist[11].V1=0;
+    model->facelist[11].V2=0;
+    model->facelist[11].V3=0;
+}
+
+/*******************************************************************************/
+/* Affiche un modèle 3D */
+
+void show3dmodel(model3d *model, matrix44 *transformation, vector4 origin[], float factor, type3D type)
+{
+    u16 i;
+    vertex2d *plane=0x00250000;
+    for (i = 0; i < model->vertexnb; i++) 
+    {
+        matrix44_transform(transformation, &model->vertexlist[i]);
+    }
+    proj(model->vertexlist, plane, origin, model->vertexnb, factor);
+    switch (type) {
+	    case TYPE3D_POINTS:
+            for(i=0;i<model->vertexnb;i++) {
+                v_writepxl(&plane[i], egatorgb(4));
+            }
+            break;
+	    case TYPE3D_LINES:
+            for(i=0;i<model->facenb;i++) {
+                v_line(&plane[model->facelist[i].V1], &plane[model->facelist[i].V2], egatorgb(4));
+                v_line(&plane[model->facelist[i].V1], &plane[model->facelist[i].V3], egatorgb(4));
+                v_line(&plane[model->facelist[i].V2], &plane[model->facelist[i].V3], egatorgb(4));
+            }
+            break;
+	    case TYPE3D_FACES:
+            break;
+	    case TYPE3D_FLAT:
+            break;
+	    case TYPE3D_TEXTURE:
+            break;
+    }
 }
 
 /*******************************************************************************/
@@ -147,11 +221,11 @@ int load3ds(u8 *pointer,u32 size, model3d *model)
                 i=0;
                 listunsigned=ptr;
                 model->facelist=0x00400000;
-                while(i<model->facenb*3)
+                while(i<model->facenb)
                 {
-                    model->facelist[i++]=*(listunsigned++);
-                    model->facelist[i++]=*(listunsigned++);
-                    model->facelist[i++]=*(listunsigned++);
+                    model->facelist[i].V1=*(listunsigned++);
+                    model->facelist[i].V2=*(listunsigned++);
+                    model->facelist[i++].V3=*(listunsigned++);
                     listunsigned++;
                 }
                 ptr=listunsigned;                
