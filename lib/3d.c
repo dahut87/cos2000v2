@@ -4,6 +4,7 @@
 #include "3d.h"
 #include "types.h"
 #include "video.h"
+#include "string.h"
 
 /*******************************************************************************/
 /* Crée une projection simple pour test */
@@ -58,35 +59,123 @@ void cube(vector4 list[], vector4 *origin, u16 size)
 /*******************************************************************************/
 /* Charge un fichier 3DS */
 
-void load3ds(u8 *pointer, model3d *model)
+int load3ds(u8 *pointer,u32 size, model3d *model)
 {
-    u16 chunk;
-    u32 size;
-    bool formatok;
-    while(true) {
-        chunk=(u16) *(pointer);
-        pointer+=2;
-        size=(u32) *(pointer);
-        pointer+=4;
-        switch(chunk)
-        {
-            case MAIN3DS:
-                break;
-            case EDIT3DS:
-                break;
-            case EDIT_OBJECT:
-                break;
-            case OBJ_TRIMESH:
-                break;
-            case TRI_VERTEXL:
-                break;
-            case TRI_FACEL1:
-                break;
-            case TRI_LOCAL:
-                break;
-            default:
-                break;
+    u8 *ptr=pointer;
+    u16 chunk_id;
+    u32 chunk_size;
+    u16 i;
+    float *listfloat;
+    u16 *listunsigned;
+    dsState state=DS_READ_CHUNK_ID;
+    bool dsfile=false;
+    while(ptr-pointer<size) {
+		switch(state)
+		{
+            case DS_READ_CHUNK_ID:
+                chunk_id=*((u16*) ptr);
+                ptr+=2;
+                state=DS_READ_CHUNK_LENGTH;                   
+			    break;
+            case DS_READ_CHUNK_LENGTH:
+                chunk_size=*((u32*) ptr);
+                ptr+=4;
+                switch(chunk_id)
+                {
+                    case MAIN3DS:
+                        dsfile=true;
+                        ptr+=10;
+                        state=DS_READ_CHUNK_ID;                      
+                        break;
+                    case EDIT3DS:
+                        state=DS_READ_CHUNK_ID;   
+                        break;
+                    case OBJ_TRIMESH:
+                        state=DS_READ_CHUNK_ID;
+                        break;
+                    case EDIT_OBJECT:
+                        state=DS_READ_OBJECT_NAME;   
+                        break;
+                    case TRI_VERTEXL:
+                        state=DS_READ_POINT_COUNT;
+                        break;
+                    case TRI_FACEL1:
+                        state=DS_READ_FACE_COUNT;
+                        break;
+                    case TRI_LOCAL:
+                        state=DS_READ_MATRIX;
+                        break;
+                    default:
+                        if (!dsfile) return 1;
+                        ptr+=(chunk_size-6);
+                        state=DS_READ_CHUNK_ID;  
+                        break;
+                }
+			    break;
+            case DS_READ_OBJECT_NAME:
+                strcpy(ptr, model->name);
+                ptr+=(strlen(ptr)+1);
+                state=DS_READ_CHUNK_ID;                 
+			    break;
+            case DS_SKIP_CHUNK:
+			    break;
+            case DS_READ_POINT_COUNT:
+                model->vertexnb=*((u16*) ptr);
+                state=DS_READ_POINTS;  
+                ptr+=2;
+			    break;
+            case DS_READ_POINTS:
+                i=0;
+                listfloat=ptr;
+                model->vertexlist=0x00300000;
+                while(i<model->vertexnb)
+                {
+                    model->vertexlist[i].x=*(listfloat++);
+                    model->vertexlist[i].y=*(listfloat++);
+                    model->vertexlist[i].z=*(listfloat++);
+                    model->vertexlist[i++].w=1.0;               
+                }
+                ptr=listfloat;                
+                state=DS_READ_CHUNK_ID;  
+			    break;
+            case DS_READ_FACE_COUNT:
+                model->facenb=*((u16*) ptr);
+                state=DS_READ_FACES;  
+                ptr+=2;
+			    break;
+            case DS_READ_FACES:
+                i=0;
+                listunsigned=ptr;
+                model->facelist=0x00400000;
+                while(i<model->facenb*3)
+                {
+                    model->facelist[i++]=*(listunsigned++);
+                    model->facelist[i++]=*(listunsigned++);
+                    model->facelist[i++]=*(listunsigned++);
+                    listunsigned++;
+                }
+                ptr=listunsigned;                
+                state=DS_READ_CHUNK_ID;  
+			    break;
+            case DS_READ_MATRIX:
+                i=0;
+                listfloat=ptr;
+                while(i<4)
+                {
+                    model->view.V[i].x=*(listfloat++);
+                    model->view.V[i].y=*(listfloat++);
+                    model->view.V[i].z=*(listfloat++);    
+                    model->view.V[i++].w=0.0f;         
+                }
+                model->view.V[3].w=1.0f;
+                ptr=listfloat;       
+                state=DS_READ_CHUNK_ID;       
+			    break;
+            case DS_READ_DONE:
+			    break;
+                
         }
+            
     }
 }
 

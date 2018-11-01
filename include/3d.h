@@ -8,9 +8,9 @@
 typedef struct model3d {
     u8 name[12];
     matrix44 view;
-    vector4 **vertexlist;
+    vector4 *vertexlist;
     u16 vertexnb;
-    u16 **facelist;
+    u16 *facelist;
     u16 facenb;    
 } model3d __attribute__ ((packed));
 
@@ -25,12 +25,28 @@ typedef struct vertex3d {
   };
 } vertex3d __attribute__ ((packed));
 
+
 void proj(vector4 list[], vertex2d plane[], vector4 origin[], u16 number, float factor);
 void cube(vector4 list[], vector4 *origin, u16 size);
-
+int load3ds(u8 *pointer,u32 size, model3d *model);
 
 /*******************************************************************************/
 /* Fichier 3DS */
+
+typedef enum dsState
+{
+	DS_READ_CHUNK_ID,
+	DS_READ_CHUNK_LENGTH,
+	DS_READ_OBJECT_NAME,
+	DS_SKIP_CHUNK,
+	DS_READ_POINT_COUNT,
+	DS_READ_POINTS,
+	DS_READ_FACE_COUNT,
+	DS_READ_FACES,
+    DS_READ_MATRIX,
+	DS_READ_DONE
+} dsState  __attribute__ ((packed));
+
 
 #define MAIN3DS       0x4D4D
 

@@ -429,7 +429,7 @@ int test3d()
         return 1;
     }
     model3d model;
-    load3ds(&sphere, &model);
+    load3ds(&sphere, sizeof(sphere), &model);
     vector4 list3d[8];
     vertex2d list2d[8];
     matrix44 rotatex,rotatey,rotatez,mrotatex,mrotatey,mrotatez;
