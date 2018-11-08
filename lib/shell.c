@@ -38,6 +38,7 @@ static command commands[] = {
 	{"logo"      , "", &logo},
 	{"font"      , "", &sfont},
 	{"test3d"      , "", &test3d},
+	{"detectpci"      , "", &detectpci},
 };
 
 /*******************************************************************************/
@@ -77,6 +78,12 @@ int test(void)
     return;
 }
 
+/*******************************************************************************/
+/* Affiche les périphériques PCI */
+int detectpci()
+{
+    scanPCI();
+}
 
 /*******************************************************************************/
 /* Change la police courante */
@@ -429,6 +436,8 @@ int test3d()
         print("Mode graphique necessaire afin de lancer ce programme\r\n");
         return 1;
     }
+    line(-100,-50,1800,200,egatorgb(4));
+waitascii();
     model3d model;
     float factor=100.0f;
     type3D type=TYPE3D_POINTS;

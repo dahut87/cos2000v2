@@ -27,3 +27,4 @@ int bpclr(u8* commandline);
 int sfont(u8* commandline);
 int help();
 int logo();
+int detectpci();

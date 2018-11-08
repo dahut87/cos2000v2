@@ -74,8 +74,8 @@ void cube(model3d *model, vector4 *origin, u16 size)
     model->facelist[4].V2=1;
     model->facelist[4].V3=5;
     model->facelist[5].V1=0;
-    model->facelist[5].V2=4;
-    model->facelist[5].V3=5;
+    model->facelist[5].V2=1;
+    model->facelist[5].V3=4;
     model->facelist[6].V1=0;
     model->facelist[6].V2=0;
     model->facelist[6].V3=0;

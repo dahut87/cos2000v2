@@ -660,11 +660,29 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
 /******************************************************************************/
 /* Affiche une ligne horizontale entre les points spécifiés */
 
-void hline(u16 x1, u16 x2, u16 y, u32 color)
+void hline(s16 x1, s16 x2, s16 y, u32 color)
 {
     if (vinfo->isgraphic)
     {
-	    if (x2 > x1)
+        if (x1<0) 
+        {
+            if (x2<0)
+                return;
+            x1=0;
+        }
+        else if (x1>vinfo->currentwidth) 
+            x1=vinfo->currentwidth-1;
+        if (x2<0) 
+            x2=0;
+        else if (x2>vinfo->currentwidth) 
+        {
+            if (x1>vinfo->currentwidth)
+                return;
+            x2=vinfo->currentwidth-1;
+        }
+        if (x1>vinfo->currentwidth) 
+            x1=vinfo->currentwidth-1;
+	    if (x2 > x1) 
             mem_to_video(color,(vinfo->currentdepth>>3)*x1+vinfo->currentpitch*y,x2-x1,false);
         else
             mem_to_video(color,(vinfo->currentdepth>>3)*x2+vinfo->currentpitch*y,x1-x2,false);
@@ -680,12 +698,15 @@ void v_writepxl(vertex2d *A, u32 color)
     writepxl(A->x, A->y, color);
 }
 
-void writepxl(u16 x, u16 y, u32 color)
+void writepxl(s16 x, s16 y, u32 color)
 {
     if (vinfo->isgraphic)
     {
-        u32 addr=(vinfo->currentdepth>>3)*x+vinfo->currentpitch*y;
-        mem_to_video(color,addr,1,false);
+        if (x>0 && y>0 && x<vinfo->currentwidth && y<vinfo->currentheight)
+        {
+            u32 addr=(vinfo->currentdepth>>3)*x+vinfo->currentpitch*y;
+            mem_to_video(color,addr,1,false);
+        }
     }
 }
 
@@ -697,13 +718,79 @@ void v_line(vertex2d *A, vertex2d *B, u32 color)
 	line(A->x, A->y, B->x, B->y, color);
 }
 
-void line(u32 x1, u32 y1, u32 x2, u32 y2, u32 color)
+void line(s16 x1, s16 y1, s16 x2, s16 y2, u32 color)
 {
-	s32 dx, dy, sdx, sdy;
-	u32 i, dxabs, dyabs, x, y, px, py;
+	s16 dx, dy, sdx, sdy;
+    float a, b;
+	s16 i, dxabs, dyabs, x, y, px, py;
 
 	dx = x2 - x1;		/*  distance horizontale de la line */
-	dy = y2 - y1;		/* distance verticale de la line * */
+	dy = y2 - y1;		/* distance verticale de la line */
+
+    if (x1<0)
+    {
+        a = 1.0f * dy / dx;
+        b = y1 - a*x1;
+        x1 = 0;
+        y1 = b;
+        if (x2<0)
+            return;
+    }
+    else if (x2<0)
+    {
+        a = 1.0f * dy / dx;
+        b = y2 - a*x2;
+        x2 = 0;
+        y2 = b;
+    }
+    if (y1<0)
+    {
+        a = 1.0f * dy / dx;
+        b = y1 - a*x1;
+        y1 = 0;
+        x1 = - b / a;
+        if (y2<0)
+            return;
+    }
+    else if (y2<0)
+    {
+        a = 1.0f * dy / dx;
+        b = y2 - a*x2;
+        y2 = 0;
+        x2 = - b / a;
+    }
+    if (x1>vinfo->currentwidth)
+    {
+        a = 1.0f * dy / dx;
+        b = y1 - a*x1;
+        x1 = vinfo->currentwidth-1;
+        y1 = a*x1+b;
+        if (x2>vinfo->currentwidth)
+            return;
+    }
+    else if (x2>vinfo->currentwidth)
+    {
+        a = 1.0f * dy / dx;
+        b = y2 - a*x2;
+        x2 = vinfo->currentwidth-1;
+        y2 = a*x2+b;
+    }
+    if (y1>vinfo->currentheight)
+    {
+        a = 1.0f * dy / dx;
+        b = y1 - a*x1;
+        y1 = vinfo->currentheight-1;
+        x1 = (y1 - b) / a;
+        if (y2>vinfo->currentheight)
+            return;
+    }
+    else if (y2>vinfo->currentheight)
+    {
+        a = 1.0f * dy / dx;
+        b = y2 - a*x2;
+        y2 = vinfo->currentheight-1;
+        x2 = (y2 - b) / a;
+    }
 	dxabs = abs(dx);
 	dyabs = abs(dy);
 	sdx = sgn(dx);

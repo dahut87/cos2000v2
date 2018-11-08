@@ -11,8 +11,8 @@
 #define MAXFONTS   10
 
 typedef struct vertex2d{
-	u16 x;	
-	u16 y;
+	s16 x;	
+	s16 y;
 } vertex2d __attribute__ ((packed));
 
 typedef struct rgbcolor {
@@ -107,9 +107,9 @@ void showchar (u16 coordx, u16 coordy, u8 thechar, u8 attrib);
 u8 getchar (u16 coordx, u16 coordy);
 u8 getattrib (u16 coordx, u16 coordy);
 void v_writepxl (vertex2d *A, u32 color);
-void writepxl (u16 x, u16 y, u32 color);
-void line(u32 x1, u32 y1, u32 x2, u32 y2, u32 color);
-void hline(u16 x1, u16 x2, u16 y, u32 color);
+void writepxl (s16 x, s16 y, u32 color);
+void line(s16 x1, s16 y1, s16 x2, s16 y2, u32 color);
+void hline(s16 x1, s16 x2, s16 y, u32 color);
 void changemode(u8 mode);
 u32 egatorgb(u8 ega);
 u8 egatovga(u8 ega);
