@@ -4,7 +4,7 @@
 #include "types.h"
      
 #ifndef MULTIBOOT
-# define ALLTYMULTIBOOTPES
+#define MULTIBOOT
 
      /*  How many bytes from the start of the file we search for the header. */
      #define MULTIBOOT_SEARCH                        32768
@@ -389,8 +389,12 @@
        u32 load_base_addr;
      };
 
-void getbootinfo(void);
-u32 getblockinfo(void);
+u32 getgrubinfo(u8 type);
+u8 *getgrubinfo_cmdline(void);
+u32 getgrubinfo_ram(void);
+struct multiboot_memory_map_t *getgrubinfo_mem(void);
+struct multiboot_tag_framebuffer *getgrubinfo_fb(void);
+void getgrubinfo_all(void);
 void initmultiboot(const u32 addr);
      
 #endif

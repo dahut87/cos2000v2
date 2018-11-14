@@ -375,7 +375,7 @@ int err(u8* commandline)
 /* Information sur le démarrage */
 int info()
 {
-    getbootinfo();
+    getgrubinfo_all();
     return 0;
 }
 

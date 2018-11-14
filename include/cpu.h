@@ -7,8 +7,8 @@ typedef struct cpuinfo
 {	
 u8 vendor[13];
 u8 names[32];
-u8 detectedname[48];
-u8 techs[48];
+u8 detectedname[256];
+u8 techs[256];
 u8 stepping;
 u8 models;
 u8 family;

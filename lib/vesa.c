@@ -18,45 +18,26 @@ static capabilities vesacapabilities[] = {
 /*******************************************************************************/
 /* Detecte si le hardware est disponible, return NULL ou pointeur sur le type de pilote */
 u8 *VESA_detect_hardware(void) {
-    u32 addr=getblockinfo();
-    struct multiboot_tag *tag;
-    unsigned size = *(unsigned *) addr;
-    for (tag = (struct multiboot_tag *) (addr + 8);
-            tag->type != MULTIBOOT_TAG_TYPE_END;
-            tag = (struct multiboot_tag *) ((u8 *) tag + ((tag->size + 7) & ~7)))
-            {
-           switch (tag->type)
-             {
-             case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
-               {
-                 struct multiboot_tag_framebuffer *tagfb = (struct multiboot_tag_framebuffer *) tag;
-     
-                 switch (tagfb->common.framebuffer_type)
-                   {
-                   case MULTIBOOT_FRAMEBUFFER_TYPE_RGB:
-                     vesacapabilities[0].modenumber=0x0;
-                     vesacapabilities[0].width=tagfb->common.framebuffer_width;
-                     vesacapabilities[0].height=tagfb->common.framebuffer_height;
-                     vesacapabilities[0].graphic=true;
-                     vesacapabilities[0].depth=tagfb->common.framebuffer_bpp;
-                     vesacapabilities[0].refresh=0x0;
-                     infos.baseaddress=tagfb->common.framebuffer_addr;
-                     infos.currentpitch=tagfb->common.framebuffer_pitch;
-                     return "LEGACY";
-                     break;
-
-                    default:
-                   case MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED:
-                   case MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT:
-                     return NULL;
-                     break;
-                   }
-     
-                 break;
-               }
-     
-             }
-        }
+    struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
+    switch (tagfb->common.framebuffer_type)
+    {
+        case MULTIBOOT_FRAMEBUFFER_TYPE_RGB:
+            vesacapabilities[0].modenumber=0x0;
+            vesacapabilities[0].width=tagfb->common.framebuffer_width;
+            vesacapabilities[0].height=tagfb->common.framebuffer_height;
+            vesacapabilities[0].graphic=true;
+            vesacapabilities[0].depth=tagfb->common.framebuffer_bpp;
+            vesacapabilities[0].refresh=0x0;
+            infos.baseaddress=tagfb->common.framebuffer_addr;
+            infos.currentpitch=tagfb->common.framebuffer_pitch;
+            return "LEGACY";
+            break;
+        default:
+        case MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED:
+        case MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT:
+            return NULL;
+            break;
+     }
 }
 
 /*******************************************************************************/

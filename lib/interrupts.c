@@ -758,8 +758,9 @@ void initidt(void)
 
 void inittimer(void)
 {
+    u32 divisor = TIMER_FREQ / HZ;
 	outb(TIMER_MODE, RATE_GENERATOR);
-	outb(TIMER0, (u8) (TIMER_FREQ / HZ));
-	outb(TIMER0, (u8) ((TIMER_FREQ / HZ) >> 8));
+	outb(TIMER0, (u8) divisor);
+	outb(TIMER0, (u8) (divisor >> 8));
 }
 /*******************************************************************************/
