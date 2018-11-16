@@ -3,10 +3,121 @@
 /*                                                                             */
 #include "types.h"
 #include "memory.h"
+#include "multiboot2.h"
 
-u32 *pd0 = (u32 *) KERNEL_PGD_ADDR;	  /* page directory */
-u8 *pg0 = (u8 *) 0;		              /* page 0 */
-u8 *pg1 = (u8 *) (PAGESIZE*PAGENUMBER); /* page 1 */
+static u32 *pd0 = (u32 *) KERNEL_PGD_ADDR;	  /* page directory */
+static u8 *pg0 = (u8 *) 0;		              /* page 0 */
+static u8 *pg1 = (u8 *) (PAGESIZE*PAGENUMBER); /* page 1 */
+static u8 bitmap[MAXMEMPAGE / 8];
+
+/*******************************************************************************/ 
+/* Retourne la taille de la mémoire (selon grub) */ 
+
+u64 getmemorysize()
+{
+    u64 maxaddr=0;
+    struct multiboot_tag_mmap *tag=getgrubinfo_mem();
+    multiboot_memory_map_t *mmap;       
+    for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;(u8 *) mmap < (u8 *) tag + tag->size; mmap = (multiboot_memory_map_t *)
+                        ((unsigned long) mmap + ((struct multiboot_tag_mmap *) tag)->entry_size))
+        if (mmap->addr+mmap->len>maxaddr)
+                maxaddr=mmap->addr+mmap->len;
+    return maxaddr;
+}
+
+/*******************************************************************************/ 
+/* Retourne que la page actuelle est occupée */ 
+
+void bitmap_page_use(page)
+{
+	bitmap[((u32) page)/8] |= (1 << (((u32) page)%8));
+}
+
+/*******************************************************************************/ 
+/* Retourne que la page actuelle est libre */ 
+
+void bitmap_page_free(page)
+{
+	bitmap[((u32) page)/8] &= ~(1 << (((u32) page)%8));
+}
+
+/*******************************************************************************/ 
+/* Reserve un espace mémoire dans le bitmap */ 
+
+void bitmap_page_setused(u64 addr,u64 len)
+{
+    u32 nbpage=TOPAGE(len);
+    u32 pagesrc=TOPAGE(addr);
+    if (len & 0b1111111111 > 0)
+        nbpage++;
+    for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
+        bitmap_page_use(page);
+}
+
+/*******************************************************************************/ 
+/* Indique un espace mémoire libre dans le bitmap */ 
+
+void bitmap_page_setfree(u64 addr,u64 len)
+{
+    u32 nbpage=TOPAGE(len);
+    u32 pagesrc=TOPAGE(addr);
+    if (len & 0b1111111111 > 0)
+        nbpage++;
+    for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
+        bitmap_page_free(page);
+}
+
+/*******************************************************************************/ 
+/* Retourne une page libre */ 
+
+u8* bitmap_page_getonefree(void)
+{
+	u8 byte, bit;
+	u32 page = 0;
+	for (byte = 0; byte < sizeof(bitmap); byte++)
+		if (bitmap[byte] != 0xFF)
+			for (bit = 0; bit < 8; bit++)
+				if (!(bitmap[byte] & (1 << bit))) {
+					page = 8 * byte + bit;
+					bitmap_page_use(page);
+					return (u8 *) (page * PAGESIZE);
+				}
+	return NULL;
+}
+
+/*******************************************************************************/ 
+/* Retourne l'espace libre */ 
+
+u64 getmemoryfree(void)
+{
+	u32 byte, bit;
+	u64 free = 0;
+	for (byte = 0; byte < sizeof(bitmap); byte++)
+		if (bitmap[byte] != 0xFF)
+			for (bit = 0; bit < 8; bit++)
+				if (!(bitmap[byte] & (1 << bit)))
+					free+=PAGESIZE;
+	return free;
+}
+
+/*******************************************************************************/ 
+/* Initialisation du bitmap */
+ 
+void bitmap_init()
+{
+    u64 page;
+	for (page=0; page < sizeof(bitmap); page++)
+		bitmap[page] = 0xFF;
+    struct multiboot_tag_mmap *tag=getgrubinfo_mem();
+    multiboot_memory_map_t *mmap;       
+    for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;(u8 *) mmap < (u8 *) tag + tag->size; mmap = (multiboot_memory_map_t *)
+                        ((unsigned long) mmap + ((struct multiboot_tag_mmap *) tag)->entry_size))
+        if (mmap->type==1) 
+            bitmap_page_setfree(mmap->addr,mmap->len);
+        else
+            bitmap_page_setused(mmap->addr,mmap->len);
+    bitmap_page_setused(0x0,KERNELSIZE);
+}
 
 /*******************************************************************************/ 
 /* Initialisation de la mémoire paginée */ 

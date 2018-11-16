@@ -3,14 +3,22 @@
 /*                                                                             */
 #include "types.h"
 
+#define TOPAGE(addr)	  (addr) >> 12
+
+
 #define	PAGESIZE 	4096 /* Taille d'une page */
 #define	PAGENUMBER 	1024 /* Nombre de pages */
+#define KERNELSIZE  PAGESIZE*PAGENUMBER*2 /* 2 pages de 4mo en identity mapping */
 
 #define IDT_ADDR		  0x00000000	/* adresse de la IDT */
 #define GDT_ADDR		  0x00000800	/* adresse de la GDT */
 #define	KERNEL_PGD_ADDR	  0x00001000    /* adresse de la page directory */
 #define	KERNEL_STACK_ADDR 0x0009FFFF    /* adresse de la pile du kernel */
 #define	KERNEL_CODE_ADDR  0x00100000
+
+/* limites de la mémoire 32 bits */
+#define	MAXMEMSIZE	0x100000000
+#define	MAXMEMPAGE	1024*1024
 
 /* page directory */
 #define PAGE_PRESENT	0b000000001/* page directory / table */

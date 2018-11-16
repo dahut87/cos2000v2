@@ -1183,7 +1183,7 @@ u32 format(const u8 * string, va_list args, u32 maxsize, u32 (*fonction)(u8* src
 				bufferend=sitoa(num, &buffer, sizes[asize]);
                 buffersize=bufferend-&buffer[0];
 				counter += fonction(&buffer,&dest,buffersize);
-				counter += fonction(units[unit],&dest,3);
+				counter += fonction(&units[unit],&dest,3);
 				flag = false;
 				break;
 			case 'd':

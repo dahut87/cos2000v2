@@ -69,6 +69,7 @@ int main(u32 magic, u32 addr)
 	ok();
 
     print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
+    bitmap_init();
 	//initpaging();
 	ok();
 

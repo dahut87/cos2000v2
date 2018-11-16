@@ -79,13 +79,13 @@ qemu-debug:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &)
 
 qemu-debug64:
-	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &)
+	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &)
 
 qemu:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &)  
 
 qemu64:
-	(killall qemu-system-x86_64;qemu-system-x86_64 -m 1G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
+	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
 
 qemu-floppy:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -fda ./final/floppy.img.final --enable-kvm -cpu host -s &)  

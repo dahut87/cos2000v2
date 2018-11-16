@@ -48,9 +48,9 @@ u32 getgrubinfo_ram(void)
 /*******************************************************************************/
 /* Renvoie le plan de la mémoire */
 
-struct multiboot_memory_map_t *getgrubinfo_mem(void)
+struct multiboot_tag_mmap *getgrubinfo_mem(void)
 {
-    struct multiboot_memory_map_t *tag=getgrubinfo(MULTIBOOT_TAG_TYPE_MMAP);
+    struct multiboot_tag_mmap *tag=getgrubinfo(MULTIBOOT_TAG_TYPE_MMAP);
     return tag;
 }
 
