@@ -50,6 +50,10 @@ void bitmap_page_setused(u64 addr,u64 len)
     u32 pagesrc=TOPAGE(addr);
     if (len & 0b1111111111 > 0)
         nbpage++;
+    if (addr>0xFFFFFFFF)
+	return;
+    if (len>0xFFFFFFFF)
+	len=0xFFFFFFFF;
     for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
         bitmap_page_use(page);
 }
@@ -62,7 +66,11 @@ void bitmap_page_setfree(u64 addr,u64 len)
     u32 nbpage=TOPAGE(len);
     u32 pagesrc=TOPAGE(addr);
     if (len & 0b1111111111 > 0)
-        nbpage++;
+        nbpage++; 
+    if (addr>0xFFFFFFFF)
+	return;
+    if (len>0xFFFFFFFF)
+	len=0xFFFFFFFF;
     for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
         bitmap_page_free(page);
 }
