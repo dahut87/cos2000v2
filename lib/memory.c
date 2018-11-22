@@ -4,16 +4,87 @@
 #include "types.h"
 #include "memory.h"
 #include "multiboot2.h"
+#include "queue.h"
+#include "asm.h"
 
-static u32 *pd0 = (u32 *) KERNEL_PGD_ADDR;	  /* page directory */
-static u8 *pg0 = (u8 *) 0;		              /* page 0 */
-static u8 *pg1 = (u8 *) (PAGESIZE*PAGENUMBER); /* page 1 */
-static u8 bitmap[MAXMEMPAGE / 8];
+static pd *kerneldirectory=NULL;	/* pointeur vers le page directory noyau */
+static u8 *kernelheap=NULL; 		/* pointeur vers le heap noyau */
+static u8 bitmap[MAXMEMPAGE / 8]; 	/* bitmap */
+static vrange_t freepages;
 
 /*******************************************************************************/ 
-/* Retourne la taille de la mémoire (selon grub) */ 
+/* Erreur fatale */ 
+void panic(u8 *string)
+{
+	printf("KERNEL PANIC: %s\r\nSysteme arrete...\n");
+	halt();
+}
 
-u64 getmemorysize()
+/*******************************************************************************/ 
+/* Alloue plusieurs pages virtuelles (size) pour le heap du noyau */ 
+
+tmalloc *mallocpage(u8 size)
+{
+	tmalloc *chunk;
+	u8 *paddr;
+	u32 realsize=size * PAGESIZE;
+	if ((kernelheap - KERNEL_HEAP + realsize) > MAXHEAPSIZE)
+		panic("Plus de memoire noyau heap disponible a allouer !\n");
+	chunk = (tmalloc *) kernelheap;
+ 	virtual_range_new_kernel(kernelheap, realsize);
+	chunk->size = realsize;
+	chunk->used = 0;
+	return chunk;
+}
+
+/*******************************************************************************/ 
+/* Alloue de la mémoire virtuelle au noyau de façon dynamique (heap) */ 
+
+void *vmalloc(u32 size)
+{
+	u32 realsize;	
+	tmalloc *chunk, *new;
+	realsize = sizeof(tmalloc) + size;
+	if (realsize < MALLOC_MINIMUM)
+		realsize = MALLOC_MINIMUM;
+	chunk = KERNEL_HEAP;
+	while (chunk->used || chunk->size < realsize) {
+		if (chunk->size == 0)
+			panic(sprintf("Element du heap %x defectueux avec une taille nulle (heap %x) !",chunk, kernelheap));
+		chunk = chunk + chunk->size;
+		if (chunk == (tmalloc *) kernelheap)
+			mallocpage((realsize / PAGESIZE) + 1);
+		else if (chunk > (tmalloc *) kernelheap)
+			panic (sprintf("Element du heap %x depassant la limite %x !",chunk, kernelheap));
+	}
+	if (chunk->size - realsize < MALLOC_MINIMUM)
+		chunk->used = 1;
+	else {
+		new = chunk + realsize;
+		new->size = chunk->size - realsize;
+		new->used = 0;
+		chunk->size = realsize;
+		chunk->used = 1;
+	}
+	return (u8 *) chunk + sizeof(tmalloc);
+}
+
+/*******************************************************************************/ 
+/* Libère de la mémoire virtuelle depuis le heap noyau */ 
+
+void vmfree(void *vaddr)
+{
+	tmalloc *chunk, *new;
+	chunk = (tmalloc *) (vaddr - sizeof(tmalloc));
+	chunk->used = 0;
+	while ((new = (tmalloc *) chunk + chunk->size) && new < (tmalloc *) kernelheap && new->used == 0)
+		chunk->size += new->size;
+}
+
+/*******************************************************************************/ 
+/* Retourne la taille de la mémoire physique (selon grub) */ 
+
+u64 physical_getmemorysize()
 {
     u64 maxaddr=0;
     struct multiboot_tag_mmap *tag=getgrubinfo_mem();
@@ -26,59 +97,59 @@ u64 getmemorysize()
 }
 
 /*******************************************************************************/ 
-/* Retourne que la page actuelle est occupée */ 
+/* Retourne que la page physique actuelle est occupée */ 
 
-void bitmap_page_use(page)
+void physical_page_use(u32 page)
 {
-	bitmap[((u32) page)/8] |= (1 << (((u32) page)%8));
+	bitmap[(page/8)] |= (1 << (page%8));
 }
 
 /*******************************************************************************/ 
-/* Retourne que la page actuelle est libre */ 
+/* Retourne que la page physique actuelle est libre */ 
 
-void bitmap_page_free(page)
+void physical_page_free(u32 page)
 {
-	bitmap[((u32) page)/8] &= ~(1 << (((u32) page)%8));
+	bitmap[(page/8)] &= ~(1 << (page%8));
 }
 
 /*******************************************************************************/ 
-/* Reserve un espace mémoire dans le bitmap */ 
+/* Reserve un espace mémoire physique dans le bitmap */ 
 
-void bitmap_page_setused(u64 addr,u64 len)
+void physical_range_use(u64 addr,u64 len)
 {
     u32 nbpage=TOPAGE(len);
     u32 pagesrc=TOPAGE(addr);
     if (len & 0b1111111111 > 0)
         nbpage++;
-    if (addr>0xFFFFFFFF)
+    if (addr>=MAXMEMSIZE)
 	return;
-    if (len>0xFFFFFFFF)
-	len=0xFFFFFFFF;
+    if (addr+len>=MAXMEMSIZE)
+	len=MAXMEMSIZE-addr-1;
     for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
-        bitmap_page_use(page);
+        physical_page_use(page);
 }
 
 /*******************************************************************************/ 
-/* Indique un espace mémoire libre dans le bitmap */ 
+/* Libère un espace mémoire physique dans le bitmap */ 
 
-void bitmap_page_setfree(u64 addr,u64 len)
+void physical_range_free(u64 addr,u64 len)
 {
     u32 nbpage=TOPAGE(len);
     u32 pagesrc=TOPAGE(addr);
     if (len & 0b1111111111 > 0)
         nbpage++; 
-    if (addr>0xFFFFFFFF)
+    if (addr>=MAXMEMSIZE)
 	return;
-    if (len>0xFFFFFFFF)
-	len=0xFFFFFFFF;
+    if (addr+len>=MAXMEMSIZE)
+	len=MAXMEMSIZE-addr-1;
     for(u32 page=pagesrc;page<pagesrc+nbpage;page++)
-        bitmap_page_free(page);
+        physical_page_free(page);
 }
 
 /*******************************************************************************/ 
-/* Retourne une page libre */ 
+/* Retourne une page physique libre */ 
 
-u8* bitmap_page_getonefree(void)
+u8* physical_page_getfree(void)
 {
 	u8 byte, bit;
 	u32 page = 0;
@@ -87,7 +158,7 @@ u8* bitmap_page_getonefree(void)
 			for (bit = 0; bit < 8; bit++)
 				if (!(bitmap[byte] & (1 << bit))) {
 					page = 8 * byte + bit;
-					bitmap_page_use(page);
+					physical_page_use(page);
 					return (u8 *) (page * PAGESIZE);
 				}
 	return NULL;
@@ -109,9 +180,9 @@ u64 getmemoryfree(void)
 }
 
 /*******************************************************************************/ 
-/* Initialisation du bitmap */
+/* Initialisation du bitmap pour la gestion physique de la mémoire */
  
-void bitmap_init()
+void physical_init(void)
 {
     u64 page;
 	for (page=0; page < sizeof(bitmap); page++)
@@ -121,10 +192,76 @@ void bitmap_init()
     for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;(u8 *) mmap < (u8 *) tag + tag->size; mmap = (multiboot_memory_map_t *)
                         ((unsigned long) mmap + ((struct multiboot_tag_mmap *) tag)->entry_size))
         if (mmap->type==1) 
-            bitmap_page_setfree(mmap->addr,mmap->len);
+            physical_range_free(mmap->addr,mmap->len);
         else
-            bitmap_page_setused(mmap->addr,mmap->len);
-    bitmap_page_setused(0x0,KERNELSIZE);
+            physical_range_use(mmap->addr,mmap->len);
+    //physical_range_use(0x0,KERNELSIZE);
+}
+/*******************************************************************************/ 
+/* Allocation de page virtuelle de mémoire */
+page *virtual_page_getfree(void)
+{
+	page *pg;
+	vrange *vpages;
+	u8 *vaddr, *paddr;
+	paddr = physical_page_getfree();
+	if (paddr == NULL) 
+		panic ("Plus de memoire physique disponible !\n");
+	if (TAILQ_EMPTY(&freepages)
+		panic ("Plus de place disponible dans la reserve de page !\n");
+	vpages = TAILQ_FIRST(&freepages);
+	vaddr = vpages->vaddrlow;
+	vpages->vaddrlow += PAGESIZE;
+	if (pages->vaddrlow == pages->vaddrhigh) {
+		TAILQ_REMOVE(&freepages, vpages, tailq);
+		vfree(vpages);
+	}
+	pd0_add_page(v_addr, p_addr, 0);*/
+	virtual_pd_page_add(pd,vaddr,paddr, 0)
+	pg = (page*) vmalloc(sizeof(page));
+	pg->vaddr = vaddr;
+	pg->paddr = paddr;
+	return pg;
+}
+
+/*******************************************************************************/ 
+/* Création d'un directory pour la gestion virtuelle de la mémoire */
+ 
+pd *virtual_pd_create()
+{
+	pd *new;
+	u32 *pdir,pd0;
+	u32 i;
+	pd = (pd *) vmalloc(sizeof(pd));
+	pd->addr = virtual_page_getfree();
+	if (kerneldirectory!=NULL)
+	{
+		pdir = (u32 *) pd->base->vaddr;
+		pd0 = (u32 *) kerneldirectory->base->vaddr;
+		for (i = 0; i < 256; i++)
+			pdir[i] = pd0[i];
+		for (i = 256; i < 1023; i++)
+			pdir[i] = 0;
+		pdir[1023] = ((u32) pd->base->p_addr | (PG_PRESENT | PG_WRITE));
+	}	
+	TAILQ_INIT(&pd->addr);
+	return pd;
+}
+}
+
+/*******************************************************************************/ 
+/* Initialisation d'une STAILQ pour la gestion virtuelle de la mémoire */
+ 
+void virtual_init(void)
+{
+	kernelheap = (u8 *) KERNEL_HEAP;
+	vrange *vpages = (vrange*) vmalloc(sizeof(vrange));
+	vpages->vaddrlow = (u8 *) KERNEL_HEAP;
+	vpages->vaddrhigh = (u8 *) KERNEL_HEAP+MAXHEAPSIZE;
+	TAILQ_INIT(&freepages);
+        TAILQ_INSERT_TAIL(&freepages, vpages, tailq);
+	kerneldirectory=virtual_pd_create();
+ 	virtual_range_use_kernel(0x00000000, 0x00000000, KERNELSIZE);
 }
 
 /*******************************************************************************/ 
@@ -132,22 +269,16 @@ void bitmap_init()
 
 void initpaging(void) 
 {
-    u16 i;
-    pd0[0] = ((u32) pg0 | (PAGE_PRESENT | PAGE_WRITE | PAGE_4MB));
-	pd0[1] = ((u32) pg1 | (PAGE_PRESENT | PAGE_WRITE | PAGE_4MB));
-	for (i = 2; i < 1023; i++)
-		pd0[i] = ((u32) pg1 + PAGESIZE * i) | (PAGE_PRESENT | PAGE_WRITE);
-
-	pd0[1023] = ((u32) pd0 | (PAGE_PRESENT | PAGE_WRITE));
-
-	asm("mov %[pd0_addr], %%eax \n \
+	physical_init();
+	virtual_init();
+    asm("mov %[directory_addr], %%eax \n \
         mov %%eax, %%cr3 \n \
         mov %%cr4, %%eax \n \
 		or $0x00000010, %%eax \n \
         mov %%eax, %%cr4 \n \
         mov %%cr0, %%eax \n \
 		or $0x80000001, %%eax \n \
-        mov %%eax, %%cr0"::[pd0_addr]"m"(pd0));
+        mov %%eax, %%cr0"::[directory_addr]"m"(kerneldirectory->addr));
 }
 
 /*******************************************************************************/ 

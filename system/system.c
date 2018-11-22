@@ -46,11 +46,11 @@ int main(u32 magic, u32 addr)
 {
 	cli();
 	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC) initmultiboot(addr);
-    initdriver();
-    registerdriver(&vgafonctions);
-    registerdriver(&vesafonctions);
-    apply_bestdriver();
-    changemode(0x1);
+	initdriver();
+	registerdriver(&vgafonctions);
+	registerdriver(&vesafonctions);
+	apply_bestdriver();
+	changemode(0x1);
 
 	/*  Efface l'ecran   */
 	print("\033[2J\r\n\000");
@@ -68,9 +68,8 @@ int main(u32 magic, u32 addr)
 	inittr();
 	ok();
 
-    print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
-    bitmap_init();
-	//initpaging();
+	print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
+	initpaging();
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
@@ -103,6 +102,6 @@ int main(u32 magic, u32 addr)
 	ok();
   
 retry:
-    sti();
+	sti();
 	shell();
 }
