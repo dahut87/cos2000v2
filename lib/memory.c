@@ -72,7 +72,7 @@ void *vmalloc(u32 size)
 /*******************************************************************************/ 
 /* Libère de la mémoire virtuelle depuis le heap noyau */ 
 
-void vmfree(void *vaddr)
+void vfree(void *vaddr)
 {
 	tmalloc *chunk, *new;
 	chunk = (tmalloc *) (vaddr - sizeof(tmalloc));
@@ -207,17 +207,16 @@ page *virtual_page_getfree(void)
 	paddr = physical_page_getfree();
 	if (paddr == NULL) 
 		panic ("Plus de memoire physique disponible !\n");
-	if (TAILQ_EMPTY(&freepages)
-		panic ("Plus de place disponible dans la reserve de page !\n");
+	if (TAILQ_EMPTY(&freepages))
+		panic("Plus de place disponible dans la reserve de page !\n");
 	vpages = TAILQ_FIRST(&freepages);
 	vaddr = vpages->vaddrlow;
 	vpages->vaddrlow += PAGESIZE;
-	if (pages->vaddrlow == pages->vaddrhigh) {
+	if (vpages->vaddrlow == vpages->vaddrhigh) {
 		TAILQ_REMOVE(&freepages, vpages, tailq);
 		vfree(vpages);
 	}
-	pd0_add_page(v_addr, p_addr, 0);*/
-	virtual_pd_page_add(pd,vaddr,paddr, 0)
+	virtual_pd_page_add(kerneldirectory,vaddr,paddr, 0);
 	pg = (page*) vmalloc(sizeof(page));
 	pg->vaddr = vaddr;
 	pg->paddr = paddr;
@@ -230,23 +229,39 @@ page *virtual_page_getfree(void)
 pd *virtual_pd_create()
 {
 	pd *new;
-	u32 *pdir,pd0;
+	u32 *pdir,*pd0;
 	u32 i;
-	pd = (pd *) vmalloc(sizeof(pd));
-	pd->addr = virtual_page_getfree();
+	new = (pd *) vmalloc(sizeof(pd));
+	new->addr = virtual_page_getfree();
 	if (kerneldirectory!=NULL)
 	{
-		pdir = (u32 *) pd->base->vaddr;
-		pd0 = (u32 *) kerneldirectory->base->vaddr;
+		pdir = (u32 *) new->addr->vaddr;
+		pd0 = (u32 *) kerneldirectory->addr->vaddr;
 		for (i = 0; i < 256; i++)
 			pdir[i] = pd0[i];
 		for (i = 256; i < 1023; i++)
 			pdir[i] = 0;
-		pdir[1023] = ((u32) pd->base->p_addr | (PG_PRESENT | PG_WRITE));
+		pdir[1023] = ((u32) new->addr->paddr | (PAGE_PRESENT | PAGE_WRITE));
 	}	
-	TAILQ_INIT(&pd->addr);
-	return pd;
+	//TAILQ_INIT(&new->addr);
+	return new;
 }
+
+/*******************************************************************************/ 
+/* Destruction d'un directory pour la gestion virtuelle de la mémoire */
+
+void pd_destroy(pd *dst)
+{
+	page *pg;
+	list_for_each_safe(p, n, &pd->pt) {
+		pg = list_entry(p, struct page, list);
+		release_page_from_heap(pg->vaddr);
+		list_del(p);
+		vfree(pg);
+	}
+	release_page_from_heap(dst->add->vaddr);
+	vfree(dst);
+	return 0;
 }
 
 /*******************************************************************************/ 
