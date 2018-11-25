@@ -10,7 +10,7 @@
 static pd *kerneldirectory=NULL;	/* pointeur vers le page directory noyau */
 static u8 *kernelheap=NULL; 		/* pointeur vers le heap noyau */
 static u8 bitmap[MAXMEMPAGE / 8]; 	/* bitmap */
-static vrange_t freepages;
+static vrange_t vrange_head;
 
 /*******************************************************************************/ 
 /* Erreur fatale */ 
@@ -199,6 +199,7 @@ void physical_init(void)
 }
 /*******************************************************************************/ 
 /* Allocation de page virtuelle de mémoire */
+
 page *virtual_page_getfree(void)
 {
 	page *pg;
@@ -207,13 +208,13 @@ page *virtual_page_getfree(void)
 	paddr = physical_page_getfree();
 	if (paddr == NULL) 
 		panic ("Plus de memoire physique disponible !\n");
-	if (TAILQ_EMPTY(&freepages))
+	if (TAILQ_EMPTY(&vrange_head))
 		panic("Plus de place disponible dans la reserve de page !\n");
-	vpages = TAILQ_FIRST(&freepages);
+	vpages = TAILQ_FIRST(&vrange_head);
 	vaddr = vpages->vaddrlow;
 	vpages->vaddrlow += PAGESIZE;
 	if (vpages->vaddrlow == vpages->vaddrhigh) {
-		TAILQ_REMOVE(&freepages, vpages, tailq);
+		TAILQ_REMOVE(&vrange_head, vpages, tailq);
 		vfree(vpages);
 	}
 	virtual_pd_page_add(kerneldirectory,vaddr,paddr, 0);
@@ -243,23 +244,81 @@ pd *virtual_pd_create()
 			pdir[i] = 0;
 		pdir[1023] = ((u32) new->addr->paddr | (PAGE_PRESENT | PAGE_WRITE));
 	}	
-	//TAILQ_INIT(&new->addr);
+	TAILQ_INIT(&new->page_head);
 	return new;
+}
+
+/*******************************************************************************/ 
+/* Renvoie l'adresse physique de la page virtuel */
+
+u8* virtual_to_physical(u8 *vaddr)
+{
+	u32 *pdir;	
+	u32 *ptable;
+
+	pdir = (u32 *) (0xFFFFF000 | (((u32) vaddr & 0xFFC00000) >> 20));
+	if ((*pdir & PAGE_PRESENT)) {
+		ptable = (u32 *) (0xFFC00000 | (((u32) vaddr & 0xFFFFF000) >> 10));
+		if ((*ptable & PAGE_PRESENT))
+			return (u8 *) ((*ptable & 0xFFFFF000) + (TOPG((u32) vaddr)));
+	}
+	return 0;
+}
+
+/*******************************************************************************/ 
+/* Libère une page virtuelle de la mémoire */
+
+void virtual_page_free(u8* vaddr)
+{
+	vrange *next, *prev, *new;
+	u8 *paddr;
+	paddr = virtual_to_physical(vaddr);
+	if (paddr)
+		virtual_page_free(paddr);
+	else {
+		printf("Aucune page associee a l'adresse virtuelle %x\n", vaddr);
+		return;
+	}
+	virtual_pd_page_remove(vaddr);
+	TAILQ_FOREACH(next, &vrange_head, tailq) {
+		if (next->vaddrlow > vaddr)
+			break;
+	}
+	prev = TAILQ_PREV(next, vrange_s, tailq);                
+	if (prev->vaddrhigh == vaddr) {
+		prev->vaddrhigh += PAGESIZE;
+		if (prev->vaddrhigh == next->vaddrlow) {
+			prev->vaddrhigh = next->vaddrhigh;
+			TAILQ_REMOVE(&vrange_head, next, tailq);
+			vfree(next);
+		}
+	}
+	else if (next->vaddrlow == vaddr + PAGESIZE) {
+		next->vaddrlow = vaddr;
+	}
+	else if (next->vaddrlow > vaddr + PAGESIZE) {
+		new = (vrange*) vmalloc(sizeof(vrange));
+		new->vaddrlow = vaddr;
+		new->vaddrhigh = vaddr + PAGESIZE;
+		TAILQ_INSERT_BEFORE(prev, new, tailq);
+	}
+	else
+		panic("Liste chainee corrompue !\n");
+	return 0;
 }
 
 /*******************************************************************************/ 
 /* Destruction d'un directory pour la gestion virtuelle de la mémoire */
 
-void pd_destroy(pd *dst)
+void virtual_pd_destroy(pd *dst)
 {
 	page *pg;
-	list_for_each_safe(p, n, &pd->pt) {
-		pg = list_entry(p, struct page, list);
-		release_page_from_heap(pg->vaddr);
-		list_del(p);
+	TAILQ_FOREACH(pg, &dst->page_head, tailq) {
+		virtual_page_free(pg->vaddr);
+		TAILQ_REMOVE(&dst->page_head, pg, tailq);
 		vfree(pg);
 	}
-	release_page_from_heap(dst->add->vaddr);
+	virtual_page_free(dst->addr->vaddr);
 	vfree(dst);
 	return 0;
 }
@@ -273,8 +332,8 @@ void virtual_init(void)
 	vrange *vpages = (vrange*) vmalloc(sizeof(vrange));
 	vpages->vaddrlow = (u8 *) KERNEL_HEAP;
 	vpages->vaddrhigh = (u8 *) KERNEL_HEAP+MAXHEAPSIZE;
-	TAILQ_INIT(&freepages);
-        TAILQ_INSERT_TAIL(&freepages, vpages, tailq);
+	TAILQ_INIT(&vrange_head);
+        TAILQ_INSERT_TAIL(&vrange_head, vpages, tailq);
 	kerneldirectory=virtual_pd_create();
  	virtual_range_use_kernel(0x00000000, 0x00000000, KERNELSIZE);
 }

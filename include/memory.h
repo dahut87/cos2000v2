@@ -5,7 +5,9 @@
 #include "queue.h"
 
 #define TOPAGE(addr)	  (addr) >> 12
-
+#define	TOPD(addr)	((addr) & 0xFFC00000) >> 22
+#define	TOPT(addr)	((addr) & 0x003FF000) >> 12
+#define	TOPG(addr)	(addr) & 0x00000FFF
 
 #define	PAGESIZE 	4096 /* Taille d'une page */
 #define	PAGENUMBER 	1024 /* Nombre de pages */
@@ -61,10 +63,8 @@ typedef TAILQ_HEAD(page_s, page) page_t;
 /* Page directory, pour la gestion de la mémoire virtuelle */
 typedef struct pd {
 	page *addr;
-	TAILQ_ENTRY(pd) tailq;
+	page_t page_head;
 } __attribute__ ((packed))  pd;
-
-typedef TAILQ_HEAD(pd_s, pd) pd_t;
 
 /* vaddrrange, pour la gestion des pages de la mémoire virtuelle */
 typedef struct vrange {
@@ -99,9 +99,7 @@ pd *virtual_pd_create();
 Fonction à ajouter...pour gestion mémoire virtuelle
 u8* virtual_to_physical(u8 *vaddr)
 
-pd *virtual_pd_create(void)
 
-void virtual_pd_destroy(pd *dst)
 
 void virtual_pd_page_remove(pd *dst, u8* vaddr)
 
@@ -115,9 +113,9 @@ void virtual_range_new(pd *dst, u8 vaddr, u8 len)
 
 page *virtual_page_getfree(void)
 
-void virtual_page_free(u8* vaddr)
+void virtual_page_free(pd *dst, u8* vaddr)
 
-void virtual_page_use(u8* vaddr)
+void virtual_page_use(pd *dst, u8* vaddr)
 
 void virtual_init(void)
 
