@@ -7,7 +7,6 @@
 #include "queue.h"
 #include "asm.h"
 
-static pd *kerneldirectory=NULL;	/* pointeur vers le page directory noyau */
 static u8 *kernelheap=NULL; 		/* pointeur vers le heap noyau */
 static u8 bitmap[MAXMEMPAGE / 8]; 	/* bitmap */
 static vrange_t vrange_head;
@@ -47,7 +46,7 @@ void *vmalloc(u32 size)
 	realsize = sizeof(tmalloc) + size;
 	if (realsize < MALLOC_MINIMUM)
 		realsize = MALLOC_MINIMUM;
-	chunk = KERNEL_HEAP;
+	chunk = kernelheap;
 	while (chunk->used || chunk->size < realsize) {
 		if (chunk->size == 0)
 			panic(sprintf("Element du heap %x defectueux avec une taille nulle (heap %x) !",chunk, kernelheap));
@@ -151,7 +150,8 @@ void physical_range_free(u64 addr,u64 len)
 
 u8* physical_page_getfree(void)
 {
-	u8 byte, bit;
+	u32 byte;
+	u8 bit;
 	u32 page = 0;
 	for (byte = 0; byte < sizeof(bitmap); byte++)
 		if (bitmap[byte] != 0xFF)
@@ -195,10 +195,11 @@ void physical_init(void)
             physical_range_free(mmap->addr,mmap->len);
         else
             physical_range_use(mmap->addr,mmap->len);
-    //physical_range_use(0x0,KERNELSIZE);
+    physical_range_use(0x0,KERNELSIZE);
 }
+
 /*******************************************************************************/ 
-/* Allocation de page virtuelle de mémoire */
+/* Retourne une page virtuelle de mémoire */
 
 page *virtual_page_getfree(void)
 {
@@ -217,7 +218,7 @@ page *virtual_page_getfree(void)
 		TAILQ_REMOVE(&vrange_head, vpages, tailq);
 		vfree(vpages);
 	}
-	virtual_pd_page_add(kerneldirectory,vaddr,paddr, 0);
+	virtual_pd_page_add(NULL,vaddr,paddr, 0);
 	pg = (page*) vmalloc(sizeof(page));
 	pg->vaddr = vaddr;
 	pg->paddr = paddr;
@@ -234,18 +235,61 @@ pd *virtual_pd_create()
 	u32 i;
 	new = (pd *) vmalloc(sizeof(pd));
 	new->addr = virtual_page_getfree();
-	if (kerneldirectory!=NULL)
-	{
-		pdir = (u32 *) new->addr->vaddr;
-		pd0 = (u32 *) kerneldirectory->addr->vaddr;
-		for (i = 0; i < 256; i++)
-			pdir[i] = pd0[i];
-		for (i = 256; i < 1023; i++)
-			pdir[i] = 0;
-		pdir[1023] = ((u32) new->addr->paddr | (PAGE_PRESENT | PAGE_WRITE));
-	}	
+	pdir = (u32 *) new->addr->vaddr;
+	pd0 = (u32 *) KERNEL_PD_ADDR;
+	for (i = 0; i < 256; i++)
+		pdir[i] = pd0[i];
+	for (i = 256; i < 1023; i++)
+		pdir[i] = 0;
+	pdir[1023] = ((u32) new->addr->paddr | (PAGE_PRESENT | PAGE_WRITE));
 	TAILQ_INIT(&new->page_head);
 	return new;
+}
+
+/*******************************************************************************/ 
+/* Attache une page virtuelle de la mémoire dans le directory spécifié */
+
+void virtual_pd_page_add(pd *dst, u8* vaddr, u8 * paddr, u32 flags)
+{
+	u32 *pdir;	
+	u32 *ptable;
+	u32 *pt;
+	page *pg;
+	int i;
+	if (dst==NULL)
+		if (vaddr > (u8 *) USER_CODE) {
+		print("ERREUR: Adresse %X n'est pas dans l'espace noyau !\n", vaddr);
+		return ;
+	}
+	pdir = (u32 *) (0xFFFFF000 | (((u32) vaddr & 0xFFC00000) >> 20));
+	if ((*pdir & PAGE_PRESENT) == 0) {
+		if (dst==NULL)
+			panic(sprintf("Page table introuvable pour l'adresse %x !\r\n", vaddr));
+		pg = virtual_page_getfree();
+		pt = (u32 *) pg->vaddr;
+		for (i = 1; i < 1024; i++)
+			pt[i] = 0;
+		*pdir = (u32) pg->paddr | (PAGE_PRESENT | PAGE_WRITE | flags);
+		if (dst) 
+ 			TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+	}
+	ptable = (u32 *) (0xFFC00000 | (((u32) vaddr & 0xFFFFF000) >> 10));
+	*ptable = ((u32) paddr) | (PAGE_PRESENT | PAGE_WRITE | flags);
+	return;
+}
+
+/*******************************************************************************/ 
+/* Retire une page virtuelle de la mémoire dans le directory spécifié */
+
+void virtual_pd_page_remove(u8* vaddr)
+{
+	u32 *ptable;
+	if (virtual_to_physical(vaddr)) {
+		ptable = (u32 *) (0xFFC00000 | (((u32) vaddr & 0xFFFFF000) >> 10));
+		*ptable = (*ptable & (~PAGE_PRESENT));
+		asm("invlpg %0"::"m"(vaddr));
+	}
+	return;
 }
 
 /*******************************************************************************/ 
@@ -266,15 +310,89 @@ u8* virtual_to_physical(u8 *vaddr)
 }
 
 /*******************************************************************************/ 
+/* Détermine une plage virtuelle de mémoire comme étant mappé aux adresses physiques spécifiées GENERIQUE*/
+void virtual_range_use(pd *dst, u8 *vaddr, u8 *paddr, u64 len, u32 flags)
+{
+	u64 i;
+	u32 realen=len/PAGESIZE;
+	page *pg;
+	if (len%PAGESIZE!=0) realen++;
+	for(i=0;i<realen;i++)
+	{
+		pg = (page *) vmalloc(sizeof(page));
+		pg->paddr = paddr+i*PAGESIZE; 
+		pg->vaddr = vaddr+i*PAGESIZE;
+		TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
+	}
+}
+
+/*******************************************************************************/ 
+/* Supprime une plage virtuelle de mémoire GENERIQUE */
+void virtual_range_free(pd *dst, u8 *vaddr, u64 len)
+{
+	u64 i;
+	u32 realen=len/PAGESIZE;
+	if (len%PAGESIZE!=0) realen++;
+	for(i=0;i<realen;i++)
+	{
+		virtual_pd_page_remove(vaddr+i*PAGESIZE);
+		virtual_page_free(vaddr);
+	}
+}
+
+/*******************************************************************************/ 
+/* Détermine une plage virtuelle de mémoire en attribuant de la mémoire physique GENERIQUE */
+void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags)
+{
+	u64 i;
+	u32 realen=len/PAGESIZE;
+	page *pg;
+	if (len%PAGESIZE!=0) realen++;
+	for(i=0;i<realen;i++)
+	{
+		pg = (page *) vmalloc(sizeof(page));
+		pg->paddr = physical_page_getfree(); 
+		pg->vaddr = (u8 *) (vaddr+i*PAGESIZE);
+		TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
+	}
+}
+
+/*******************************************************************************/ 
+/* Détermine une plage virtuelle de mémoire comme étant mappé aux adresses physiques spécifiées pour le noyau*/
+
+void virtual_range_use_kernel(u8 *vaddr, u8 *paddr, u64 *len, u32 flags)
+{
+	virtual_range_use(NULL, vaddr, paddr, len, flags);
+}
+
+/*******************************************************************************/ 
+/* Supprime une plage virtuelle de mémoire pour le noyau */
+
+void virtual_range_free_kernel(u8 *vaddr, u64 len)
+{
+	virtual_range_free(NULL, vaddr, len);
+}
+
+/*******************************************************************************/ 
+/* Détermine une plage virtuelle de mémoire en attribuant de la mémoire physique pour le noyau */
+
+void virtual_range_new_kernel(u8 *vaddr, u64 len, u32 flags)
+{
+	virtual_range_new(NULL, vaddr, len, flags);
+}
+
+/*******************************************************************************/ 
 /* Libère une page virtuelle de la mémoire */
 
-void virtual_page_free(u8* vaddr)
+void virtual_page_free(u8 *vaddr)
 {
 	vrange *next, *prev, *new;
 	u8 *paddr;
 	paddr = virtual_to_physical(vaddr);
 	if (paddr)
-		virtual_page_free(paddr);
+		physical_page_free(TOPAGE((u32) paddr));
 	else {
 		printf("Aucune page associee a l'adresse virtuelle %x\n", vaddr);
 		return;
@@ -324,18 +442,61 @@ void virtual_pd_destroy(pd *dst)
 }
 
 /*******************************************************************************/ 
+/* Initialise une pages virtuelles (size) pour le heap du noyau */ 
+void malloc_init(void)
+{
+	kernelheap=KERNEL_HEAP;
+	tmalloc *chunk;
+	chunk = (tmalloc *) kernelheap;
+	virtual_pd_page_add(NULL, KERNEL_HEAP, physical_page_getfree(), PAGE_NOFLAG);
+	chunk->size = PAGESIZE;
+	chunk->used = 0;
+ 	//virtual_range_new_kernel(kernelheap, chunk->size, PAGE_NOFLAG);
+}
+
+
+/*******************************************************************************/ 
 /* Initialisation d'une STAILQ pour la gestion virtuelle de la mémoire */
  
 void virtual_init(void)
 {
-	kernelheap = (u8 *) KERNEL_HEAP;
 	vrange *vpages = (vrange*) vmalloc(sizeof(vrange));
-	vpages->vaddrlow = (u8 *) KERNEL_HEAP;
+	vpages->vaddrlow = (u8 *) KERNEL_HEAP+1;
 	vpages->vaddrhigh = (u8 *) KERNEL_HEAP+MAXHEAPSIZE;
 	TAILQ_INIT(&vrange_head);
         TAILQ_INSERT_TAIL(&vrange_head, vpages, tailq);
-	kerneldirectory=virtual_pd_create();
- 	virtual_range_use_kernel(0x00000000, 0x00000000, KERNELSIZE);
+}
+
+/*******************************************************************************/ 
+/* Initialisation des 8 premiers MB de la mémoire en identity mapping */
+ 
+void identity_init(void)
+{
+	u32 i;
+		u32 *pd0 = KERNEL_PD_ADDR;
+		u8 *pg0 = (u8 *) 0;
+		u8 *pg1 = (u8 *) (PAGESIZE*PAGENUMBER);
+		pd0[0] = ((u32) pg0 | (PAGE_PRESENT | PAGE_WRITE | PAGE_4MB));
+		pd0[1] = ((u32) pg1 | (PAGE_PRESENT | PAGE_WRITE | PAGE_4MB));
+		for (i = 2; i < 1023; i++)
+			pd0[i] =
+		    	((u32) pg1 + PAGESIZE * i) | (PAGE_PRESENT | PAGE_WRITE);
+		pd0[1023] = ((u32) pd0 | (PAGE_PRESENT | PAGE_WRITE));
+}
+
+/*******************************************************************************/ 
+/* Initialisation des registres CR0, CR3, CR4 */
+ 
+void registry_init(void)
+{
+asm("mov %[directory_addr], %%eax \n \
+        mov %%eax, %%cr3 \n \
+        mov %%cr4, %%eax \n \
+		or $0x00000010, %%eax \n \
+        mov %%eax, %%cr4 \n \
+        mov %%cr0, %%eax \n \
+		or $0x80000001, %%eax \n \
+        mov %%eax, %%cr0"::[directory_addr]"i"(KERNEL_PD_ADDR));
 }
 
 /*******************************************************************************/ 
@@ -343,16 +504,11 @@ void virtual_init(void)
 
 void initpaging(void) 
 {
+	identity_init();
+	registry_init();
 	physical_init();
+	malloc_init();
 	virtual_init();
-    asm("mov %[directory_addr], %%eax \n \
-        mov %%eax, %%cr3 \n \
-        mov %%cr4, %%eax \n \
-		or $0x00000010, %%eax \n \
-        mov %%eax, %%cr4 \n \
-        mov %%cr0, %%eax \n \
-		or $0x80000001, %%eax \n \
-        mov %%eax, %%cr0"::[directory_addr]"m"(kerneldirectory->addr));
 }
 
 /*******************************************************************************/ 

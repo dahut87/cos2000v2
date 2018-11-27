@@ -30,6 +30,7 @@
 #define MAXPAGESSIZE	KERNEL_HEAP-KERNEL_PAGES
 
 /* page directory */
+#define PAGE_NOFLAG	0x0
 #define PAGE_PRESENT	0b000000001/* page directory / table */
 #define PAGE_WRITE	    0b000000010 /* page lecture ecriture */
 #define PAGE_ALL		0b000000100 /* accessible user & supervisor */
@@ -94,43 +95,14 @@ void *vmalloc(u32 size);
 void vfree(void *vaddr);
 page *virtual_page_getfree(void);
 pd *virtual_pd_create();
-
-/*
-Fonction à ajouter...pour gestion mémoire virtuelle
-u8* virtual_to_physical(u8 *vaddr)
-
-
-
-void virtual_pd_page_remove(pd *dst, u8* vaddr)
-
-void virtual_pd_page_add(pd *dst, u8* vaddr, u8 * paddr, u32 flags)
-
-void virtual_range_use(pd *dst, u8 vaddr, u8 paddr, u8 len)
-
-void virtual_range_free(pd *dst, u8 vaddr, u8 len)
-
-void virtual_range_new(pd *dst, u8 vaddr, u8 len)
-
-page *virtual_page_getfree(void)
-
-void virtual_page_free(pd *dst, u8* vaddr)
-
-void virtual_page_use(pd *dst, u8* vaddr)
-
-void virtual_init(void)
-
-
-
-
-void virtual_range_use_kernel(u8 vaddr, u8 paddr, u8 len)
-
-void virtual_range_free_kernel(u8 vaddr, u8 len)
-
-void virtual_range_new_kernel(u8 vaddr, u8 len)
-
-void virtual_range_use_current(u8 vaddr, u8 paddr, u8 len)
-
-void virtual_range_free_current(u8 vaddr, u8 len)
-
-void virtual_range_new_current(u8 vaddr, u8 len)
-*/
+void virtual_pd_destroy(pd *dst);
+void virtual_page_free(u8* vaddr);
+u8* virtual_to_physical(u8 *vaddr);
+void virtual_pd_page_remove(u8* vaddr);
+void virtual_pd_page_add(pd *dst, u8* vaddr, u8 * paddr, u32 flags);
+void virtual_range_use(pd *dst, u8 *vaddr, u8 *paddr, u64 len, u32 flags);
+void virtual_range_free(pd *dst, u8 *vaddr, u64 len);
+void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags);
+void malloc_init(void);
+void identity_init(void);
+void registry_init(void);
