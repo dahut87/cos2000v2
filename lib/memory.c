@@ -38,6 +38,46 @@ tmalloc *mallocpage(u8 size)
 }
 
 /*******************************************************************************/ 
+/* Retourne la mémoire virtuelle utilisée de façon dynamique (heap) */ 
+
+u32 getmallocused(void)
+{
+    u32 realsize=0;	
+	tmalloc *chunk, *new;
+	chunk = KERNEL_HEAP;
+	while (chunk < (tmalloc *) kernelcurrentheap) {
+        if (chunk->used)
+            realsize+=chunk->size;
+		chunk = chunk + chunk->size;
+    }
+    return realsize;
+}
+
+/*******************************************************************************/ 
+/* Retourne la mémoire virtuelle libre de façon dynamique (heap) */ 
+
+u32 getmallocfree(void)
+{
+    u32 realsize=0;	
+	tmalloc *chunk, *new;
+	chunk = KERNEL_HEAP;
+	while (chunk < (tmalloc *) kernelcurrentheap) {
+        if (!chunk->used)
+            realsize+=chunk->size;
+		chunk = chunk + chunk->size;
+    }
+    return realsize;
+}
+
+/*******************************************************************************/ 
+/* Retourne la mémoire virtuelle non allouée de façon dynamique (heap) */ 
+
+u32 getmallocnonallocated(void)
+{
+    return VESA_FBMEM-((u32) kernelcurrentheap);
+}
+
+/*******************************************************************************/ 
 /* Alloue de la mémoire virtuelle au noyau de façon dynamique (heap) */ 
 
 void *vmalloc(u32 size)
@@ -91,8 +131,10 @@ u64 physical_getmemorysize()
     multiboot_memory_map_t *mmap;       
     for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;(u8 *) mmap < (u8 *) tag + tag->size; mmap = (multiboot_memory_map_t *)
                         ((unsigned long) mmap + ((struct multiboot_tag_mmap *) tag)->entry_size))
-        if (mmap->addr+mmap->len>maxaddr)
+        if ((mmap->addr+mmap->len>maxaddr) && mmap->type==1)
                 maxaddr=mmap->addr+mmap->len;
+    if (maxaddr>=MAXMEMSIZE)
+         maxaddr=MAXMEMSIZE-1;
     return maxaddr;
 }
 

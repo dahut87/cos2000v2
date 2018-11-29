@@ -153,6 +153,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * REGS affiche les registres CPU,
 * GDT affiche la table des descripteurs,
 * IDT affiche la table des interruptions,
+* MEM affiche les statistiques d'occupation memoire,
 * INFO affiche des informations issues de GRUB,
 * ERR génère une exception (ARGUMENTS),
 * VIEW visionne la mémoire vive (ARGUMENTS),

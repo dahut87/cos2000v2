@@ -107,3 +107,6 @@ void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags);
 void malloc_init(void);
 void identity_init(void);
 void registry_init(void);
+u32 getmallocused(void);
+u32 getmallocfree(void);
+u32 getmallocnonallocated(void);

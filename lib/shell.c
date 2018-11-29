@@ -39,6 +39,7 @@ static command commands[] = {
 	{"font"      , "", &sfont},
 	{"test3d"      , "", &test3d},
 	{"detectpci"      , "", &detectpci},
+	{"mem"      , "", &mem},
 };
 
 /*******************************************************************************/
@@ -75,6 +76,17 @@ void shell()
 int test(void)
 {
     print("Fonction de test !\r\n");
+    return;
+}
+
+/*******************************************************************************/
+/* Affiche des informations sur la mémoire */
+int mem()
+{
+    u32 libre=getmemoryfree();
+    u32 total=physical_getmemorysize();
+    printf("Memoire physique\r\n -libre : %H\r\n -occupee : %H\r\n -total : %H\r\n\r\n",libre,total-libre,total);
+    printf("Memoire tas noyau\r\n -libre : %H\r\n -occupee : %H\r\n -allouables : %H\r\n",getmallocfree(),getmallocused(),getmallocnonallocated());
     return;
 }
 

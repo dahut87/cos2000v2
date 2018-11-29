@@ -28,3 +28,4 @@ int sfont(u8* commandline);
 int help();
 int logo();
 int detectpci();
+int mem();
