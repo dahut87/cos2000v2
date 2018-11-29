@@ -144,6 +144,9 @@
 
 #define ror(addr) \
 	asm volatile ("rorb $0x1,%0":"=m" (addr):);
+
+#define finit() \
+    asm volatile ("finit"::);
 /******************************************************************************/
 
 #define outb(port,value) \

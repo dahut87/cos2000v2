@@ -1,4 +1,4 @@
-all: bits32 bits64 floppy harddisk uefi
+all: bits32 bits64 harddisk uefi
 	sync
 
 bits32: ARCH=bits32 
@@ -9,25 +9,21 @@ bits64: ARCH=bits64
 bits64: lib/libs.o system/system.sys
 	sync
 
-floppy: boot/boot12.bin final/floppy.img.final
-
 harddisk: final/harddisk.img.final
 
 uefi: final/harddiskuefi.img.final
 
 install:
-	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils)
+	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios)
 
 clean:	
 	(cd system; make clean)
-	(cd boot; make clean)
 	(cd lib;make clean)
 	(cd final;make clean)
 	sync
 
 littleclean:	
 	(cd system; make clean)
-	(cd boot; make clean)
 	(cd lib;make clean)
 	(cd final;make littleclean)
 	sync
@@ -48,9 +44,7 @@ retest: littleclean test
 
 retest64: littleclean test64
 
-floppytest: bits32 floppy qemu-floppy
-
-refloppytest: littleclean floppytest
+testbochs: bits32 harddisk bochs-debug
 
 view:
 	(hexdump  -C ./final/harddisk.img.final|head -c10000)
@@ -75,6 +69,9 @@ debug-system: bits32 harddisk qemu-debug
 debug-system64: bits64 uefi qemu-debug64
 	(sleep 2;cgdb -x ./debug/system.txt)
 
+bochs-debug:
+	(killall bochs-debug;bochs -f ./debug/config.bochs)
+
 qemu-debug:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &)
 
@@ -86,18 +83,9 @@ qemu:
 
 qemu64:
 	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
-
-qemu-floppy:
-	(killall qemu-system-i386;qemu-system-i386 -m 1G -fda ./final/floppy.img.final --enable-kvm -cpu host -s &)  
 	
 system/system.sys:
 	(cd system; VESA=$(VESA) make)
-	
-boot/boot12.bin:
-	(cd boot; make)	
-
-final/floppy.img.final:
-	(cd final; make floppy.img.final)
 
 final/harddisk.img.final:
 	(cd final; make harddisk.img.final)

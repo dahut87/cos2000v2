@@ -652,7 +652,7 @@ void showchar(u16 coordx, u16 coordy, u8 thechar, u8 attrib)
                
 
 
-                writepxl(currentfont->width*coordx + x, currentfont->height*coordy + y, color);
+                writepxl(currentfont->width*coordx + x + 1, currentfont->height*coordy + y, color);
             }
 		}
 	}

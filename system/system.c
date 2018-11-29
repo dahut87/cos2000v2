@@ -99,8 +99,9 @@ int main(u32 magic, u32 addr)
 		warning();
 	else
 		ok();
-	printf(" -Installation des appels systemes utilisateur");
+	printf(" -Installation des appels systemes utilisateur et du FPU");
 	initsyscall();
+    finit();
 	ok();
   
 retry:
