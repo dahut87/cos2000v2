@@ -105,7 +105,6 @@ Commande de compilation de base
 
 Autres commandes de compilation de COS2000
 
-* ```make floppy``` compile la version disquette (SUPPRIMER SUR VERSION RECENTE)
 * ```make harddisk``` compile la version disque dur
 * ```make uefi``` compile la version disque dur UEFI
 * ```make bochstest``` lance l'émulation BOCHS en 32 bits sur disque dur
@@ -213,7 +212,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * virtualisation par VMX,
 * Gestion du système de fichier EXT2FS.
 
-![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/29-10-2018.png)
+![COS2000 le 29-11-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/29-11-2018.png)
 
 #### Historique du projet
 * Version 2.2fr - C en mode protégé Reprise du projet
