@@ -13,10 +13,10 @@ Le système est développé essentiellement en langage C mais il comporte aussi 
 
 Il s'agit du logiciel principal qui anime votre ordinateur. Il a pour fonctions principales :
 
-* Piloter des périphériques, souris, clavier, écran, imprimante...etc;
+* Piloter des périphériques tels que souris, clavier, écran, imprimante...etc;
 * Gérer des fichiers qui sont produit et exploités par des applications; 
-* Coordonner l'accès aux ressources pour plusieurs usagers;
-* Détection et récupération de dysfonctionnements;
+* Coordonner l'accès aux ressources par plusieurs utilisateurs;
+* Détection et récupération des dysfonctionnements;
 * Surveiller les performances et assurer une gestion optimale des ressources systèmes.
 
 Sans système d'exploitation votre ordinateur est inopérant: c'est une boite vide !
@@ -73,6 +73,7 @@ Images disques, débogage & émulation:
 * dd (coreutils version 8.25-2)
 * tar version 1.28-2.1
 * GNU indent version 2.2.11
+* Bochs (optionnel)
 
 ##### Téléchargement de COS2000
 
@@ -98,16 +99,20 @@ ou sinon, depuis un terminal disposé sur le répertoire cos2000
 
 #### Compilation
 
-Commandes de compilation de COS2000
+Commande de compilation de base
 
-* ```make all``` compile tout le projet dans sa version disquette, disque dur et disque dur UEFI
-* ```make floppy``` compile la version disquette
+* ```make all``` compile tout le projet dans sa version disque dur et disque dur en UEFI
+
+Autres commandes de compilation de COS2000
+
+* ```make floppy``` compile la version disquette (SUPPRIMER SUR VERSION RECENTE)
 * ```make harddisk``` compile la version disque dur
 * ```make uefi``` compile la version disque dur UEFI
-* ```make floppytest``` lance l'émulation QEMU en 32 bits sur disquette
+* ```make bochstest``` lance l'émulation BOCHS en 32 bits sur disque dur
 * ```make test``` lance l'émulation QEMU en 32 bits sur disque dur
-* ```make test64``` lance l'émulation QEMU en 64 bits sur disque dur UEFI
+* ```make test64``` lance l'émulation QEMU en 64 bits sur disque dur en UEFI
 * ```make clean``` supprime les fichers compilés
+* ```VESA=no make test``` préfixe à utiliser (VESA=no) pour faire appel au pilote VGA et non pas VESA
 
 #### Utilisation
 
@@ -117,11 +122,23 @@ Pour tester l'OS en émulation taper donc la commande ```make test``` qui compil
 
 ##### Sur un ordinateur physique
 
-Il faut d'abord copier l'image sur une clé (Attention l'opération effacera le contenu de la clé) :
+Lancer une compilation du système COS2000
+
+```make all``` 
+
+Puis, il faut copier l'image sur une clé (Attention l'opération effacera le contenu de la clé) :
 
 ```sudo dd if=./final/harddisk.img.final of=/dev/sdx bs=1M``` (ou sdx est votre périphérique)
 
 Bootez sur votre clé en mode bios (legacy).
+
+Pour un boot en mode UEFI
+
+```sudo dd if=./final/harddiskuefi.img.final of=/dev/sdx bs=1M``` (ou sdx est votre périphérique)
+
+Pour connaitre le numéro de votre périphérique (clé)
+
+```lsblk```
 
 ##### Usage de COS2000
 
@@ -131,18 +148,26 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * CLEAR efface l'écran,
 * MODE change le mode video,
 * DETECTCPU detecte et affiche les informations CPU,
+* DETECTPCI detecte et affiche les périphériques PCI,
 * TEST2D teste l'affichage graphique 2D,
+* TEST3D teste l'affichage graphique 2D,
 * REGS affiche les registres CPU,
 * GDT affiche la table des descripteurs,
 * IDT affiche la table des interruptions,
-* INFO affiche des informations issues de GRUB.
-* PAGEFAULT génère une erreur de pagination. 
+* INFO affiche des informations issues de GRUB,
+* ERR génère une exception (ARGUMENTS),
+* VIEW visionne la mémoire vive (ARGUMENTS),
+* LOGO affiche le logo,
+* FONT change la police d'affichage (ARGUMENTS),
+* HELP affiche les commandes disponibles,
+* BPSET met un point d'arrêt pour le débogueur (ARGUMENTS),
+* BPCLR efface un point d'arrêt (ARGUMENTS),
+* DISASM désassemble une portion de mémoire (ARGUMENTS),
 
 ![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/28-09-2018.png)
 
 #### Organisation du dépôt
 
-* boot - fichiers source assembleur démarrage FAT12 - disquette
 * debug - fichiers configuration débogueur
 * final - img raw utilisables avec un émulateur des 3 versions
 * * harddisk.img.final
@@ -162,21 +187,33 @@ Pour l'instant quelques commandes seulement sont disponibles:
 
 #### Avancement du projet
 
-* secteur de boot disquette (FAT12),
-* démarrage autre support par GRUB (Disque dur/SSD, réseau...Etc),
-* pilote souris, clavier, VGA,
-* gestion des interruptions et de la segmentation GDT,
+* démarrage tout support grâce à GRUB (disquette, disque dur/SSD, réseau...Etc),
+* pilotes souris et clavier,
+* pilotes VGA et VESA (framebuffer),
+* bibliothèque graphique 2D,
+* bibliothèque graphique 3D,
+* gestion des interruptions (IDT),
+* gestion de la segmentation (GDT),
+* gestion de la mémoire paginée,
+* débogueur et désassembleur intégré,
 * interpréteur de commande,
-* noyau avec fonctions minimales implémentées (printf, itoa, maths...),
-* mode protégé limité à 4Go de mémoire vive.
+* affichage de chaîne de caractères (prinfs,sprintf,vsprintf) avec type (bin,hexa,octal,float,double,string,char),
+* mode protégé limité à 4Go de mémoire vive (32 bits),
+* gestion avancée de la mémoire (vmalloc).
 
 #### A faire
-* gestion du framebuffer,
-* gestion de la mémoire paginée,
+
 * espace utilisateur et appels systèmes,
-* ordonnanceur de tâche,
+* ordonnanceur de tâche (par TSS),
 * chargeur ELF32,
-* pilote IDE/ATA et lecture/ecriture EXT2FS.
+* pilote IDE/ATA (PIO mode),
+* fonctions affichage image PNG,
+* double buffering,
+* gestion multiprocessing,
+* virtualisation par VMX,
+* Gestion du système de fichier EXT2FS.
+
+![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/29-10-2018.png)
 
 #### Historique du projet
 * Version 2.2fr - C en mode protégé Reprise du projet
