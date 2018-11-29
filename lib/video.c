@@ -396,6 +396,7 @@ void apply_driver(u8* name)
     u32 i=0;
     while (registred[i].nom!=NULL && i<MAXDRIVERS) {
         if (strcmp(name,registred[i].nom)==0) {
+                remap_memory=registred[i].pointer->remap_memory;
                 detect_hardware=registred[i].pointer->detect_hardware;
                 setvideo_mode=registred[i].pointer->setvideo_mode;
                 getvideo_drivername=registred[i].pointer->getvideo_drivername;
@@ -497,7 +498,7 @@ void fill(u8 attrib)
     }
     else
     {
-        mem_to_video(0x0,0,vinfo->pagesize, false);
+        mem_to_video(0x0,0,vinfo->pagesize>>2, false);
     }
 }
 

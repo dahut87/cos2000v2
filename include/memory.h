@@ -20,13 +20,14 @@
 #define	KERNEL_CODE_ADDR	0x00100000	/* adresse du code du noyau */
 #define KERNEL_PAGES		0x00800000	/* adresse des pages */
 #define KERNEL_HEAP		0x10000000	/* adresse du heap */
+#define VESA_FBMEM		    0x38000000	/* adresse du framebuffer VESA */
 #define	USER_CODE 		0x40000000      /* adresse du code utilisateur */
 #define	USER_STACK 		0xE0000000	/* adresse de la pile utilisateur */
 
 /* limites de la mémoire 32 bits */
 #define	MAXMEMSIZE	0x100000000
 #define	MAXMEMPAGE	1024*1024
-#define MAXHEAPSIZE	USER_CODE-KERNEL_HEAP
+#define MAXHEAPSIZE	VESA_FBMEM-KERNEL_HEAP
 #define MAXPAGESSIZE	KERNEL_HEAP-KERNEL_PAGES
 
 /* page directory */
@@ -36,7 +37,7 @@
 #define PAGE_ALL		0b000000100 /* accessible user & supervisor */
 #define PAGE_WTROUGH	0b000001000 /* write-through cache */
 #define PAGE_NOCACHE	0b000010000 /* cache desactivé */
-#define PAGE_ACCESS 	0b000100000 /* cache desactivé */
+#define PAGE_ACCESS 	0b000100000 /* page accedée */
 #define PAGE_4MB		0b010000000 /* page de 4mb au lieu de 4k (NECESSITE PSE)*/
 
 /* page table */

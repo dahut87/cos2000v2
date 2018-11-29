@@ -7,7 +7,7 @@
 #include "queue.h"
 #include "asm.h"
 
-static u8 *kernelheap=NULL; 		/* pointeur vers le heap noyau */
+static u8 *kernelcurrentheap=NULL; 		/* pointeur vers le heap noyau */
 static u8 bitmap[MAXMEMPAGE / 8]; 	/* bitmap */
 static vrange_t vrange_head;
 
@@ -27,10 +27,11 @@ tmalloc *mallocpage(u8 size)
 	tmalloc *chunk;
 	u8 *paddr;
 	u32 realsize=size * PAGESIZE;
-	if ((kernelheap - KERNEL_HEAP + realsize) > MAXHEAPSIZE)
+	if ((kernelcurrentheap - KERNEL_HEAP + realsize) > MAXHEAPSIZE)
 		panic("Plus de memoire noyau heap disponible a allouer !\n");
-	chunk = (tmalloc *) kernelheap;
- 	virtual_range_new_kernel(kernelheap, realsize);
+	chunk = (tmalloc *) kernelcurrentheap;
+ 	virtual_range_new_kernel(kernelcurrentheap, realsize);
+    kernelcurrentheap += realsize;
 	chunk->size = realsize;
 	chunk->used = 0;
 	return chunk;
@@ -46,15 +47,15 @@ void *vmalloc(u32 size)
 	realsize = sizeof(tmalloc) + size;
 	if (realsize < MALLOC_MINIMUM)
 		realsize = MALLOC_MINIMUM;
-	chunk = kernelheap;
+	chunk = KERNEL_HEAP;
 	while (chunk->used || chunk->size < realsize) {
 		if (chunk->size == 0)
-			panic(sprintf("Element du heap %x defectueux avec une taille nulle (heap %x) !",chunk, kernelheap));
+			panic(sprintf("Element du heap %x defectueux avec une taille nulle (heap %x) !",chunk, kernelcurrentheap));
 		chunk = chunk + chunk->size;
-		if (chunk == (tmalloc *) kernelheap)
+		if (chunk == (tmalloc *) kernelcurrentheap)
 			mallocpage((realsize / PAGESIZE) + 1);
-		else if (chunk > (tmalloc *) kernelheap)
-			panic (sprintf("Element du heap %x depassant la limite %x !",chunk, kernelheap));
+		else if (chunk > (tmalloc *) kernelcurrentheap)
+			panic (sprintf("Element du heap %x depassant la limite %x !",chunk, kernelcurrentheap));
 	}
 	if (chunk->size - realsize < MALLOC_MINIMUM)
 		chunk->used = 1;
@@ -76,7 +77,7 @@ void vfree(void *vaddr)
 	tmalloc *chunk, *new;
 	chunk = (tmalloc *) (vaddr - sizeof(tmalloc));
 	chunk->used = 0;
-	while ((new = (tmalloc *) chunk + chunk->size) && new < (tmalloc *) kernelheap && new->used == 0)
+	while ((new = (tmalloc *) chunk + chunk->size) && new < (tmalloc *) kernelcurrentheap && new->used == 0)
 		chunk->size += new->size;
 }
 
@@ -311,6 +312,7 @@ u8* virtual_to_physical(u8 *vaddr)
 
 /*******************************************************************************/ 
 /* Détermine une plage virtuelle de mémoire comme étant mappé aux adresses physiques spécifiées GENERIQUE*/
+
 void virtual_range_use(pd *dst, u8 *vaddr, u8 *paddr, u64 len, u32 flags)
 {
 	u64 i;
@@ -322,13 +324,17 @@ void virtual_range_use(pd *dst, u8 *vaddr, u8 *paddr, u64 len, u32 flags)
 		pg = (page *) vmalloc(sizeof(page));
 		pg->paddr = paddr+i*PAGESIZE; 
 		pg->vaddr = vaddr+i*PAGESIZE;
-		TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+		if (dst!=NULL)
+            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+        else
+            vfree(pg);
 		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
 	}
 }
 
 /*******************************************************************************/ 
 /* Supprime une plage virtuelle de mémoire GENERIQUE */
+
 void virtual_range_free(pd *dst, u8 *vaddr, u64 len)
 {
 	u64 i;
@@ -343,6 +349,7 @@ void virtual_range_free(pd *dst, u8 *vaddr, u64 len)
 
 /*******************************************************************************/ 
 /* Détermine une plage virtuelle de mémoire en attribuant de la mémoire physique GENERIQUE */
+
 void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags)
 {
 	u64 i;
@@ -354,7 +361,10 @@ void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags)
 		pg = (page *) vmalloc(sizeof(page));
 		pg->paddr = physical_page_getfree(); 
 		pg->vaddr = (u8 *) (vaddr+i*PAGESIZE);
-		TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+		if (dst!=NULL)
+            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+        else
+            vfree(pg);
 		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
 	}
 }
@@ -443,15 +453,16 @@ void virtual_pd_destroy(pd *dst)
 
 /*******************************************************************************/ 
 /* Initialise une pages virtuelles (size) pour le heap du noyau */ 
+
 void malloc_init(void)
 {
-	kernelheap=KERNEL_HEAP;
 	tmalloc *chunk;
-	chunk = (tmalloc *) kernelheap;
+	chunk = (tmalloc *) KERNEL_HEAP;
 	virtual_pd_page_add(NULL, KERNEL_HEAP, physical_page_getfree(), PAGE_NOFLAG);
+	kernelcurrentheap=KERNEL_HEAP+PAGESIZE;
 	chunk->size = PAGESIZE;
 	chunk->used = 0;
- 	//virtual_range_new_kernel(kernelheap, chunk->size, PAGE_NOFLAG);
+ 	//virtual_range_new_kernel(kernelcurrentheap, chunk->size, PAGE_NOFLAG);
 }
 
 
@@ -461,7 +472,7 @@ void malloc_init(void)
 void virtual_init(void)
 {
 	vrange *vpages = (vrange*) vmalloc(sizeof(vrange));
-	vpages->vaddrlow = (u8 *) KERNEL_HEAP+1;
+	vpages->vaddrlow = (u8 *) KERNEL_HEAP+PAGESIZE;
 	vpages->vaddrhigh = (u8 *) KERNEL_HEAP+MAXHEAPSIZE;
 	TAILQ_INIT(&vrange_head);
         TAILQ_INSERT_TAIL(&vrange_head, vpages, tailq);

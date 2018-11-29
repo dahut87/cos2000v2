@@ -6,7 +6,7 @@
 
 #define TEXTSCREEN 0xB8000	/* debut de la memoire video texte*/
 #define GRPHSCREEN 0xA0000	/* debut de la memoire video graphique*/
-
+#define ENDOFVMEM  0xC0000
 
 /* Registres VGAs */
 
@@ -93,6 +93,7 @@ typedef struct vgamode {
 } vgamode __attribute__ ((packed));
 
 /* fonction obligatoires */
+void VGA_remap_memory(u32 vaddr);
 u8 *VGA_detect_hardware (void);
 u8 VGA_setvideo_mode (u8 mode);
 u8 *VGA_getvideo_drivername (void);
@@ -117,6 +118,7 @@ void VGA_blink_disable (void);
 
 static videofonction vgafonctions = 
 {
+    &VGA_remap_memory,
     &VGA_detect_hardware,
     &VGA_setvideo_mode,
     &VGA_getvideo_drivername,

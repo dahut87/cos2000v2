@@ -11,6 +11,13 @@
 static videoinfos infos;
 
 /*******************************************************************************/
+/* Deplace l'adresse virtuelle en mode paginee */
+
+void VGA_remap_memory(u32 vaddr) {
+    virtual_range_use_kernel(vaddr, GRPHSCREEN, ENDOFVMEM-GRPHSCREEN, PAGE_NOFLAG);
+}
+
+/*******************************************************************************/
 /* Detecte si le hardware est disponible, return NULL ou pointeur sur le type de pilote */
 u8 *VGA_detect_hardware(void) {
     return "LEGACY";

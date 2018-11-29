@@ -15,6 +15,7 @@
 #include "shell.h"
 #include "syscall.h"
 #include "multiboot2.h"
+#include "memory.h"
 
 static u8 warnmsg[] =
     "\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
@@ -70,6 +71,7 @@ int main(u32 magic, u32 addr)
 
 	print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
 	initpaging();
+    remap_memory(VESA_FBMEM);
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");

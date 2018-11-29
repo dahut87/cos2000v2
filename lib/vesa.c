@@ -14,9 +14,20 @@ static capabilities vesacapabilities[] = {
     {0xFF,000,000,false, 0,  0},
 };
 
+/*******************************************************************************/
+/* Deplace l'adresse virtuelle en mode paginee */
+
+void VESA_remap_memory(u32 vaddr) {
+    struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
+    u32 len=infos.pagesize*2;
+    u32 paddr=tagfb->common.framebuffer_addr;
+    virtual_range_use_kernel(vaddr, paddr, len, PAGE_NOFLAG);
+    infos.baseaddress=vaddr;
+}
 
 /*******************************************************************************/
 /* Detecte si le hardware est disponible, return NULL ou pointeur sur le type de pilote */
+
 u8 *VESA_detect_hardware(void) {
     struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
     switch (tagfb->common.framebuffer_type)

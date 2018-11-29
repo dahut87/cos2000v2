@@ -42,6 +42,7 @@ typedef struct videoinfos {
 } videoinfos __attribute__ ((packed));
 
 typedef struct videofonction {
+    void (*remap_memory)();
     u8 *(*detect_hardware)();
     u8 (*setvideo_mode) ();
     u8 *(*getvideo_drivername) ();
@@ -150,6 +151,7 @@ void apply_driver(u8* name);
 void apply_nextvideomode(void);
 
 /* Fonctions du pilote */
+void (*remap_memory) (u32 vaddr);
 u8 *(*detect_hardware) (void);
 u8 (*setvideo_mode) (u8 mode);
 u8 *(*getvideo_drivername) (void);

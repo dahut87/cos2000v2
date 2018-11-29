@@ -7,6 +7,7 @@
 #define STATE       0x3da
 
 /* fonction obligatoires */
+void VESA_remap_memory(u32 vaddr);
 u8 *VESA_detect_hardware (void);
 u8 VESA_setvideo_mode (u8 mode);
 u8 *VESA_getvideo_drivername (void);
@@ -23,6 +24,7 @@ void VESA_dummy ();
 
 static videofonction vesafonctions = 
 {
+    &VESA_remap_memory,
     &VESA_detect_hardware,
     &VESA_setvideo_mode,
     &VESA_getvideo_drivername,
