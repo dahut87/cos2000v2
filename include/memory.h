@@ -91,7 +91,7 @@ u8* physical_page_getfree(void);
 void physical_init(void);
 void initpaging(void);
 void virtual_init(void);
-tmalloc *mallocpage(u8 size);
+tmalloc *mallocpage(u64 size);
 void *vmalloc(u32 size);
 void vfree(void *vaddr);
 page *virtual_page_getfree(void);

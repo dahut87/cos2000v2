@@ -29,3 +29,4 @@ int help();
 int logo();
 int detectpci();
 int mem();
+int testmem();

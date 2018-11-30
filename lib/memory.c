@@ -22,11 +22,14 @@ void panic(u8 *string)
 /*******************************************************************************/ 
 /* Alloue plusieurs pages virtuelles (size) pour le heap du noyau */ 
 
-tmalloc *mallocpage(u8 size)
+tmalloc *mallocpage(u64 size)
 {
 	tmalloc *chunk;
 	u8 *paddr;
-	u32 realsize=size * PAGESIZE;
+	u16 nbpages=size / PAGESIZE;
+    u64 realsize=nbpages * PAGESIZE;
+    if (size%PAGESIZE!=0)
+        realsize+=PAGESIZE;
 	if ((kernelcurrentheap - KERNEL_HEAP + realsize) > MAXHEAPSIZE)
 		panic("Plus de memoire noyau heap disponible a allouer !\n");
 	chunk = (tmalloc *) kernelcurrentheap;
@@ -47,7 +50,7 @@ u32 getmallocnb(void)
 	chunk = KERNEL_HEAP;
 	while (chunk < (tmalloc *) kernelcurrentheap) {
             realsize++;
-		chunk = chunk + chunk->size;
+		chunk = (tmalloc *)((u8 *) chunk + chunk->size);
     }
     return realsize;
 }
@@ -64,7 +67,7 @@ u32 getmallocused(void)
 	while (chunk < (tmalloc *) kernelcurrentheap) {
         if (chunk->used)
             realsize+=chunk->size;
-		chunk = chunk + chunk->size;
+		chunk = (tmalloc *)((u8 *) chunk + chunk->size);
     }
     return realsize;
 }
@@ -80,7 +83,7 @@ u32 getmallocfree(void)
 	while (chunk < (tmalloc *) kernelcurrentheap) {
         if (!chunk->used)
             realsize+=chunk->size;
-		chunk = chunk + chunk->size;
+		chunk = (tmalloc *)((u8 *) chunk + chunk->size);
     }
     return realsize;
 }
@@ -107,16 +110,16 @@ void *vmalloc(u32 size)
 	while (chunk->used || chunk->size < realsize) {
 		if (chunk->size == 0)
 			panic(sprintf("Element du heap %x defectueux avec une taille nulle (heap %x) !",chunk, kernelcurrentheap));
-		chunk = chunk + chunk->size;
+		chunk = (tmalloc *)((u8 *) chunk + chunk->size);
 		if (chunk == (tmalloc *) kernelcurrentheap)
-			mallocpage((realsize / PAGESIZE) + 1);
+			mallocpage(realsize);
 		else if (chunk > (tmalloc *) kernelcurrentheap)
 			panic (sprintf("Element du heap %x depassant la limite %x !",chunk, kernelcurrentheap));
 	}
 	if (chunk->size - realsize < MALLOC_MINIMUM)
 		chunk->used = 1;
 	else {
-		new = chunk + realsize;
+		new = (tmalloc *)((u8 *) chunk + realsize);
 		new->size = chunk->size - realsize;
 		new->used = 0;
 		chunk->size = realsize;
@@ -133,7 +136,7 @@ void vfree(void *vaddr)
 	tmalloc *chunk, *new;
 	chunk = (tmalloc *) (vaddr - sizeof(tmalloc));
 	chunk->used = 0;
-	while ((new = (tmalloc *) chunk + chunk->size) && new < (tmalloc *) kernelcurrentheap && new->used == 0)
+	while ((new = (tmalloc *)((u8 *) chunk + chunk->size)) && new < (tmalloc *) kernelcurrentheap && new->used == 0)
 		chunk->size += new->size;
 }
 
@@ -379,14 +382,18 @@ void virtual_range_use(pd *dst, u8 *vaddr, u8 *paddr, u64 len, u32 flags)
 	if (len%PAGESIZE!=0) realen++;
 	for(i=0;i<realen;i++)
 	{
-		pg = (page *) vmalloc(sizeof(page));
-		pg->paddr = paddr+i*PAGESIZE; 
-		pg->vaddr = vaddr+i*PAGESIZE;
-		if (dst!=NULL)
-            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+        if (dst==NULL)
+        {
+            virtual_pd_page_add(dst, vaddr+i*PAGESIZE, paddr+i*PAGESIZE, flags);
+        }
         else
-            vfree(pg);
-		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
+        {
+		    pg = (page *) vmalloc(sizeof(page));
+		    pg->paddr = paddr+i*PAGESIZE; 
+		    pg->vaddr = vaddr+i*PAGESIZE;
+            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+    		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
+        }
 	}
 }
 
@@ -416,15 +423,19 @@ void virtual_range_new(pd *dst, u8 *vaddr, u64 len, u32 flags)
 	if (len%PAGESIZE!=0) realen++;
 	for(i=0;i<realen;i++)
 	{
-		pg = (page *) vmalloc(sizeof(page));
-		pg->paddr = physical_page_getfree(); 
-		pg->vaddr = (u8 *) (vaddr+i*PAGESIZE);
-		if (dst!=NULL)
-            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+        if (dst==NULL)
+        {
+            virtual_pd_page_add(dst, vaddr+i*PAGESIZE, physical_page_getfree(), flags);
+        }
         else
-            vfree(pg);
-		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
-	}
+        {
+		    pg = (page *) vmalloc(sizeof(page));
+		    pg->paddr = physical_page_getfree();
+		    pg->vaddr = vaddr+i*PAGESIZE;
+            TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
+    		virtual_pd_page_add(dst, pg->vaddr, pg->paddr, flags);
+        }
+    }
 }
 
 /*******************************************************************************/ 
