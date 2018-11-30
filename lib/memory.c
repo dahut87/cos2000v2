@@ -38,12 +38,28 @@ tmalloc *mallocpage(u8 size)
 }
 
 /*******************************************************************************/ 
+/* Retourne le nombre de blocs dynamiques (heap) */ 
+
+u32 getmallocnb(void)
+{
+    u32 realsize=0;	
+	tmalloc *chunk;
+	chunk = KERNEL_HEAP;
+	while (chunk < (tmalloc *) kernelcurrentheap) {
+            realsize++;
+		chunk = chunk + chunk->size;
+    }
+    return realsize;
+}
+
+
+/*******************************************************************************/ 
 /* Retourne la mémoire virtuelle utilisée de façon dynamique (heap) */ 
 
 u32 getmallocused(void)
 {
     u32 realsize=0;	
-	tmalloc *chunk, *new;
+	tmalloc *chunk;
 	chunk = KERNEL_HEAP;
 	while (chunk < (tmalloc *) kernelcurrentheap) {
         if (chunk->used)
@@ -59,7 +75,7 @@ u32 getmallocused(void)
 u32 getmallocfree(void)
 {
     u32 realsize=0;	
-	tmalloc *chunk, *new;
+	tmalloc *chunk;
 	chunk = KERNEL_HEAP;
 	while (chunk < (tmalloc *) kernelcurrentheap) {
         if (!chunk->used)
@@ -436,6 +452,28 @@ void virtual_range_new_kernel(u8 *vaddr, u64 len, u32 flags)
 }
 
 /*******************************************************************************/ 
+/* Renvoie le nombre de pages virtuelles occupées */
+
+u32 virtual_getpagesused()
+{
+    u32 maxpage=((u32) MAXPAGESSIZE)/((u16) PAGESIZE);
+    return maxpage-virtual_getpagesfree();
+}
+
+/*******************************************************************************/ 
+/* Renvoie le nombre de pages virtuelles libres */
+
+u32 virtual_getpagesfree()
+{
+	vrange *next;
+    u32 realsize=0;
+	TAILQ_FOREACH(next, &vrange_head, tailq)
+        realsize+=(next->vaddrhigh - next->vaddrlow)/PAGESIZE;
+    return realsize;
+}
+
+
+/*******************************************************************************/ 
 /* Libère une page virtuelle de la mémoire */
 
 void virtual_page_free(u8 *vaddr)
@@ -514,8 +552,8 @@ void malloc_init(void)
 void virtual_init(void)
 {
 	vrange *vpages = (vrange*) vmalloc(sizeof(vrange));
-	vpages->vaddrlow = (u8 *) KERNEL_HEAP+PAGESIZE;
-	vpages->vaddrhigh = (u8 *) KERNEL_HEAP+MAXHEAPSIZE;
+	vpages->vaddrlow = (u8 *) KERNEL_PAGES+PAGESIZE;
+	vpages->vaddrhigh = (u8 *) KERNEL_PAGES+MAXPAGESSIZE;
 	TAILQ_INIT(&vrange_head);
         TAILQ_INSERT_TAIL(&vrange_head, vpages, tailq);
 }

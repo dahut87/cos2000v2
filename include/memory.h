@@ -110,3 +110,4 @@ void registry_init(void);
 u32 getmallocused(void);
 u32 getmallocfree(void);
 u32 getmallocnonallocated(void);
+u32 virtual_getpagesfree();
