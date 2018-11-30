@@ -1161,7 +1161,8 @@ u32 format(const u8 * string, va_list args, u32 maxsize, u32 (*fonction)(u8* src
             case '%':
 			    fonction(&achar,string,1);
 				counter++;
-				flag = false;                
+				flag = false;
+                break;
 			case 'c':
 				temp = (u8) va_arg(args, u8);
 			    fonction(&temp,string,1);

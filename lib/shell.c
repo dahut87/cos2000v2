@@ -89,7 +89,7 @@ int testmem()
     u8* test;
     print("**** AVANT ALLOCATION\r\n");    
     mem();
-    test=vmalloc(4096*10); /* 10 pages */
+    test=vmalloc(150*1024*1024); /* 10 pages */
     print("**** APRES ALLOCATION\r\n");
     mem();
     vfree(test);
@@ -104,7 +104,7 @@ int mem()
 {
     u32 libre=getmemoryfree();
     u32 total=physical_getmemorysize();
-    printf("Memoire physique (TOTAL)\r\n -libre \33[40D\33[15C%H (%.2f%%)\r\n -occupee \33[40D\33[15C%H\r\n -total \33[40D\33[15C%H\r\n\r\n",libre,(float) libre/total*100,total-libre,total);
+    printf("Memoire physique (TOTAL)\r\n -libre \33[40D\33[15C%H (%.2f%%)\r\n -occupee \33[40D\33[15C%H\r\n -total \33[40D\33[15C%H\r\n\r\n",libre,((float) libre/total*100.0f),total-libre,total);
     printf("Memoire HEAP (NOYAU) - % u blocs\r\n -libre \33[40D\33[15C%H\r\n -occupee \33[40D\33[15C%H\r\n -allouables \33[40D\33[15C%H\r\n\r\n",getmallocnb(),getmallocfree(),getmallocused(),getmallocnonallocated());
     printf("Plan de memoire (NOYAU)\r\n -IDT \33[40D\33[15C%X\r\n -GDT \33[40D\33[15C%X\r\n -PGD \33[40D\33[15C%X\r\n -STACK \33[40D\33[15C%X\r\n -CODE \33[40D\33[15C%X\r\n -PAGES \33[40D\33[15C%X\r\n -HEAP \33[40D\33[15C%X\r\n -VESAFB \33[40D\33[15C%X\r\n\r\n",IDT_ADDR,GDT_ADDR,KERNEL_PD_ADDR,KERNEL_STACK_ADDR,KERNEL_CODE_ADDR,KERNEL_PAGES,KERNEL_HEAP,VESA_FBMEM);
     printf("Memoire Virtuelle (NOYAU)\r\n -pages libres \33[40D\33[16C% u\r\n -pages occupees \33[40D\33[16C% u\r\n",virtual_getpagesfree(),virtual_getpagesused());
