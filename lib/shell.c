@@ -18,6 +18,7 @@
 #include "3D/sphere.c"
 #include "3D/man.c"
 #include "memory.h"
+#include "syscall.h"
 
 static command commands[] = {
 	{"reboot"    , "", &rebootnow},
@@ -42,7 +43,7 @@ static command commands[] = {
 	{"detectpci"      , "", &detectpci},
 	{"mem"      , "", &mem},
 	{"testmem"      , "", &testmem},
-
+    {"testsyscall"      , "", &testsyscall},
 };
 
 /*******************************************************************************/
@@ -80,6 +81,15 @@ int test(void)
 {
     print("Fonction de test !\r\n");
     return;
+}
+
+/*******************************************************************************/
+/* Test l'usage de syscall */
+int testsyscall()
+{
+    print("*** avant appel");
+    syscall2(0x0, 0x1980, 0x2505);
+    print("*** apres appel");
 }
 
 /*******************************************************************************/

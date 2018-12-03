@@ -30,3 +30,4 @@ int logo();
 int detectpci();
 int mem();
 int testmem();
+int testsyscall();
