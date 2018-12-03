@@ -365,14 +365,15 @@ void registerdriver(videofonction *pointer)
 /*******************************************************************************/
 /* Choisi le meilleur driver en terme d'affichage */
 void apply_bestdriver(void) {
-    u32 i=0,j=0;  
+    u32 i=0,j;  
     u8 bestdepth=0x0;
-    u8 bestresol=0x0;
+    u32 bestresol=0x0;
     u8 bestmode=0x0;
     u8* bestdriver=NULL;
     capabilities *cap;
     while (registred[i].nom!=NULL && i<MAXDRIVERS) {
         cap=registred[i].pointer->getvideo_capabilities();
+        j=0;
         while(cap[j].modenumber!=0xFF) {
             if (cap[j].depth>bestdepth && (cap[j].width*cap[j].height)>=bestresol) 
             {

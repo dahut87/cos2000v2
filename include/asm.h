@@ -53,10 +53,6 @@
         pushl %%eax\n \
         mov %%dr3, %%eax \n \
         pushl %%eax\n \
-        mov %%dr4, %%eax \n \
-        pushl %%eax\n \
-        mov %%dr5, %%eax \n \
-        pushl %%eax\n \
         mov %%dr6, %%eax \n \
         pushl %%eax\n \
         mov %%dr7, %%eax \n \
@@ -67,8 +63,6 @@
         pushl %%eax":::)
 
 #define restcpu() asm("\
-        popl %%eax \n \
-        popl %%eax \n \
         popl %%eax \n \
         popl %%eax \n \
         popl %%eax \n \
