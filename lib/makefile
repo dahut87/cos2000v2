@@ -1,4 +1,4 @@
-CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -w -m32 -F pe-i386 -I ../include
+CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F pe-i386 -I ../include
 LINK=ld -m elf_i386 -r -o
 SRCS= $(wildcard *.c)
 OBJS= $(SRCS:.c=.o)

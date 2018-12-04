@@ -1,4 +1,4 @@
-GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -fomit-frame-pointer -Wall -w -I ../include -m32 -c -o
+GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -I ../include -m32 -c -o
 ASM=nasm
 LINK=ld -m elf_i386 -T linker.lds -n -o
 
