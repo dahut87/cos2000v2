@@ -156,11 +156,9 @@ void cpuerror(const u8 * src, const save_stack *stack)
 void interruption()
 {
 	cli();
-	pushf();
 	pushad();
 	print("Appel d'une interruption\r\n");
 	popad();
-	popf();
 	sti();
 	iret();
 }

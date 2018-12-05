@@ -54,15 +54,6 @@
         asm volatile ("movl %%ebp,%[tomem];":: [tomem] "m" (mem)); \
 })
 
-#define setEBP(mem) ({ \
-        asm volatile ("movl %[tomem],%%ebp;":[tomem] "=m" (mem):); \
-})
-
-#define setESP(mem) ({ \
-        asm volatile ("movl %[tomem],%%esp;":[tomem] "=m" (mem):); \
-})
-
-
 #define dumpcpu() asm("\
         pushal \n \
         pushf \n \

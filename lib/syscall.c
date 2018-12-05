@@ -5,6 +5,8 @@
 #include <gdt.h>
 #include <asm.h>
 #include <memory.h>
+#include <interrupts.h>
+#include <syscall.h>
 
  /* 32bit SYSENTER instruction entry.
   *
@@ -23,8 +25,25 @@
 /* Entrée pour les appels système SYSENTER */
 
 void sysenter_handler(void)
-{
-
+{ 
+    cli(); 
+    save_stack *dump;
+    dumpcpu();
+    getESP(dump);
+    sti(); 
+	switch (dump->eax)
+	{
+		case 0:
+    			printf("Test de fonctionnement syscall\r\n -arguments 1:%Y 2:%Y 3:%Y\r\n", dump->ebx,dump->esi,dump->edi);
+			dump->eax=0x6666666;
+			break;
+		default:
+	    		printf("Appel syscall vers fonction inexistante en %Y:%Y", dump->cs,dump->eip);
+			break;
+		
+	}
+    restdebugcpu();
+    sysexit();
 }
 
 /*******************************************************************************/
@@ -34,8 +53,8 @@ void sysenter_handler(void)
 void initsyscall(void)
 {
 	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
-	wrmsr(0x175, KERNEL_STACK_ADDR, 0x0);
-	wrmsr(0x176, &sysenter_handler, 0x0);
+	wrmsr(0x175, 0x60000, 0x0);
+	wrmsr(0x176, &sysenter_handler+6, 0x0);
 }
 
 /*******************************************************************************/
