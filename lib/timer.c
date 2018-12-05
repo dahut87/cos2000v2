@@ -37,7 +37,7 @@ void timer(void)
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x0C, %esp;");
+	leave();
 	iret();
 }
 

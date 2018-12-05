@@ -117,7 +117,7 @@ u8 getcpuinfos(cpuinfo * proc)
 	}
 	boolean = &proc->mmx;
 	i = 0;
-
+	proc->techs[0]='\000';
 	for (i = 0; i < sizeof(msg); i++)
 		if (*(boolean++) == 1) {
 			strcat(msg[i], &proc->techs);
@@ -133,7 +133,7 @@ void show_lightcpu(save_stack *stack)
 {
     u32 i;
 	printf("\33[0mEAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
-	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->oldesp, stack->ebp);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
 	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
     (stack->eflags & (1 <<11)) ? 'O':'-',
     (stack->eflags & (1 <<10)) ? 'D':'-',
@@ -175,12 +175,12 @@ void show_lightcpu(save_stack *stack)
     }
 
 	printf("\33[0m\r\n\r\n\r\nSTACK\r\n");
-    if (abs(KERNEL_STACK_ADDR-stack->oldesp)>0x10000)
+    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
         printf("Pile invalide !");
     else
     {
         i=0;
-	    for (u32 *pointer = stack->oldesp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
             if (i>0 && i % 10 == 0) print("\033[10A");
             if (i>=10)
                 print("\033[25C");            
@@ -197,7 +197,7 @@ void show_lightcpu(save_stack *stack)
 void show_cpu(save_stack *stack)
 {
 	printf("EAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
-	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->oldesp, stack->ebp);
+	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
 	printf("EIP=%Y EFL=%Y [%c%c%c%c%c%c%c%c%c]\r\n", stack->eip, stack->eflags,
     (stack->eflags & (1 <<11)) ? 'O':'-',
     (stack->eflags & (1 <<10)) ? 'D':'-',
@@ -225,15 +225,15 @@ void show_cpu(save_stack *stack)
      printf("IDT=     %Y %Y\r\n",idtreg.base,idtreg.limite);
      printf("CR0=%Y CR2=%Y CR3=%Y CR4=%Y\r\n",stack->cr0,stack->cr2,stack->cr3,stack->cr4);
      printf("DR0=%Y DR1=%Y DR2=%Y DR3=%Y\r\n",stack->dr0,stack->dr1,stack->dr2,stack->dr3);
-     printf("DR4=%Y DR5=%Y DR6=%Y DR7=%Y\r\n",stack->dr4,stack->dr5,stack->dr6,stack->dr7);
+     printf("DR6=%Y DR7=%Y\r\n",stack->dr6,stack->dr7);
      printf("EFER=%lY\r\n",stack->efer);
 	printf("STACK\r\n");
-    if (abs(KERNEL_STACK_ADDR-stack->oldesp)>0x10000)
+    if (abs(KERNEL_STACK_ADDR-stack->esp)>0x10000)
         printf("Pile invalide !");
     else
     {
         u32 i=0;
-	    for (u32 *pointer = stack->oldesp; pointer < KERNEL_STACK_ADDR; pointer ++) {
+	    for (u32 *pointer = stack->esp; pointer < KERNEL_STACK_ADDR; pointer ++) {
             if (i>0 && i % 10 == 0) print("\033[10A");
             if (i>=10)
                 print("\033[25C");            

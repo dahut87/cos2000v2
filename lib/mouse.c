@@ -133,9 +133,7 @@ void mouse(void)
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x18,%esp;\
-popl %bx;\
-iret;");
+	leave();
 	iret();
 }
 

@@ -342,7 +342,7 @@ void keyboard(void)
 	popad();
 	popf();
 	sti();
-	asm("addl  $0x01C, %esp;");
+	leave();
 	iret();
 }
 
