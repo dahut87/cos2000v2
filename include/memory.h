@@ -4,6 +4,9 @@
 #include "types.h"
 #include "queue.h"
 
+#ifndef _MEMORY
+#define _MEMORY
+
 #define TOPAGE(addr)	  (addr) >> 12
 #define	TOPD(addr)	((addr) & 0xFFC00000) >> 22
 #define	TOPT(addr)	((addr) & 0x003FF000) >> 12
@@ -45,7 +48,17 @@
 #define PAGE_DIRTY      0b001000000 /* page écrite */
 #define PAGE_GLOBAL     0b100000000 /* évite que le TLB mette à jour l'adresse dans le cache si CR4 est remis à zéro (NECESSITE CR4) */
 
+/* Selecteur RPL */
+#define RPL_RING0       0b00  /* Anneau 0 */
+#define RPL_RING1       0b01  /* Anneau 1 */
+#define RPL_RING2       0b01  /* Anneau 2 */
+#define RPL_RING3       0b11  /* Anneau 3 */
+
+
 #define MALLOC_MINIMUM		16
+
+#define setcr3(addr) \
+    asm volatile ("mov %0, %%eax; mov %%eax, %%cr3"::"m"(processes[pid].pd->addr->paddr));
 
 /* Malloc, pour l'attribution de mémoire en heap */
 typedef struct tmalloc {
@@ -111,3 +124,5 @@ u32 getmallocused(void);
 u32 getmallocfree(void);
 u32 getmallocnonallocated(void);
 u32 virtual_getpagesfree();
+
+#endif

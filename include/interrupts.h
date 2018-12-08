@@ -155,7 +155,7 @@
 
 
 /* save pile */
-typedef struct save_stack {
+typedef struct regs {
    u64 efer;
    u32 dr7;
    u32 dr6;
@@ -183,7 +183,7 @@ typedef struct save_stack {
    u32 edx;
    u32 ecx;
    u32 eax;
-} save_stack __attribute__ ((packed));
+} regs __attribute__ ((packed));
 /* exception pile */
 typedef struct exception_stack {
     u32 error_code;
@@ -219,7 +219,7 @@ struct idtr {
  void initpic(void);
  void enableirq(u8 irq);
  void disableirq(u8 irq);
- void cpuerror(const u8 * src, const save_stack *stack);
+ void cpuerror(const u8 * src, const regs *stack);
 
 #endif
 

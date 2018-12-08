@@ -26,10 +26,10 @@ static command commands[] = {
 	{"mode"      , "", &mode},
 	{"detectcpu" , "", &detectcpu},
 	{"test2d"    , "", &test2d},
-	{"regs"      , "", &regs},
-	{"gdt"       , "", &readgdt},
-	{"idt"       , "", &readidt},
-	{"info"      , "", &info},
+	{"regs"      , "", &showregs},
+	{"gdt"       , "", &showgdt},
+	{"idt"       , "", &showidt},
+	{"info"      , "", &showinfo},
 	{"err"      , "", &err},
 	{"test"      , "", &test},
 	{"view"      , "", &view},
@@ -41,9 +41,9 @@ static command commands[] = {
 	{"font"      , "", &sfont},
 	{"test3d"      , "", &test3d},
 	{"detectpci"      , "", &detectpci},
-	{"mem"      , "", &mem},
+	{"showmem"      , "", &showmem},
 	{"testmem"      , "", &testmem},
-    {"testsyscall"      , "", &testsyscall},
+    {"testcall"      , "", &testcall},
 };
 
 /*******************************************************************************/
@@ -85,7 +85,7 @@ int test(void)
 
 /*******************************************************************************/
 /* Test l'usage de syscall */
-int testsyscall()
+int testcall()
 {
     print("*** avant appel");
     syscall2(0x0, 0x1980, 0x2505);
@@ -98,19 +98,18 @@ int testmem()
 {
     u8* test;
     print("**** AVANT ALLOCATION\r\n");    
-    mem();
+    showmem();
     test=vmalloc(150*1024*1024); /* 10 pages */
     print("**** APRES ALLOCATION\r\n");
-    mem();
+    showmem();
     vfree(test);
     print("**** APRES LIBERATION\r\n");
-    mem();
-
+    showmem();
 }
 
 /*******************************************************************************/
 /* Affiche des informations sur la mémoire */
-int mem()
+int showmem()
 {
     u32 libre=getmemoryfree();
     u32 total=physical_getmemorysize();
@@ -416,7 +415,7 @@ int err(u8* commandline)
 
 /*******************************************************************************/
 /* Information sur le démarrage */
-int info()
+int showinfo()
 {
     getgrubinfo_all();
     return 0;
@@ -425,9 +424,9 @@ int info()
 /*******************************************************************************/
 /* Affiche les registres */
 
-int regs()
+int showregs()
 {
-    save_stack dump;
+    regs dump;
     show_cpu(&dump);
 	return 0;
 }
@@ -600,7 +599,7 @@ int test2d()
 /*******************************************************************************/
 /* Lit l'IDT et l'affiche */
 
-int readidt()
+int showidt()
 {
 	u32 index, i = 0;
 	idtdes *desc;
@@ -648,7 +647,7 @@ int readidt()
 /*******************************************************************************/
 /* Lit les descripteurs GDT et les affiche */
 
-int readgdt()
+int showgdt()
 {
 	u32 index;
 	struct gdtr gdtreg;

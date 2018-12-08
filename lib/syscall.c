@@ -27,7 +27,7 @@
 void sysenter_handler(void)
 { 
     cli(); 
-    save_stack *dump;
+    regs *dump;
     dumpcpu();
     getESP(dump);
     sti(); 

@@ -137,7 +137,7 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 /******************************************************************************/
 /* Affiche une erreur CPU et fige l'ordinateur */
 
-void cpuerror(const u8 * src, const save_stack *stack)
+void cpuerror(const u8 * src, const regs *stack)
 {
 	printf("\033[31m*** ERREUR CPU : %s *** \r\n", src);
     if (stack!=NULL) show_cpu(stack);
@@ -168,7 +168,7 @@ void interruption()
 
 void exception0()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -184,7 +184,7 @@ void exception0()
 void exception1()
 {
     cli();
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -223,7 +223,7 @@ void exception1()
 
 void exception2()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -238,7 +238,7 @@ void exception2()
 
 void exception3()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -253,7 +253,7 @@ void exception3()
 
 void exception4()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -268,7 +268,7 @@ void exception4()
 
 void exception5()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -283,7 +283,7 @@ void exception5()
 
 void exception6()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -298,7 +298,7 @@ void exception6()
 
 void exception7()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -313,7 +313,7 @@ void exception7()
 
 void exception8()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -328,7 +328,7 @@ void exception8()
 
 void exception9()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -343,7 +343,7 @@ void exception9()
 
 void exception10()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -358,7 +358,7 @@ void exception10()
 
 void exception11()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -373,7 +373,7 @@ void exception11()
 
 void exception12()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -388,7 +388,7 @@ void exception12()
 
 void exception13()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -403,7 +403,7 @@ void exception13()
 
 void exception14()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -448,7 +448,7 @@ void exception14()
 
 void exception15()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -463,7 +463,7 @@ void exception15()
 
 void exception16()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -478,7 +478,7 @@ void exception16()
 
 void exception17()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);
@@ -493,7 +493,7 @@ void exception17()
 
 void exception18()
 {
-    save_stack *dump;
+    regs *dump;
     exception_stack_noerror *current;
     u32 *oldesp;
     getEBP(oldesp);

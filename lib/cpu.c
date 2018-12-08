@@ -129,7 +129,7 @@ u8 getcpuinfos(cpuinfo * proc)
 /******************************************************************************/
 /* Affiche les registres CPU */
 
-void show_lightcpu(save_stack *stack)
+void show_lightcpu(regs *stack)
 {
     u32 i;
 	printf("\33[0mEAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
@@ -194,7 +194,7 @@ void show_lightcpu(save_stack *stack)
 /******************************************************************************/
 /* Affiche les registres CPU */
 
-void show_cpu(save_stack *stack)
+void show_cpu(regs *stack)
 {
 	printf("EAX=%Y EBX=%Y ECX=%Y EDX=%Y\r\n", stack->eax, stack->ebx, stack->ecx, stack->edx);
 	printf("ESI=%Y EDI=%Y ESP=%Y EBP=%Y\r\n", stack->esi, stack->edi, stack->esp, stack->ebp);
