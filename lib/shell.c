@@ -41,9 +41,10 @@ static command commands[] = {
 	{"font"      , "", &sfont},
 	{"test3d"      , "", &test3d},
 	{"detectpci"      , "", &detectpci},
-	{"showmem"      , "", &showmem},
+	{"wmem"      , "", &showmem},
 	{"testmem"      , "", &testmem},
     {"testcall"      , "", &testcall},
+    {"testtask"      , "", &testtask},
 };
 
 /*******************************************************************************/
@@ -84,7 +85,16 @@ int test(void)
 }
 
 /*******************************************************************************/
+/* Test l'usage de création de tâche */
+
+int testtask()
+{
+    print("*** Creation d'une tache");
+}
+
+/*******************************************************************************/
 /* Test l'usage de syscall */
+
 int testcall()
 {
     print("*** avant appel");
@@ -94,6 +104,7 @@ int testcall()
 
 /*******************************************************************************/
 /* Test la memoire */
+
 int testmem()
 {
     u8* test;
@@ -109,6 +120,7 @@ int testmem()
 
 /*******************************************************************************/
 /* Affiche des informations sur la mémoire */
+
 int showmem()
 {
     u32 libre=getmemoryfree();
@@ -122,6 +134,7 @@ int showmem()
 
 /*******************************************************************************/
 /* Affiche les périphériques PCI */
+
 int detectpci()
 {
     scanPCI();

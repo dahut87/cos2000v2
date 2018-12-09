@@ -54,11 +54,10 @@
 #define RPL_RING2       0b01  /* Anneau 2 */
 #define RPL_RING3       0b11  /* Anneau 3 */
 
-
 #define MALLOC_MINIMUM		16
 
 #define setcr3(addr) \
-    asm volatile ("mov %0, %%eax; mov %%eax, %%cr3"::"m"(processes[pid].pd->addr->paddr));
+    asm volatile ("mov %[memaddr], %%eax; mov %%eax, %%cr3"::[memaddr] "m" (addr) );
 
 /* Malloc, pour l'attribution de mémoire en heap */
 typedef struct tmalloc {

@@ -31,3 +31,4 @@ int detectpci();
 int showmem();
 int testmem();
 int testcall();
+int testtask();

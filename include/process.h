@@ -127,10 +127,14 @@ typedef struct process {
 	u32 pid;
     regs dump;
 	stackdef kstack;
-    pd ppd;
+    pd *pdd;
     u32 result;
     u8 status;
-    process *parent;
+    u8 *exec_low;
+    u8 *exec_high;
+    u8 *bss_low;
+    u8 *bss_high;
+    struct process *parent;
     page_t page_head;
     u32 entry;
 } process __attribute__ ((packed));
