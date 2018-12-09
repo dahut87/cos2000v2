@@ -1,4 +1,4 @@
-all: bits32 bits64 harddisk uefi
+all: programs bits32 bits64 harddisk uefi
 	sync
 
 bits32: ARCH=bits32 
@@ -9,6 +9,11 @@ bits64: ARCH=bits64
 bits64: lib/libs.o system/system.sys
 	sync
 
+programs: programs/test
+
+programs/test:
+	make -C programs
+
 harddisk: final/harddisk.img.final
 
 uefi: final/harddiskuefi.img.final
@@ -17,20 +22,22 @@ install:
 	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios)
 
 clean:	
-	(cd system; make clean)
-	(cd lib;make clean)
-	(cd final;make clean)
+	make -C system clean
+	make -C lib clean
+	make -C final clean
+	make -C programs clean
 	sync
 
 littleclean:	
-	(cd system; make clean)
-	(cd lib;make clean)
-	(cd final;make littleclean)
+	make -C system clean
+	make -C lib clean
+	make -C final littleclean)
+	make -C programs clean
 	sync
 
 indent:
-	(cd system; make indent)
-	(cd lib;make indent)
+	make -C system indent
+	make -C lib indent
 	sync
 
 backup: clean
@@ -85,13 +92,13 @@ qemu64:
 	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
 	
 system/system.sys:
-	(cd system; VESA=$(VESA) make)
+	make -C system VESA=$(VESA)
 
 final/harddisk.img.final:
-	(cd final; make harddisk.img.final)
+	make -C final harddisk.img.final
 
 final/harddiskuefi.img.final:
-	(cd final; make harddiskuefi.img.final)	
+	make -C final harddiskuefi.img.final	
 
 lib/libs.o:
-	(cd lib; make)	
+	make -C lib	

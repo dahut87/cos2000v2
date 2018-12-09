@@ -1,11 +1,15 @@
-CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F elf_i386 -I ../include
+CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F elf-i386 -I ../include
 LINK=ld -m elf_i386 -r -o
 SRCS= $(wildcard *.c)
 OBJS= $(SRCS:.c=.o)
+ARCH=ar rcs
 
 all: makeall
 
-makeall: libs.o
+makeall: libs.a
+
+libs.a:libs.o
+	$(ARCH) $@ $^
 
 libs.o:$(OBJS)
 	$(LINK) libs.o $(OBJS)
@@ -16,8 +20,7 @@ libs.o:$(OBJS)
 clean:
 	rm -f *.o
 	rm -f *.c~
-	rm -f ./VGA/*.c~
+	rm -f *.a
 
 indent: 
 	indent -linux -i8 -ts8 *.c
-	indent -linux -i8 -ts8 ./VGA/*.c

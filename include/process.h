@@ -85,7 +85,7 @@
 /* OS identification */
 #define ELFOSABI_NONE 	0 	//No extensions or unspecified
 #define ELFOSABI_LINUX 	3 	//Linux
-#define ELFOSABI_COS2000 15 //COS2000
+#define ELFOSABI_COS2000 16 //COS2000
 
 /* ELF header */
 typedef struct elf32 {

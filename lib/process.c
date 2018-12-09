@@ -14,7 +14,7 @@ u32 lastpid;
 
 u8 elf_errors1[]="Aucune signature ELF";
 u8 elf_errors2[]="Fichier au format ELF mais non 32 bits";
-u8 elf_errors3[]="ELF non MSB";
+u8 elf_errors3[]="ELF non LSB";
 u8 elf_errors4[]="ELF mauvaise version";
 u8 elf_errors5[]="ELF pour OS ne correspondant pas";
 u8 elf_errors6[]="Mauvais type de machine";
@@ -37,8 +37,6 @@ u32 elf_test(u8 *src)
 	    && header->e_ident[EI_MAG2] == ELFMAG2 && header->e_ident[EI_MAG3] == ELFMAG3)
         {
         if (header->e_ident[EI_CLASS]!=ELFCLASS32)
-            return 1;
-        if (header->e_ident[EI_DATA]!=ELFDATA2LSB)
             return 2;
         if (header->e_ident[EI_DATA]!=ELFDATA2LSB)
             return 3;

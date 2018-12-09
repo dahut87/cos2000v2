@@ -2,9 +2,6 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 
-#define sysexit() asm volatile ("sysexit"::);
-
-
 #define syscall0(syscall) ({ \
 	u32 _v; \
 	asm volatile (\
@@ -45,6 +42,3 @@
 	_v; \
 })
 
-/* Vers 6 arguments maximum */
-void initsyscall(void);
-void sysenter_handler(void);
