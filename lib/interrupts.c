@@ -139,6 +139,7 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 
  void createdump(regs *dump)
 {
+        
         push(dump->eax);
         push(dump->ecx);
         push(dump->edx);
