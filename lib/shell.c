@@ -41,7 +41,7 @@ static command commands[] = {
 	{"font"      , "", &sfont},
 	{"test3d"      , "", &test3d},
 	{"detectpci"      , "", &detectpci},
-	{"wmem"      , "", &showmem},
+	{"mem"      , "", &showmem},
 	{"testmem"      , "", &testmem},
     {"testcall"      , "", &testcall},
     {"testtask"      , "", &testtask},
@@ -87,9 +87,14 @@ int test(void)
 /*******************************************************************************/
 /* Test l'usage de création de tâche */
 
+#include "test.c"
+
 int testtask()
 {
+    task_init();
     print("*** Creation d'une tache");
+    u32 pid=task_create(&programs_test);
+    task_run(pid);
 }
 
 /*******************************************************************************/

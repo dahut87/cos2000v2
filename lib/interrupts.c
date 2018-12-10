@@ -9,6 +9,7 @@
 #include "gdt.h"
 #include "system.h"
 #include "debug.h"
+#include "process.h"
 
 #define IDT_SIZE		256	/* nombre de descripteurs */
 
@@ -401,6 +402,16 @@ void exception13()
 	cpuerror("#GP General protection fault (GPF)",dump);
 }
 
+static u8 ex14_errors1[]="Supervisory process tried to read a non-present page entry";
+static u8 ex14_errors2[]="Supervisory process tried to read a page and caused a protection fault";
+static u8 ex14_errors3[]="Supervisory process tried to write to a non-present page entry";
+static u8 ex14_errors4[]="Supervisory process tried to write a page and caused a protection fault";
+static u8 ex14_errors5[]="User process tried to read a non-present page entry";
+static u8 ex14_errors6[]="User process tried to read a page and caused a protection fault";
+static u8 ex14_errors7[]="User process tried to write to a non-present page entry";
+static u8 ex14_errors8[]="User process tried to write a page and caused a protection fault";
+static u8 *ex14_errors[]={&ex14_errors1,&ex14_errors2,&ex14_errors3,&ex14_errors4,&ex14_errors5,&ex14_errors6,&ex14_errors7,&ex14_errors8};
+
 void exception14()
 {
     regs *dump;
@@ -413,37 +424,20 @@ void exception14()
     dump->esp=*oldesp;
     dump->ebp=*((u32 *) dump->esp);
     dump->eip=current->eip;
-    u8* errorstring;
-    u8 completeerrorstring[255];
-    switch (current->error_code & 0xF) {
-        case 0:
-            errorstring="Supervisory process tried to read a non-present page entry";
-            break;
-        case 1:
-            errorstring="Supervisory process tried to read a page and caused a protection fault";
-            break;
-        case 2:
-            errorstring="Supervisory process tried to write to a non-present page entry";
-            break;
-        case 3:
-            errorstring="Supervisory process tried to write a page and caused a protection fault";
-            break;
-        case 4:
-            errorstring="User process tried to read a non-present page entry";
-            break;
-        case 5:
-            errorstring="User process tried to read a page and caused a protection fault";
-            break;
-        case 6:
-            errorstring="User process tried to write to a non-present page entry";
-            break;      
-        case 7:
-            errorstring="User process tried to write a page and caused a protection fault";
-            break;   
-    }
-   // printf("%X",current->error_code);
-    sprintf(&completeerrorstring,"#PF Page fault - %s at adress %X",errorstring,dump->cr2);
-	cpuerror(&completeerrorstring,dump);
+    if (dump->cr2 >= USER_CODE && dump->cr2 < USER_STACK) 
+    {
+        virtual_range_new(getcurrentprocess()->pdd, (u8 *) (dump->cr2 & 0xFFFFF000), PAGESIZE, PAGE_ALL);
+	} 
+	else {		
+        printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",ex14_errors[current->error_code & 0xF],dump->cr2,dump->cs,dump->eip);
+        cpuerror("#SS Page fault",dump);
+	}
+    dump->ebp=oldesp;
+    restdebugcpu();
+    leave();
+    sti();
+    asm("addl $0x04,%%esp"::);
+    iret();	
 }
 
 void exception15()

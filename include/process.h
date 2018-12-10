@@ -143,3 +143,7 @@ void task_init();
 u32 task_getfreePID ();
 u32 task_usePID (u32 pid);
 u32 task_create();
+u32 elf_test(u8 *src);
+u32 elf_load(u8 *src, u32 pid);
+process *getcurrentprocess();
+void task_run(u32 pid);

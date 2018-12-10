@@ -12,13 +12,13 @@ process *current;
 u32 lastpid;
 
 
-u8 elf_errors1[]="Aucune signature ELF";
-u8 elf_errors2[]="Fichier au format ELF mais non 32 bits";
-u8 elf_errors3[]="ELF non LSB";
-u8 elf_errors4[]="ELF mauvaise version";
-u8 elf_errors5[]="ELF pour OS ne correspondant pas";
-u8 elf_errors6[]="Mauvais type de machine";
-u8 *elf_errors[6]={&elf_errors1,&elf_errors2,&elf_errors3,&elf_errors4,&elf_errors5,&elf_errors6};
+static u8 elf_errors1[]="Aucune signature ELF";
+static u8 elf_errors2[]="Fichier au format ELF mais non 32 bits";
+static u8 elf_errors3[]="ELF non LSB";
+static u8 elf_errors4[]="ELF mauvaise version";
+static u8 elf_errors5[]="ELF pour OS ne correspondant pas";
+static u8 elf_errors6[]="Mauvais type de machine";
+static u8 *elf_errors[]={&elf_errors1,&elf_errors2,&elf_errors3,&elf_errors4,&elf_errors5,&elf_errors6};
 
 /*******************************************************************************/
 /* Vérifie la signature ELF 
@@ -44,7 +44,7 @@ u32 elf_test(u8 *src)
             return 4;
         if (header->e_ident[EI_OSABI]!=ELFOSABI_COS2000)
             return 5;
-        if (header->e_machine==EM_386)
+        if (header->e_machine!=EM_386)
             return 6;
         return 0;
         }
@@ -68,7 +68,7 @@ u32 elf_load(u8 *src, u32 pid)
 	program = (elf32p *) (src + header->e_phoff);
     code=elf_test(src);	
     if (code!=0) {
-		printf("Mauvais format ELF : N°%s !\r\n",elf_errors[code-1]);
+		printf("Erreur de chargement ELF, %s !\r\n",elf_errors[code-1]);
 		return NULL;
 	}
 	for (i = 0; i < header->e_phnum; i++, program++) {
@@ -91,12 +91,13 @@ u32 elf_load(u8 *src, u32 pid)
 				processes[pid].bss_low = (u8*) v_begin;
 				processes[pid].bss_high = (u8*) v_end;
 			}
-			memcpy((u8 *) v_begin, (u8 *) (src + program->p_offset), program->p_filesz,0);
+			memcpy((u8 *) (src + program->p_offset),(u8 *) v_begin , program->p_filesz,0);
 			if (program->p_memsz > program->p_filesz)
 				for (i = program->p_filesz, ptr = (u8 *) program->p_vaddr; i < program->p_memsz; i++)
 					ptr[i] = 0;
 		}
 	}
+    processes[pid].entry=header->e_entry;
 	return header->e_entry;
 }
 
@@ -134,6 +135,13 @@ u32 task_getfreePID ()
 }
 
 /*******************************************************************************/
+/* Récupère les informations sur le processus courant */
+process *getcurrentprocess()
+{
+    return current;
+}
+
+/*******************************************************************************/
 /* Determine le dernier PID occupé */
 
 u32 task_usePID (u32 pid)
@@ -142,10 +150,18 @@ u32 task_usePID (u32 pid)
 }
 
 /*******************************************************************************/
+/* Execute une tâche */
+
+void task_run(u32 pid)
+{  
+	processes[pid].status = STATUS_RUN;
+}
+
+/*******************************************************************************/
 /* Initialise une tâche */
 
 u32 task_create(u8 *code)
-{
+{    
     process *previous=current; 
     u32 pid=task_getfreePID();
     task_usePID(pid);
@@ -156,15 +172,17 @@ u32 task_create(u8 *code)
 	current = &processes[pid];
 	setcr3(processes[pid].pdd->addr->paddr);
 	kstack = virtual_page_getfree();
-	processes[pid].dump.ss = SEL_USER_STACK || RPL_RING3;
+	processes[pid].dump.ss = SEL_USER_STACK | RPL_RING3;
 	processes[pid].dump.esp = USER_STACK;
 	processes[pid].dump.eflags = 0x0;
-	processes[pid].dump.cs = SEL_USER_CODE  || RPL_RING3;
+	processes[pid].dump.cs = SEL_USER_CODE  | RPL_RING3;
 	processes[pid].dump.eip = elf_load(code,pid);
-	processes[pid].dump.ds = SEL_USER_DATA || RPL_RING3;
-	processes[pid].dump.es = SEL_USER_DATA || RPL_RING3;
-	processes[pid].dump.fs = SEL_USER_DATA || RPL_RING3;
-	processes[pid].dump.gs = SEL_USER_DATA || RPL_RING3;
+    if (processes[pid].dump.eip==NULL)
+        return NULL;
+	processes[pid].dump.ds = SEL_USER_DATA | RPL_RING3;
+	processes[pid].dump.es = SEL_USER_DATA | RPL_RING3;
+	processes[pid].dump.fs = SEL_USER_DATA | RPL_RING3;
+	processes[pid].dump.gs = SEL_USER_DATA | RPL_RING3;
 	processes[pid].dump.cr3 = (u32) processes[pid].pdd->addr->paddr;
 	processes[pid].kstack.ss0 = SEL_KERNEL_STACK;
 	processes[pid].kstack.esp0 = (u32) kstack->vaddr + PAGESIZE - 16;
@@ -178,6 +196,14 @@ u32 task_create(u8 *code)
 	processes[pid].result = 0;
 	processes[pid].status = STATUS_READY;
 	current = previous;
-	setcr3(current->dump.cr3);
-	return pid;
+    if (current==NULL)
+    {
+        u32 pd = KERNEL_PD_ADDR;
+	    setcr3(pd);
+    }    
+    else
+    {    
+	    setcr3(current->dump.cr3);
+    }	
+    return pid;
 }

@@ -31,7 +31,7 @@ clean:
 littleclean:	
 	make -C system clean
 	make -C lib clean
-	make -C final littleclean)
+	make -C final littleclean
 	make -C programs clean
 	sync
 
