@@ -125,7 +125,6 @@ void setidt(u32 offset, u16 select, u16 type, u16 index)
 }
 
 /******************************************************************************/
-
 /* Met une entrée dans l'IDT */
 
 void putidt(u32 offset, u16 select, u16 type, u16 index)
@@ -133,6 +132,43 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 	idtdes temp;
 	makeidtdes(offset, select, type, &temp);
 	idt[index] = temp;
+}
+
+/******************************************************************************/
+/* Créé un dump de la mémoire en empilant les registres */
+
+ void createdump(regs *dump)
+{
+        push(dump->eax);
+        push(dump->ecx);
+        push(dump->edx);
+        push(dump->ebx);
+        push(dump->esp);
+        push(dump->ebp);
+        push(dump->esi);
+        push(dump->edi);
+        push(dump->eflags);
+        push(dump->cs);
+        push(dump->eip);
+        push(dump->ds);
+        push(dump->es);
+        push(dump->fs);
+        push(dump->gs);
+        push(dump->ss);
+        push(dump->cr0);
+        push(dump->cr2);
+        push(dump->cr3);
+        push(dump->cr4);
+        push(dump->dr0);
+        push(dump->dr1);
+        push(dump->dr2);
+        push(dump->dr3);
+        push(dump->dr6);
+        push(dump->dr7);
+        u32 eferlow=dump->efer & 0xFFFF;
+        u32 eferhigh=dump->efer >> 32;
+        push(eferlow);
+        push(eferhigh);
 }
 
 /******************************************************************************/

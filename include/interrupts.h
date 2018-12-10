@@ -220,6 +220,6 @@ struct idtr {
  void enableirq(u8 irq);
  void disableirq(u8 irq);
  void cpuerror(const u8 * src, const regs *stack);
-
+ void createdump(regs *dump);
 #endif
 

@@ -21,6 +21,10 @@
 
 #define pushf() asm("pushf"::)
 
+#define pop(mem) asm("popl %0":"=m" (mem))
+
+#define push(mem) asm("pushl %0"::"m" (mem))
+
 #define popf() asm("popf"::)
 
 #define iret() asm("iret"::)

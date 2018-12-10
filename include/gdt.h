@@ -85,3 +85,4 @@ bool isdesvalid(u16 sel);
 u8 getdesbit3(u16 sel);
 u32 getdesdpl(u16 sel);
 u16 getdesalign(u16 sel);
+void setTSS(u32 ss,u32 sp);

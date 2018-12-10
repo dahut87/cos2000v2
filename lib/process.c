@@ -150,11 +150,32 @@ u32 task_usePID (u32 pid)
 }
 
 /*******************************************************************************/
+/* Bascule vers une tâche */
+
+void task_switch(u32 pid, bool fromkernelmode)
+{
+    u32 ss,esp,eflags;
+	current = &processes[pid];
+    setTSS(current->kstack.ss0,current->kstack.esp0);
+	eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
+	if (fromkernelmode) {
+        ss = current->dump.ss;
+		esp = current->dump.esp;
+	} else {
+		ss = current->kstack.ss0;
+		esp = current->kstack.esp0;
+	}
+	createdump(&current->dump);
+    restdebugcpu();
+}
+
+/*******************************************************************************/
 /* Execute une tâche */
 
 void task_run(u32 pid)
 {  
 	processes[pid].status = STATUS_RUN;
+    task_switch(pid, true);
 }
 
 /*******************************************************************************/

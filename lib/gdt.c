@@ -47,6 +47,15 @@ void initgdt(u32 offset)
 }
 
 /*******************************************************************************/
+/* Change le TSS courant */
+
+void setTSS(u32 ss,u32 sp)
+{
+	tss0.esp0 = sp;
+	tss0.ss0 = ss;
+}
+
+/*******************************************************************************/
 /* Initialise le registre de tâche (TSR) */
 
 void inittr(void)
