@@ -56,11 +56,11 @@
 })
 
 #define createdump(dump) ({ \
+        push(dump.ss);\
+        push(dump.esp);\
         push(dump.eflags);\
         push(dump.cs);\
         push(dump.eip);\
-        push(dump.esp);\
-        push(dump.ss);\
         push(dump.ds);\
         push(dump.es);\
         push(dump.fs);\
@@ -90,12 +90,12 @@
 
 #define dumpcpu()  ({ \
 	asm("\
+        pushl %%ss\n \
+        pushl %%esp\n \
         pushf \n \
         pushl %%cs\n \
         pushl $0x0\n \
-        pushl %%esp\n \
-        pushl %%ss\n \
-  	pushl %%ds\n \
+    	pushl %%ds\n \
         pushl %%es\n \
         pushl %%fs\n \
         pushl %%gs\n \
@@ -132,7 +132,7 @@
         pushl %%eax":::);\
 })
 
-#define restcpu(usermode)  ({\
+#define restcpu()  ({\
 	asm("\
         popl %%eax \n \
         popl %%edx \n \
@@ -166,11 +166,9 @@
         popl %%fs\n \
         popl %%es\n \
   	popl %%ds\n \"::);\
-	if (usermode==true)\
-		asm("add $0x8,%%esp"::);\
 })
 
-#define restdebugcpu(usermode) ({\
+#define restdebugcpu() ({\
 	asm("\
         popl %%eax \n \
         popl %%edx \n \
@@ -198,8 +196,6 @@
         popl %%fs\n \
         popl %%es\n \
   	popl %%ds":::);\
-	if (usermode==true)\
-		asm("add $0x8,%%esp"::);\
 })
 
 /*
@@ -237,11 +233,11 @@ typedef struct regs {
    u32 fs;
    u32 es;
    u32 ds;
-   u32 ss;
-   u32 esp;
    u32 eip;
    u32 cs;
    u32 eflags;
+   u32 esp;
+   u32 ss;
 } regs __attribute__ ((packed));
 /* exception pile */
 typedef struct exception_stack {

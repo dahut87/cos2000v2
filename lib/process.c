@@ -154,18 +154,12 @@ u32 task_usePID (u32 pid)
 
 void task_switch(u32 pid, bool fromkernelmode)
 {
+    process *previous=current;
 	current = &processes[pid];
     	setTSS(current->kstack.ss0,current->kstack.esp0);
 	current->dump.eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
-	createdump(current->dump);
-	if (fromkernelmode) 
-	{
-            restdebugcpu(true);
-	} 
-	else 
-	{
-    	   restdebugcpu(false);
-	}
+    createdump(current->dump);
+    restdebugcpu();
     iret();
 }
 
@@ -175,7 +169,7 @@ void task_switch(u32 pid, bool fromkernelmode)
 void task_run(u32 pid)
 {  
 	processes[pid].status = STATUS_RUN;
-    task_switch(pid, true);
+    task_switch(pid, false);
 }
 
 /*******************************************************************************/
@@ -194,7 +188,7 @@ u32 task_create(u8 *code)
 	setcr3(processes[pid].pdd->addr->paddr);
 	kstack = virtual_page_getfree();
 	processes[pid].dump.ss = SEL_USER_STACK | RPL_RING3;
-	processes[pid].dump.esp = USER_STACK;
+	processes[pid].dump.esp = USER_STACK-16;
 	processes[pid].dump.eflags = 0x0;
 	processes[pid].dump.cs = SEL_USER_CODE  | RPL_RING3;
 	processes[pid].dump.eip = elf_load(code,pid);

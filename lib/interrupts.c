@@ -214,14 +214,7 @@ void exception1()
           initselectors(retry_address);            
     }
     changevc(0);
-    if (dump->cs==SEL_KERNEL_CODE)
-    {
-    	restdebugcpu(true);
-    }
-    else
-    {
-    	restdebugcpu(false);
-    }
+    restdebugcpu();
     iret();
 }
 
@@ -435,14 +428,7 @@ void exception14()
         printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",ex14_errors[current->error_code & 0xF],dump->cr2,dump->cs,dump->eip);
         cpuerror("#SS Page fault",dump);
 	}
-    if (dump->cs==SEL_KERNEL_CODE)
-    {
-    	restdebugcpu(true);
-    }
-    else
-    {
-    	restdebugcpu(false);
-    }
+    restdebugcpu();
     iret();
 }
 
