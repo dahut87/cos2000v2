@@ -2,6 +2,7 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "types.h"
+#include "asm.h"
 
 #ifndef _INTERRUPTS
 #define _INTERRUPTS
@@ -54,16 +55,57 @@
         asm volatile ("movl %%ebp,%[tomem];":: [tomem] "m" (mem)); \
 })
 
-#define dumpcpu() asm("\
-        pushal \n \
+#define createdump(dump) ({ \
+        push(dump.eflags);\
+        push(dump.cs);\
+        push(dump.eip);\
+        push(dump.esp);\
+        push(dump.ss);\
+        push(dump.ds);\
+        push(dump.es);\
+        push(dump.fs);\
+        push(dump.gs);\
+        push(dump.eax);\
+        push(dump.ebx);\
+        push(dump.ecx);\
+        push(dump.edx);\
+        push(dump.esi);\
+        push(dump.edi);\
+        push(dump.ebp);\
+        push(dump.cr0);\
+        push(dump.cr2);\
+        push(dump.cr3);\
+        push(dump.cr4);\
+        push(dump.dr0);\
+        push(dump.dr1);\
+        push(dump.dr2);\
+        push(dump.dr3);\
+        push(dump.dr6);\
+        push(dump.dr7);\
+        u32 eferlow=(u32) dump.efer & 0xFFFF;\
+        u32 eferhigh=(u32) dump.efer >> 32;\
+        push(eferlow);\
+        push(eferhigh);\
+})
+
+#define dumpcpu()  ({ \
+	asm("\
         pushf \n \
         pushl %%cs\n \
         pushl $0x0\n \
-        pushl %%ds\n \
+        pushl %%esp\n \
+        pushl %%ss\n \
+  	pushl %%ds\n \
         pushl %%es\n \
         pushl %%fs\n \
         pushl %%gs\n \
-        pushl %%ss\n \
+        pushl %%eax\n \
+        pushl %%ebx\n \
+        pushl %%ecx\n \
+        pushl %%edx\n \
+        pushl %%esi\n \
+        pushl %%edi\n \
+        pushl %%ebp\n \
         mov %%cr0, %%eax \n \
         pushl %%eax\n \
         mov %%cr2, %%eax \n \
@@ -87,9 +129,11 @@
         mov $0xC0000080, %%ecx \n \
         rdmsr \n \
         pushl %%edx \n \
-        pushl %%eax":::)
+        pushl %%eax":::);\
+})
 
-#define restcpu() asm("\
+#define restcpu(usermode)  ({\
+	asm("\
         popl %%eax \n \
         popl %%edx \n \
         mov $0xC0000080, %%ecx \n \
@@ -107,24 +151,27 @@
         popl %%eax \n \
 	mov %%eax,%%dr0 \n \
         popl %%eax \n \
-	mov %%eax,%%cr4 \n \
         popl %%eax \n \
 	mov %%eax,%%cr3 \n \
         popl %%eax \n \
-	mov %%eax,%%cr2 \n \
         popl %%eax \n \
-	mov %%eax,%%cr0 \n \
-        popl %%ss\n \
+        popl %%ebp\n \
+        popl %%edi\n \
+        popl %%esi\n \
+        popl %%edx\n \
+        popl %%ecx\n \
+        popl %%ebx\n \
+        popl %%eax\n \
         popl %%gs\n \
         popl %%fs\n \
         popl %%es\n \
-        popl %%ds\n \
-        popl %%eax \n \
-        popl %%eax \n \
-        popf \n \
-        popal":::)
+  	popl %%ds\n \"::);\
+	if (usermode==true)\
+		asm("add $0x8,%%esp"::);\
+})
 
-#define restdebugcpu() asm("\
+#define restdebugcpu(usermode) ({\
+	asm("\
         popl %%eax \n \
         popl %%edx \n \
         mov $0xC0000080, %%ecx \n \
@@ -136,22 +183,34 @@
         popl %%eax \n \
         popl %%eax \n \
         popl %%eax \n \
-	mov %%eax,%%cr4 \n \
         popl %%eax \n \
 	mov %%eax,%%cr3 \n \
         popl %%eax \n \
-	mov %%eax,%%cr2 \n \
         popl %%eax \n \
-	mov %%eax,%%cr0 \n \
-        popl %%ss\n \
+        popl %%ebp\n \
+        popl %%edi\n \
+        popl %%esi\n \
+        popl %%edx\n \
+        popl %%ecx\n \
+        popl %%ebx\n \
+        popl %%eax\n \
         popl %%gs\n \
         popl %%fs\n \
         popl %%es\n \
-        popl %%ds\n \
-        popl %%eax \n \
-        popl %%eax \n \
-        popf \n \
-        popal":::)
+  	popl %%ds":::);\
+	if (usermode==true)\
+		asm("add $0x8,%%esp"::);\
+})
+
+/*
+lors d'un iret en mode user:
+	pushl %%ss\n \
+        pushl %%esp\n \
+lors d'un iret en mode kernel:
+        pushf \n \
+        pushl $cs\n \
+        pushl $0x0\
+*/
 
 
 /* save pile */
@@ -167,22 +226,22 @@ typedef struct regs {
    u32 cr3;
    u32 cr2;
    u32 cr0;
-   u32 ss;
+   u32 ebp;
+   u32 edi;
+   u32 esi;
+   u32 edx;
+   u32 ecx;
+   u32 ebx;
+   u32 eax;
    u32 gs;
    u32 fs;
    u32 es;
    u32 ds;
+   u32 ss;
+   u32 esp;
    u32 eip;
    u32 cs;
    u32 eflags;
-   u32 edi;
-   u32 esi;
-   u32 ebp;
-   u32 esp;
-   u32 ebx;
-   u32 edx;
-   u32 ecx;
-   u32 eax;
 } regs __attribute__ ((packed));
 /* exception pile */
 typedef struct exception_stack {
@@ -220,6 +279,5 @@ struct idtr {
  void enableirq(u8 irq);
  void disableirq(u8 irq);
  void cpuerror(const u8 * src, const regs *stack);
- void createdump(regs *dump);
 #endif
 

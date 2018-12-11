@@ -42,7 +42,7 @@ void sysenter_handler(void)
 			break;
 		
 	}
-    restdebugcpu();
+    restdebugcpu(true);
     sysexit();
 }
 

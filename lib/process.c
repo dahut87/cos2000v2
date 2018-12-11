@@ -154,19 +154,19 @@ u32 task_usePID (u32 pid)
 
 void task_switch(u32 pid, bool fromkernelmode)
 {
-    u32 ss,esp,eflags;
 	current = &processes[pid];
-    setTSS(current->kstack.ss0,current->kstack.esp0);
-	eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
-	if (fromkernelmode) {
-        ss = current->dump.ss;
-		esp = current->dump.esp;
-	} else {
-		ss = current->kstack.ss0;
-		esp = current->kstack.esp0;
+    	setTSS(current->kstack.ss0,current->kstack.esp0);
+	current->dump.eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
+	createdump(current->dump);
+	if (fromkernelmode) 
+	{
+            restdebugcpu(true);
+	} 
+	else 
+	{
+    	   restdebugcpu(false);
 	}
-	createdump(&current->dump);
-    restdebugcpu();
+    iret();
 }
 
 /*******************************************************************************/

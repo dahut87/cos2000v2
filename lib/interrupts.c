@@ -135,44 +135,6 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 }
 
 /******************************************************************************/
-/* Créé un dump de la mémoire en empilant les registres */
-
- void createdump(regs *dump)
-{
-        
-        push(dump->eax);
-        push(dump->ecx);
-        push(dump->edx);
-        push(dump->ebx);
-        push(dump->esp);
-        push(dump->ebp);
-        push(dump->esi);
-        push(dump->edi);
-        push(dump->eflags);
-        push(dump->cs);
-        push(dump->eip);
-        push(dump->ds);
-        push(dump->es);
-        push(dump->fs);
-        push(dump->gs);
-        push(dump->ss);
-        push(dump->cr0);
-        push(dump->cr2);
-        push(dump->cr3);
-        push(dump->cr4);
-        push(dump->dr0);
-        push(dump->dr1);
-        push(dump->dr2);
-        push(dump->dr3);
-        push(dump->dr6);
-        push(dump->dr7);
-        u32 eferlow=dump->efer & 0xFFFF;
-        u32 eferhigh=dump->efer >> 32;
-        push(eferlow);
-        push(eferhigh);
-}
-
-/******************************************************************************/
 /* Affiche une erreur CPU et fige l'ordinateur */
 
 void cpuerror(const u8 * src, const regs *stack)
@@ -213,8 +175,8 @@ void exception0()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#DE Divide error",dump);
 }
@@ -229,8 +191,8 @@ void exception1()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
     changevc(6);
     clearscreen();
@@ -252,10 +214,14 @@ void exception1()
           initselectors(retry_address);            
     }
     changevc(0);
-    dump->ebp=oldesp;
-    restdebugcpu();
-    leave();
-    sti();
+    if (dump->cs==SEL_KERNEL_CODE)
+    {
+    	restdebugcpu(true);
+    }
+    else
+    {
+    	restdebugcpu(false);
+    }
     iret();
 }
 
@@ -268,8 +234,8 @@ void exception2()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("NMI Non-maskable hardware interrupt",dump);
 }
@@ -283,8 +249,8 @@ void exception3()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#BP INT3 instruction",dump);
 }
@@ -298,8 +264,8 @@ void exception4()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#OF INTO instruction detected overflow",dump);
 }
@@ -313,8 +279,8 @@ void exception5()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#BR BOUND instruction detected overrange",dump);
 }
@@ -328,8 +294,8 @@ void exception6()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#UD Invalid instruction opcode",dump);
 }
@@ -343,8 +309,8 @@ void exception7()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#NM No coprocessor",dump);
 }
@@ -358,8 +324,8 @@ void exception8()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#DF Double fault",dump);
 }
@@ -373,8 +339,8 @@ void exception9()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("Coprocessor segment overrun",dump);
 }
@@ -388,8 +354,8 @@ void exception10()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#TS Invalid task state segment (TSS)",dump);
 }
@@ -403,8 +369,8 @@ void exception11()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#NP Segment not present",dump);
 }
@@ -418,8 +384,8 @@ void exception12()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#SS Stack fault",dump);
 }
@@ -433,8 +399,8 @@ void exception13()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#GP General protection fault (GPF)",dump);
 }
@@ -458,8 +424,8 @@ void exception14()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
     if (dump->cr2 >= USER_CODE && dump->cr2 < USER_STACK) 
     {
@@ -469,12 +435,15 @@ void exception14()
         printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",ex14_errors[current->error_code & 0xF],dump->cr2,dump->cs,dump->eip);
         cpuerror("#SS Page fault",dump);
 	}
-    dump->ebp=oldesp;
-    restdebugcpu();
-    leave();
-    sti();
-    asm("addl $0x04,%%esp"::);
-    iret();	
+    if (dump->cs==SEL_KERNEL_CODE)
+    {
+    	restdebugcpu(true);
+    }
+    else
+    {
+    	restdebugcpu(false);
+    }
+    iret();
 }
 
 void exception15()
@@ -486,8 +455,8 @@ void exception15()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("(reserved)",dump);
 }
@@ -501,8 +470,8 @@ void exception16()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#MF Coprocessor error",dump);
 }
@@ -516,8 +485,8 @@ void exception17()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#AC Alignment check",dump);
 }
@@ -531,8 +500,8 @@ void exception18()
     dumpcpu();
     getESP(dump);
     current=(exception_stack *) (oldesp+1);
-    dump->esp=*oldesp;
-    dump->ebp=*((u32 *) dump->esp);
+    dump->ebp=*oldesp;
+    dump->esp=(u32) oldesp+sizeof(exception_stack);
     dump->eip=current->eip;
 	cpuerror("#MC Machine check",dump);
 }
