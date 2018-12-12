@@ -430,8 +430,8 @@ void apply_bestdriver(void)
 				bestresol = cap[j].width * cap[j].height;
 				bestmode = cap[j].modenumber;
 				bestdriver =
-					registred[i].pointer->
-					getvideo_drivername();
+					registred[i].
+					pointer->getvideo_drivername();
 			}
 			j++;
 		}
@@ -459,8 +459,8 @@ void apply_driver(u8 * name)
 			getvideo_drivername =
 				registred[i].pointer->getvideo_drivername;
 			getvideo_capabilities =
-				registred[i].pointer->
-				getvideo_capabilities;
+				registred[i].
+				pointer->getvideo_capabilities;
 			getvideo_info =
 				registred[i].pointer->getvideo_info;
 			mem_to_video = registred[i].pointer->mem_to_video;
@@ -622,8 +622,10 @@ u8 egatovga(u8 ega)
 
 static  convertrgb[] =
 	{ 0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA,
- 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555,
- 0xFF55FF, 0xFFFF55, 0xFFFFFF };
+	0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
+		0xFF5555,
+	0xFF55FF, 0xFFFF55, 0xFFFFFF
+};
 
 u32 egatorgb(u8 vga)
 {

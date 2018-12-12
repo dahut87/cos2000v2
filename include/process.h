@@ -144,6 +144,7 @@ typedef struct process
 	u32     entry;
 } process __attribute__ ((packed));
 
+u32     getcurrentpid();
 void    task_init();
 u32     task_getfreePID();
 u32     task_usePID(u32 pid);

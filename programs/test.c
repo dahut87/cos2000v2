@@ -7,5 +7,6 @@
 
 void main(void)
 {
-	test_api();
+	u32     result = libc_testapi();
+	libc_exit(result);
 }

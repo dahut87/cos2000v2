@@ -73,13 +73,13 @@ int main(u32 magic, u32 addr)
 
 	print("\033[37m\033[0m -Initilisation des taches (TSR)");
 	inittr();
+	initretry(&&retry);
 	task_init();
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
 	initidt();
 	initpic();
-	initretry(&&retry);
 	sti();
 	ok();
 

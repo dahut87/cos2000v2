@@ -43,7 +43,6 @@ static command commands[] = {
 	{"detectpci", "", &detectpci},
 	{"mem", "", &showmem},
 	{"testmem", "", &testmem},
-	{"testcall", "", &testcall},
 	{"testtask", "", &testtask},
 };
 
@@ -98,16 +97,6 @@ int testtask()
 	print("*** Creation d'une tache");
 	u32     pid = task_create(&programs_test, false);
 	task_run(pid);
-}
-
-/*******************************************************************************/
-/* Test l'usage de syscall */
-
-int testcall()
-{
-	print("*** avant appel");
-	syscall2(0x0, 0x1980, 0x2505);
-	print("*** apres appel");
 }
 
 /*******************************************************************************/

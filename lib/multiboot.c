@@ -114,8 +114,8 @@ void getgrubinfo_all(void)
 				multiboot_memory_map_t *mmap;
 				printf("*** Plan de memoire ***\r\n");
 				for (mmap =
-				     ((struct multiboot_tag_mmap *) tag)->
-				     entries;
+				     ((struct multiboot_tag_mmap *)
+				      tag)->entries;
 				     (u8 *) mmap < (u8 *) tag + tag->size;
 				     mmap =
 				     (multiboot_memory_map_t

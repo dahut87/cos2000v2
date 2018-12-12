@@ -20,7 +20,8 @@ static u8 elf_errors5[] = "ELF pour OS ne correspondant pas";
 static u8 elf_errors6[] = "Mauvais type de machine";
 static u8 *elf_errors[] =
 	{ &elf_errors1, &elf_errors2, &elf_errors3, &elf_errors4,
-&elf_errors5, &elf_errors6 };
+	&elf_errors5, &elf_errors6
+};
 
 /*******************************************************************************/
 /* Vérifie la signature ELF 
@@ -183,6 +184,15 @@ process *getcurrentprocess()
 }
 
 /*******************************************************************************/
+/* Récupère le PID du processus courant */
+
+u32 getcurrentpid()
+{
+	return current->pid;
+}
+
+
+/*******************************************************************************/
 /* Determine le dernier PID occupé */
 
 u32 task_usePID(u32 pid)
@@ -212,8 +222,23 @@ void task_switch(u32 pid, bool fromkernelmode)
 
 void task_run(u32 pid)
 {
-	processes[pid].status = STATUS_RUN;
-	task_switch(pid, false);
+	if (processes[pid].status == STATUS_READY)
+	{
+		processes[pid].status = STATUS_RUN;
+		task_switch(pid, false);
+	}
+}
+
+/*******************************************************************************/
+/* Execute une tâche */
+
+void task_delete(u32 pid)
+{
+	if (processes[pid].status == STATUS_READY
+	    || processes[pid].status == STATUS_RUN)
+	{
+		processes[pid].status = STATUS_FREE;
+	}
 }
 
 /*******************************************************************************/

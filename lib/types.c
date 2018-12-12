@@ -30,7 +30,7 @@ char    ctype[] = {
 /* 'X' */ CT_UP, CT_UP, CT_UP, CT_PUN,
 	CT_PUN, CT_PUN, CT_PUN, CT_PUN,
 /* '`' */ CT_PUN, CT_LOW | CT_HEX, CT_LOW | CT_HEX,
-		CT_LOW | CT_HEX,
+	CT_LOW | CT_HEX,
 	CT_LOW | CT_HEX, CT_LOW | CT_HEX, CT_LOW | CT_HEX, CT_LOW,
 /* h' */ CT_LOW, CT_LOW, CT_LOW, CT_LOW,
 	CT_LOW, CT_LOW, CT_LOW, CT_LOW,

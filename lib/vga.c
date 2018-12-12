@@ -108,8 +108,9 @@ u8 VGA_setvideo_mode(u8 mode)
 				break;
 			case 8:
 				/* mode 256 couleurs */
-				if (modes[index].sequencer.
-				    Sequencer_Memory_Mode_Register == 0x0E)
+				if (modes[index].
+				    sequencer.Sequencer_Memory_Mode_Register
+				    == 0x0E)
 				{
 					/* mode chainé (plus rapide mais limité en mémoire) */
 					infos.currentpitch =

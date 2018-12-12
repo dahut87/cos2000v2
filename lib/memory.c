@@ -356,8 +356,8 @@ void virtual_pd_page_add(pd * dst, u8 * vaddr, u8 * paddr, u32 flags)
 		pt = (u32 *) pg->vaddr;
 		for (i = 1; i < 1024; i++)
 			pt[i] = 0;
-		*pdir = (u32) pg->
-			paddr | (PAGE_PRESENT | PAGE_WRITE | flags);
+		*pdir = (u32) pg->paddr | (PAGE_PRESENT | PAGE_WRITE |
+					   flags);
 		if (dst)
 			TAILQ_INSERT_TAIL(&dst->page_head, pg, tailq);
 	}

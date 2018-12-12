@@ -7,6 +7,7 @@
 #include <memory.h>
 #include <interrupts.h>
 #include <syscall.h>
+#include <process.h>
 
  /* 32bit SYSENTER instruction entry.
   *
@@ -36,6 +37,10 @@ void sysenter_handler(void)
 		case 0:
 			printf("Test de fonctionnement syscall\r\n -arguments 1:%Y 2:%Y 3:%Y\r\n", dump->ebx, dump->esi, dump->edi);
 			dump->eax = 0x6666666;
+			break;
+		case 1:
+			task_delete(getcurrentpid());
+			task_switch(0, false);
 			break;
 		default:
 			printf("Appel syscall vers fonction inexistante en %Y:%Y", dump->cs, dump->eip);

@@ -24,6 +24,7 @@ lib/libs.a:
     
 clean:
 	make -C lib clean
+	$(REMOVE) ../lib/TEST/test.c
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
 	find . -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;

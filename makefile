@@ -9,7 +9,10 @@ bits64: ARCH=bits64
 bits64: lib/libs.o system/system.sys
 	sync
 
-programs: programs/test
+programs: programs/test lib/TEST/test.c
+
+lib/TEST/test.c:
+	xxd -i programs/test lib/TEST/test.c
 
 programs/test:
 	make -C programs
@@ -73,16 +76,16 @@ debug64: debug-system64
 
 redebug64: littleclean debug-system64
 
-debug-boot: bits32 harddisk qemu-debug
+debug-boot: programs bits32 harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/boot.txt)
 
-debug-loader: bits32 harddisk qemu-debug
+debug-loader: programs bits32 harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/loader.txt)
 
-debug-system: bits32 harddisk qemu-debug
+debug-system: programs bits32 harddisk qemu-debug
 	(sleep 2;cgdb -x ./debug/system.txt)
 
-debug-system64: bits64 uefi qemu-debug64
+debug-system64: programs bits64 uefi qemu-debug64
 	(sleep 2;cgdb -x ./debug/system.txt)
 
 bochs-debug:

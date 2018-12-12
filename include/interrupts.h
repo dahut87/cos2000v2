@@ -56,6 +56,41 @@
         asm volatile ("movl %%ebp,%[tomem];":: [tomem] "m" (mem)); \
 })
 
+
+#   define savecpu(dump,caller,oldesp) ({\
+	getEBP(oldesp);\
+	dumpcpu();\
+	getESP(dump);\
+	caller = (exception_stack *) (oldesp + 1);\
+	dump->ebp = *oldesp;\
+	dump->eip = caller->eip;\
+	dump->cs = caller->cs;\
+	if (caller->cs==SEL_KERNEL_CODE)\
+		dump->esp = (u32) oldesp + sizeof(exception_stack);\
+	else\
+	{\
+		dump->esp = (u32) ((exception_stack_user*) caller)->esp;\
+		dump->ss = (u32) ((exception_stack_user*) caller)->ss;\
+	}\
+})
+
+#   define savecpu_noerror(dump,caller,oldesp) ({\
+	getEBP(oldesp);\
+	dumpcpu();\
+	getESP(dump);\
+	caller = (exception_stack_noerror *) (oldesp + 1);\
+	dump->ebp = *oldesp;\
+	dump->eip = caller->eip;\
+	dump->cs = caller->cs;\
+	if (caller->cs==SEL_KERNEL_CODE)\
+		dump->esp = (u32) oldesp + sizeof(exception_stack_noerror);\
+	else\
+	{\
+		dump->esp = (u32) ((exception_stack_user*) caller)->esp;\
+		dump->ss = (u32) ((exception_stack_user*) caller)->ss;\
+	}\
+})
+
 #   define createdump(dump) ({ \
         push(dump.ss);\
         push(dump.esp);\
@@ -279,7 +314,6 @@ typedef struct exception_stack_noerror_user
 	u32     esp;
 	u32     ss;
 } exception_stack_noerror_user __attribute__ ((packed));
-
 
 /* descripteur de segment */
 typedef struct idtdes
