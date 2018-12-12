@@ -239,19 +239,40 @@ typedef struct regs {
    u32 esp;
    u32 ss;
 } regs __attribute__ ((packed));
-/* exception pile */
+
+/* exception pile depuis code kernel*/
 typedef struct exception_stack {
     u32 error_code;
     u32 eip;
     u32 cs;
     u32 eflags;
 } exception_stack __attribute__ ((packed));
-/* sans code erreur */
+
+/* sans code erreur depuis code kernel*/
 typedef struct exception_stack_noerror {
     u32 eip;
     u32 cs;
     u32 eflags;
 } exception_stack_noerror __attribute__ ((packed));
+
+/* exception pile depuis code user */
+typedef struct exception_stack_user {
+    u32 error_code;
+    u32 eip;
+    u32 cs;
+    u32 eflags;
+    u32 esp;
+    u32 ss;
+} exception_stack_user __attribute__ ((packed));
+
+/* sans code erreu depuis code user */
+typedef struct exception_stack_noerror_user {
+    u32 eip;
+    u32 cs;
+    u32 eflags;
+    u32 esp;
+    u32 ss;
+} exception_stack_noerror_user __attribute__ ((packed));
 
 
 /* descripteur de segment */
@@ -268,7 +289,9 @@ struct idtr {
 	u32 base;
 } __attribute__ ((packed));
 
+ void initretry(u32 address);
  void initidt(void);
+ u32 getinitretry(void);
  void setidt(u32 offset, u16 select, u16 type,u16 index);
  void makeidtdes(u32 offset, u16 select, u16 type, idtdes* desc);
  void initpic(void);

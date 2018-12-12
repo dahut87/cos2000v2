@@ -124,9 +124,10 @@ typedef	struct stackdef {
 
 
 typedef struct process {
-	u32 pid;
+    u32 pid;
+    bool kernel;
     regs dump;
-	stackdef kstack;
+    stackdef kstack;
     pd *pdd;
     u32 result;
     u8 status;
@@ -142,7 +143,7 @@ typedef struct process {
 void task_init();
 u32 task_getfreePID ();
 u32 task_usePID (u32 pid);
-u32 task_create();
+u32 task_create(u8 *code,bool kerneltask);
 u32 elf_test(u8 *src);
 u32 elf_load(u8 *src, u32 pid);
 void task_switch(u32 pid, bool fromkernelmode);

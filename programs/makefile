@@ -1,4 +1,4 @@
-CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -I ./include -c -o
+CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -I ./include -fno-pie -no-pie -c -o
 LINK=ld -m elf_i386 -T linker.lds -n -o
 SRCS= $(wildcard *.c)
 EXECS= $(SRCS:.c=)

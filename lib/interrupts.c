@@ -30,6 +30,14 @@ void initretry(u32 address)
 }
 
 /******************************************************************************/
+/* Récupère l'adresse de reprise après erreur */
+
+u32 getinitretry(void)
+{
+    return retry_address;
+}
+
+/******************************************************************************/
 /* Initialise le controleur d'interruption 8259A */
 
 void initpic(void)
@@ -424,9 +432,9 @@ void exception14()
     {
         virtual_range_new(getcurrentprocess()->pdd, (u8 *) (dump->cr2 & 0xFFFFF000), PAGESIZE, PAGE_ALL);
 	} 
-	else {		
+else {		
         printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",ex14_errors[current->error_code & 0xF],dump->cr2,dump->cs,dump->eip);
-        cpuerror("#SS Page fault",dump);
+        cpuerror("#PGF Page fault",dump);
 	}
     restdebugcpu();
     iret();

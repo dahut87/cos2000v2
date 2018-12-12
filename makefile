@@ -43,15 +43,15 @@ indent:
 backup: clean
 	(cd .. ; tar cf - Source\ C | gzip -f - > backup.tar.gz)
 
-test: bits32 harddisk qemu
+test: programs bits32 harddisk qemu
 
-test64: bits64 uefi qemu64
+test64: programs bits64 uefi qemu64
 
 retest: littleclean test
 
 retest64: littleclean test64
 
-testbochs: bits32 harddisk bochs-debug
+testbochs: programs bits32 harddisk bochs-debug
 
 view:
 	(hexdump  -C ./final/harddisk.img.final|head -c10000)

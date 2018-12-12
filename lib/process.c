@@ -111,7 +111,27 @@ void task_init() {
         processes[i].pid=NULL;
         processes[i].status=STATUS_FREE;    
     }
-    current=NULL;
+	processes[0].dump.ss = SEL_KERNEL_STACK;
+	processes[0].dump.esp = KERNEL_STACK_ADDR;
+	processes[0].dump.eflags = 0x0;
+	processes[0].dump.cs = SEL_KERNEL_CODE;
+	processes[0].dump.eip = getinitretry();
+	processes[0].dump.ds = SEL_KERNEL_DATA;
+	processes[0].dump.es = SEL_KERNEL_DATA;
+	processes[0].dump.fs = SEL_KERNEL_DATA;
+	processes[0].dump.gs = SEL_KERNEL_DATA;
+	processes[0].dump.cr3 = KERNEL_PD_ADDR;
+	processes[0].dump.eax = 0;
+	processes[0].dump.ecx = 0;
+	processes[0].dump.edx = 0;
+	processes[0].dump.ebx = 0;
+	processes[0].dump.ebp = 0;
+	processes[0].dump.esi = 0;
+	processes[0].dump.edi = 0;
+	processes[0].result = 0;
+	processes[0].status = STATUS_READY;
+	processes[0].kernel = true;
+    current=&processes[0];
     lastpid=NULL;
 }
 
@@ -136,6 +156,7 @@ u32 task_getfreePID ()
 
 /*******************************************************************************/
 /* Récupère les informations sur le processus courant */
+
 process *getcurrentprocess()
 {
     return current;
@@ -156,7 +177,10 @@ void task_switch(u32 pid, bool fromkernelmode)
 {
     process *previous=current;
 	current = &processes[pid];
-    	setTSS(current->kstack.ss0,current->kstack.esp0);
+	if (!current->kernel)
+    		setTSS(current->kstack.ss0,current->kstack.esp0);
+	else
+    		setTSS(0x0,0x0);
 	current->dump.eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
     createdump(current->dump);
     restdebugcpu();
@@ -175,7 +199,7 @@ void task_run(u32 pid)
 /*******************************************************************************/
 /* Initialise une tâche */
 
-u32 task_create(u8 *code)
+u32 task_create(u8 *code,bool kerneltask)
 {    
     process *previous=current; 
     u32 pid=task_getfreePID();
@@ -184,41 +208,63 @@ u32 task_create(u8 *code)
 	processes[pid].pid = pid;
 	processes[pid].pdd = virtual_pd_create();
 	TAILQ_INIT(&processes[pid].page_head);
-	current = &processes[pid];
-	setcr3(processes[pid].pdd->addr->paddr);
-	kstack = virtual_page_getfree();
-	processes[pid].dump.ss = SEL_USER_STACK | RPL_RING3;
-	processes[pid].dump.esp = USER_STACK-16;
-	processes[pid].dump.eflags = 0x0;
-	processes[pid].dump.cs = SEL_USER_CODE  | RPL_RING3;
-	processes[pid].dump.eip = elf_load(code,pid);
-    if (processes[pid].dump.eip==NULL)
-        return NULL;
-	processes[pid].dump.ds = SEL_USER_DATA | RPL_RING3;
-	processes[pid].dump.es = SEL_USER_DATA | RPL_RING3;
-	processes[pid].dump.fs = SEL_USER_DATA | RPL_RING3;
-	processes[pid].dump.gs = SEL_USER_DATA | RPL_RING3;
-	processes[pid].dump.cr3 = (u32) processes[pid].pdd->addr->paddr;
-	processes[pid].kstack.ss0 = SEL_KERNEL_STACK;
-	processes[pid].kstack.esp0 = (u32) kstack->vaddr + PAGESIZE - 16;
-	processes[pid].dump.eax = 0;
-	processes[pid].dump.ecx = 0;
-	processes[pid].dump.edx = 0;
-	processes[pid].dump.ebx = 0;
-	processes[pid].dump.ebp = 0;
-	processes[pid].dump.esi = 0;
-	processes[pid].dump.edi = 0;
-	processes[pid].result = 0;
-	processes[pid].status = STATUS_READY;
-	current = previous;
-    if (current==NULL)
-    {
-        u32 pd = KERNEL_PD_ADDR;
-	    setcr3(pd);
-    }    
-    else
-    {    
-	    setcr3(current->dump.cr3);
-    }	
+	if (kerneltask)
+	{
+		processes[pid].dump.ss = SEL_KERNEL_STACK;
+		processes[pid].dump.esp = (u32) kstack->vaddr + PAGESIZE - 16;
+		processes[pid].dump.eflags = 0x0;
+		processes[pid].dump.cs = SEL_KERNEL_CODE;
+		processes[pid].dump.eip = elf_load(code,pid);
+	    	if (processes[pid].dump.eip==NULL)
+			return NULL;
+		processes[pid].dump.ds = SEL_KERNEL_DATA;
+		processes[pid].dump.es = SEL_KERNEL_DATA;
+		processes[pid].dump.fs = SEL_KERNEL_DATA;
+		processes[pid].dump.gs = SEL_KERNEL_DATA;
+		processes[pid].dump.cr3 = KERNEL_PD_ADDR;
+		processes[pid].dump.eax = 0;
+		processes[pid].dump.ecx = 0;
+		processes[pid].dump.edx = 0;
+		processes[pid].dump.ebx = 0;
+		processes[pid].dump.ebp = 0;
+		processes[pid].dump.esi = 0;
+		processes[pid].dump.edi = 0;
+		processes[pid].result = 0;
+		processes[pid].status = STATUS_READY;
+		processes[pid].kernel = true;
+		current = previous;
+	}
+	else
+	{
+		current = &processes[pid];
+		setcr3(processes[pid].pdd->addr->paddr);
+		kstack = virtual_page_getfree();
+		processes[pid].dump.ss = SEL_USER_STACK | RPL_RING3;
+		processes[pid].dump.esp = USER_STACK-16;
+		processes[pid].dump.eflags = 0x0;
+		processes[pid].dump.cs = SEL_USER_CODE  | RPL_RING3;
+		processes[pid].dump.eip = elf_load(code,pid);
+	    	if (processes[pid].dump.eip==NULL)
+			return NULL;
+		processes[pid].dump.ds = SEL_USER_DATA | RPL_RING3;
+		processes[pid].dump.es = SEL_USER_DATA | RPL_RING3;
+		processes[pid].dump.fs = SEL_USER_DATA | RPL_RING3;
+		processes[pid].dump.gs = SEL_USER_DATA | RPL_RING3;
+		processes[pid].dump.cr3 = (u32) processes[pid].pdd->addr->paddr;
+		processes[pid].kstack.ss0 = SEL_KERNEL_STACK;
+		processes[pid].kstack.esp0 = (u32) kstack->vaddr + PAGESIZE - 16;
+		processes[pid].dump.eax = 0;
+		processes[pid].dump.ecx = 0;
+		processes[pid].dump.edx = 0;
+		processes[pid].dump.ebx = 0;
+		processes[pid].dump.ebp = 0;
+		processes[pid].dump.esi = 0;
+		processes[pid].dump.edi = 0;
+		processes[pid].result = 0;
+		processes[pid].status = STATUS_READY;
+		processes[pid].kernel = false;
+		current = previous;
+		setcr3(current->dump.cr3);
+	}
     return pid;
 }

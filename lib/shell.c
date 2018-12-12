@@ -87,13 +87,12 @@ int test(void)
 /*******************************************************************************/
 /* Test l'usage de création de tâche */
 
-#include "test.c"
+#include "TEST/test.c"
 
 int testtask()
 {
-    task_init();
     print("*** Creation d'une tache");
-    u32 pid=task_create(&programs_test);
+    u32 pid=task_create(&programs_test,false);
     task_run(pid);
 }
 
