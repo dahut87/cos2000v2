@@ -21,6 +21,14 @@ uefi: final/harddiskuefi.img.final
 install:
 	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios)
 
+togit:	
+	make -C system togit
+	make -C lib togit
+	make -C final togit
+	make -C programs togit
+	git status
+	sync
+
 clean:	
 	make -C system clean
 	make -C lib clean
@@ -38,6 +46,7 @@ littleclean:
 indent:
 	make -C system indent
 	make -C lib indent
+	make -C programs indent
 	sync
 
 backup: clean
