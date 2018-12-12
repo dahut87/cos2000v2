@@ -3,7 +3,7 @@
 /*                                                                             */
 #include <types.h>
 
-char ctype[] = {
+char    ctype[] = {
 	0x00,
 /* 0 */ CT_CTL, CT_CTL, CT_CTL, CT_CTL,
 	CT_CTL, CT_CTL, CT_CTL, CT_CTL,
@@ -29,7 +29,8 @@ char ctype[] = {
 	CT_UP, CT_UP, CT_UP, CT_UP,
 /* 'X' */ CT_UP, CT_UP, CT_UP, CT_PUN,
 	CT_PUN, CT_PUN, CT_PUN, CT_PUN,
-/* '`' */ CT_PUN, CT_LOW | CT_HEX, CT_LOW | CT_HEX, CT_LOW | CT_HEX,
+/* '`' */ CT_PUN, CT_LOW | CT_HEX, CT_LOW | CT_HEX,
+		CT_LOW | CT_HEX,
 	CT_LOW | CT_HEX, CT_LOW | CT_HEX, CT_LOW | CT_HEX, CT_LOW,
 /* h' */ CT_LOW, CT_LOW, CT_LOW, CT_LOW,
 	CT_LOW, CT_LOW, CT_LOW, CT_LOW,

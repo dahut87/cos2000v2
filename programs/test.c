@@ -7,5 +7,5 @@
 
 void main(void)
 {
-    test_api();
+	test_api();
 }

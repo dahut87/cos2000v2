@@ -18,11 +18,11 @@
 #include "memory.h"
 
 static u8 warnmsg[] =
-    "\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
+	"\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
 static u8 okmsg[] =
-    "\033[150C\033[8D\033[37m\033[1m[  \033[32mOK\033[37m  ]\033[0m";
+	"\033[150C\033[8D\033[37m\033[1m[  \033[32mOK\033[37m  ]\033[0m";
 static u8 errormsg[] =
-    "\033[150C\033[8D\033[37m\033[1m[\033[31mERREUR\033[37m]\033[0m";
+	"\033[150C\033[8D\033[37m\033[1m[\033[31mERREUR\033[37m]\033[0m";
 static u8 key = 0;
 
 void ok()
@@ -46,7 +46,8 @@ void error()
 int main(u32 magic, u32 addr)
 {
 	cli();
-	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC) initmultiboot(addr);
+	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
+		initmultiboot(addr);
 	initdriver();
 	registerdriver(&vgafonctions);
 	registerdriver(&vesafonctions);
@@ -62,17 +63,17 @@ int main(u32 magic, u32 addr)
 
 	print("\033[37m\033[0m -Initilisation de la memoire (GDT)");
 	initgdt(&&next);
- next:
+      next:
 	ok();
 
 	print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
 	initpaging();
-    	remap_memory(VESA_FBMEM);
+	remap_memory(VESA_FBMEM);
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des taches (TSR)");
 	inittr();
-    	task_init();
+	task_init();
 	ok();
 
 	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
@@ -83,17 +84,20 @@ int main(u32 magic, u32 addr)
 	ok();
 
 	print(" -Installation du handler timer (IRQ 0)");
-	setidt((u32) timer, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 32);
+	setidt((u32) timer, SEL_KERNEL_CODE,
+	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 32);
 	enableirq(0);
 	ok();
 
 	print(" -Installation du handler clavier (IRQ 1)");
-	setidt((u32) keyboard, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
+	setidt((u32) keyboard, SEL_KERNEL_CODE,
+	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
 	enableirq(1);
 	ok();
 
 	print(" -Installation du handler souris (IRQ12+Cascade IRQ2)");
-	setidt((u32) mouse, SEL_KERNEL_CODE, ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
+	setidt((u32) mouse, SEL_KERNEL_CODE,
+	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
 	enableirq(2);
 	enableirq(12);
 	if (initmouse() != 1)
@@ -102,10 +106,10 @@ int main(u32 magic, u32 addr)
 		ok();
 	printf(" -Installation des appels systemes utilisateur et du FPU");
 	initsyscall();
-    finit();
+	finit();
 	ok();
-  
-retry:
+
+      retry:
 	sti();
 	shell();
 }

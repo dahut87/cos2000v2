@@ -1,15 +1,20 @@
-## Liste des API 
+## API List 
 
-Bibliothèques disponibles dans COS2000
+APIs given by COS2000 libraries
 
-###  libc 
+###  LIBC 
 
-Fonctions disponibles dans la librairie "libc"
+All fonction in the "libc" library.
 
-#### test_api
+------
 
-u32 test_api(void);
+`u32 test_api(void);`
 
-syscall id : 0
-arguments : 0
-résultat : oui (0x66666666)
+*Description: function to test if the syscall mecanism is running.*
+
+* syscall id : **0**
+* arguments : **0**
+* * argument 1 : **u32 none** *Afin de documenter un argument*
+* results : **yes (always 0x66666666)**
+
+------

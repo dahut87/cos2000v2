@@ -8,5 +8,5 @@
 
 u32 test_api(void)
 {
-    syscall0(0x0);
+	syscall0(0x0);
 }

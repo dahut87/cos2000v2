@@ -46,5 +46,5 @@
 })
 
 /* Vers 6 arguments maximum */
-void initsyscall(void);
-void sysenter_handler(void);
+void    initsyscall(void);
+void    sysenter_handler(void);

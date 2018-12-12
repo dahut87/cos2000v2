@@ -98,17 +98,21 @@ static const u8 set1_ctrl[] = {
 
 /* Attend une chaine de caractère de taille max */
 
-u8 *getstring(u8 * temp)
+u8     *getstring(u8 * temp)
 {
-	u8 maxwidth = strlen(temp);
-	u8 *pointer = temp;
-	u8 ascii = 0;
-	while (ascii != '\r') {
+	u8      maxwidth = strlen(temp);
+	u8     *pointer = temp;
+	u8      ascii = 0;
+	while (ascii != '\r')
+	{
 		ascii = waitascii();
-		if (ascii == '\b' && pointer > temp) {
+		if (ascii == '\b' && pointer > temp)
+		{
 			pointer--;
 			putchar(ascii);
-		} else if (ascii > 31 && pointer <= temp + 80) {
+		}
+		else if (ascii > 31 && pointer <= temp + 80)
+		{
 			*pointer++ = ascii;
 			putchar(ascii);
 		}
@@ -122,8 +126,8 @@ u8 *getstring(u8 * temp)
 
 u8 waitascii(void)
 {
-	u8 oldptrascii = ptrascii;
-	while ((oldptrascii == ptrascii)) ;
+	u8      oldptrascii = ptrascii;
+	while ((oldptrascii == ptrascii));
 	return bufferascii[ptrascii];
 }
 
@@ -132,11 +136,12 @@ u8 waitascii(void)
 
 void outkbd(u8 port, u8 data)
 {
-	u32 timeout;
-	u8 state;
+	u32     timeout;
+	u8      state;
 
 /* timeout */
-	for (timeout = 500000L; timeout != 0; timeout--) {
+	for (timeout = 500000L; timeout != 0; timeout--)
+	{
 		state = inb(0x64);
 /* vide le buffer du 8042 */
 		if ((state & 0x02) == 0)
@@ -151,16 +156,19 @@ void outkbd(u8 port, u8 data)
 
 void reboot(void)
 {
-	u8 temp;
+	u8      temp;
 	cli();
 /* vide le 8042 */
-	do {
+	do
+	{
 		temp = inb(0x64);
-		if ((temp & 0x01) != 0) {
-			(void)inb(0x60);
+		if ((temp & 0x01) != 0)
+		{
+			(void) inb(0x60);
 			continue;
 		}
-	} while ((temp & 0x02) != 0);
+	}
+	while ((temp & 0x02) != 0);
 /* active le reset CPU */
 	outb(0x64, 0xFE);
 	while (1)
@@ -172,7 +180,7 @@ void reboot(void)
 
 unsigned convert(u32 keypressed)
 {
-	u8 temp, key, lastscan;
+	u8      temp, key, lastscan;
 /* garde le dernier pointeur du buffer scan */
 	lastscan = ptrscan;
 /* incrémente le pointeur est assigne au buffer le dernier scancode */
@@ -185,13 +193,16 @@ unsigned convert(u32 keypressed)
 		breakcode = 1;
 	key = (keypressed & 0x7F);
 /* Mise a jour des flags lors du relachement de touches de controle */
-	if (breakcode) {
-		if (key == SCAN_ALT) {
+	if (breakcode)
+	{
+		if (key == SCAN_ALT)
+		{
 			kbdstatus &= ~STATUS_ALT;
 			/* si ALT GR (E01D) alors activer aussi control */
 			if (bufferscan[lastscan] == 0xE0)
 				kbdstatus &= ~STATUS_CTRL;
-		} else if (key == SCAN_CTRL)
+		}
+		else if (key == SCAN_CTRL)
 			kbdstatus &= ~STATUS_CTRL;
 		else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT)
 			kbdstatus &= ~STATUS_SHIFT;
@@ -199,43 +210,56 @@ unsigned convert(u32 keypressed)
 		return 0;
 	}
 /* Mise a jour des flags lors de l'appuie de touches de controle */
-	if (key == SCAN_ALT) {
+	if (key == SCAN_ALT)
+	{
 		kbdstatus |= STATUS_ALT;
 		/* si ALT GR (E01D) alors desactiver aussi control */
 		if (bufferscan[lastscan] == 0xE0)
 			kbdstatus |= STATUS_CTRL;
 		return 0;
-	} else if (key == SCAN_CTRL) {
+	}
+	else if (key == SCAN_CTRL)
+	{
 		kbdstatus |= STATUS_CTRL;
 		return 0;
-	} else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT) {
+	}
+	else if (key == SCAN_LEFTSHIFT || key == SCAN_RIGHTSHIFT)
+	{
 		kbdstatus |= STATUS_SHIFT;
 		return 0;
 	}
 
-	else if ((key >= SCAN_F1) && (key <= SCAN_F8)) {
+	else if ((key >= SCAN_F1) && (key <= SCAN_F8))
+	{
 		changevc(key - SCAN_F1);
 	}
 
-	else if (key == SCAN_F9) {
-        regs dump;
-        show_cpu(&dump);
+	else if (key == SCAN_F9)
+	{
+		regs    dump;
+		show_cpu(&dump);
 	}
 
-	else if (key == SCAN_F10) {
+	else if (key == SCAN_F10)
+	{
 		apply_nextvideomode();
 	}
 
 /* Scroll Lock, Num Lock, and Caps Lock mise a jour des leds */
-	else if (key == SCAN_SCROLLLOCK) {
+	else if (key == SCAN_SCROLLLOCK)
+	{
 		kbdstatus ^= STATUS_SCRL;
 		goto LEDS;
-	} else if (key == SCAN_NUMLOCK) {
+	}
+	else if (key == SCAN_NUMLOCK)
+	{
 		kbdstatus ^= STATUS_NUM;
 		goto LEDS;
-	} else if (key == SCAN_CAPSLOCK) {
+	}
+	else if (key == SCAN_CAPSLOCK)
+	{
 		kbdstatus ^= STATUS_CAPS;
- LEDS:
+	      LEDS:
 		outkbd(0x60, 0xED);	/* "mise a jour des LEDS */
 		temp = 0;
 		if (kbdstatus & STATUS_SCRL)
@@ -248,8 +272,9 @@ unsigned convert(u32 keypressed)
 		return 0;
 	}
 /* Appuie de CRTL + ALT + SUPR ? */
-	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT) &&
-	    (key == 73)) {
+	if ((kbdstatus & STATUS_CTRL) && (kbdstatus & STATUS_ALT)
+	    && (key == 73))
+	{
 		print("redemarrage du systeme");
 		reboot();
 	}
@@ -296,14 +321,17 @@ unsigned convert(u32 keypressed)
 		if (key == 0x4f)
 			return 0x19;
 		return 0x00;
-	} else {
+	}
+	else
+	{
 /* detecte les SCANCODES invalides */
 		if (key >= sizeof(set1_normal) / sizeof(set1_normal[0]))
 			return 0;
 /* converti le scancode en code ASCII en fonction du statut*/
 		if (kbdstatus & STATUS_SHIFT || kbdstatus & STATUS_CAPS)
 			temp = set1_shift[key];
-		else if ((kbdstatus & STATUS_ALT) && (kbdstatus & STATUS_CTRL))
+		else if ((kbdstatus & STATUS_ALT)
+			 && (kbdstatus & STATUS_CTRL))
 			temp = set1_altgr[key];
 		else if (kbdstatus & STATUS_CTRL)
 			temp = set1_ctrl[key];
@@ -327,12 +355,13 @@ void keyboard(void)
 	cli();
 	pushf();
 	pushad();
-	u8 scancode, ascii;
+	u8      scancode, ascii;
 	cli();
-	while ((inb(0x64) & 1) == 0) ;
+	while ((inb(0x64) & 1) == 0);
 	scancode = inb(0x60);
 	ascii = convert(scancode);
-	if (ascii != 0) {
+	if (ascii != 0)
+	{
 		ptrascii++;
 		if (ptrascii == 255)
 			ptrascii == 0;

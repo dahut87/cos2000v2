@@ -21,19 +21,19 @@ static struct tss tss0;
 void initgdt(u32 offset)
 {
 	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);	/* descripteur nul         */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING0 | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[1]);	                        /* code -> SEL_KERNEL_CODE */
+	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING0 | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[1]);	/* code -> SEL_KERNEL_CODE */
 	makegdtdes(0x0, 0x00000, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING0 | SEG_EXPAND_DOWN | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[2]);	/* pile -> SEL_KERNEL_STACK */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING3 | SEG_CONFORMING | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[3]);	        /* code -> SEL_USER_CODE */
+	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING3 | SEG_CONFORMING | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[3]);	/* code -> SEL_USER_CODE */
 	makegdtdes(0x0, 0x00000, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING3 | SEG_EXPAND_DOWN | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[4]);	/* pile -> SEL_USER_STACK */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING0 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[5]);	                /* data -> SEL_KERNEL_DATA */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING3 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[6]);	                /* data -> SEL_USER_DATA */
+	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING0 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[5]);	/* data -> SEL_KERNEL_DATA */
+	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING3 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[6]);	/* data -> SEL_USER_DATA */
 
 	tss0.trapflag = 0x00;
 	tss0.iomap = 0x00;
 	tss0.esp0 = 0x1FFF0;
 	tss0.ss0 = SEL_TSS;
 
-	makegdtdes(&tss0, 0x67, SEG_PRESENT | SEG_CODE | SEG_RING3 | SEG_ACCESSED , 0x00, &gdt[7]);	/* descripteur de tss */
+	makegdtdes(&tss0, 0x67, SEG_PRESENT | SEG_CODE | SEG_RING3 | SEG_ACCESSED, 0x00, &gdt[7]);	/* descripteur de tss */
 
 	/* initialise le registre gdt */
 	gdtreg.limite = GDT_SIZE * sizeof(gdtdes);
@@ -49,7 +49,7 @@ void initgdt(u32 offset)
 /*******************************************************************************/
 /* Change le TSS courant */
 
-void setTSS(u32 ss,u32 sp)
+void setTSS(u32 ss, u32 sp)
 {
 	tss0.esp0 = sp;
 	tss0.ss0 = ss;
@@ -88,9 +88,10 @@ void initselectors(u32 executingoffset)
 
 u32 getdesbase(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    return (entry[index].base0_15+(entry[index].base16_23<<16)+(entry[index].base24_31<<24));
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	return (entry[index].base0_15 + (entry[index].base16_23 << 16) +
+		(entry[index].base24_31 << 24));
 }
 
 /*******************************************************************************/
@@ -98,9 +99,9 @@ u32 getdesbase(u16 sel)
 
 u32 getdeslimit(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    return (entry[index].lim0_15+(entry[index].lim16_19<<16));
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	return (entry[index].lim0_15 + (entry[index].lim16_19 << 16));
 }
 
 /*******************************************************************************/
@@ -108,9 +109,9 @@ u32 getdeslimit(u16 sel)
 
 u32 getdesdpl(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    return (entry[index].acces>>5 & 0b11);
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	return (entry[index].acces >> 5 & 0x03);
 }
 
 /*******************************************************************************/
@@ -118,12 +119,15 @@ u32 getdesdpl(u16 sel)
 
 u8 getdestype(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
-        return 'T';
-    else
-        return (((entry[index].acces & 0b1000) > 0) ? 'C' : 'D');
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	if (((entry[index].acces & 0x14) == 0)
+	    && ((entry[index].acces & 0x08) > 0)
+	    && ((entry[index].acces & 0x01) > 0)
+	    && ((entry[index].flags & 0x06) == 0))
+		return 'T';
+	else
+		return (((entry[index].acces & 0x08) > 0) ? 'C' : 'D');
 }
 
 /*******************************************************************************/
@@ -131,12 +135,15 @@ u8 getdestype(u16 sel)
 
 u8 getdesbit1(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
-    return (((entry[index].acces & 0b10) > 0) ? 'B' : '-');        
-        else
-    return (((entry[index].acces & 0b1) > 0) ? 'A' : '-');        
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	if (((entry[index].acces & 0x14) == 0)
+	    && ((entry[index].acces & 0x08) > 0)
+	    && ((entry[index].acces & 0x01) > 0)
+	    && ((entry[index].flags & 0x06) == 0))
+		return (((entry[index].acces & 0x04) > 0) ? 'B' : '-');
+	else
+		return (((entry[index].acces & 0x01) > 0) ? 'A' : '-');
 }
 
 /*******************************************************************************/
@@ -144,14 +151,17 @@ u8 getdesbit1(u16 sel)
 
 u8 getdesbit2(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
-        return (((entry[index].flags & 0b1) > 0) ? 'U' : '-');        
-    else if ((entry[index].acces & 0b1000) > 0)
-        return (((entry[index].acces & 0b10) > 0) ? 'R' : '-');
-    else
-        return (((entry[index].acces & 0b10) > 0) ? 'W' : 'R');         
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	if (((entry[index].acces & 0x20) == 0)
+	    && ((entry[index].acces & 0x08) > 0)
+	    && ((entry[index].acces & 0x01) > 0)
+	    && ((entry[index].flags & 0x06) == 0))
+		return (((entry[index].flags & 0x01) > 0) ? 'U' : '-');
+	else if ((entry[index].acces & 0x8) > 0)
+		return (((entry[index].acces & 0x02) > 0) ? 'R' : '-');
+	else
+		return (((entry[index].acces & 0x02) > 0) ? 'W' : 'R');
 }
 
 /*******************************************************************************/
@@ -159,12 +169,12 @@ u8 getdesbit2(u16 sel)
 
 u8 getdesbit3(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    if ((entry[index].acces & 0b1000) > 0)
-        return (((entry[index].acces & 0b100) > 0) ? 'C' : '-');
-    else
-        return (((entry[index].acces & 0b100) > 0) ? 'D' : 'U');           
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	if ((entry[index].acces & 0x08) > 0)
+		return (((entry[index].acces & 0x04) > 0) ? 'C' : '-');
+	else
+		return (((entry[index].acces & 0x04) > 0) ? 'D' : 'U');
 }
 
 /*******************************************************************************/
@@ -172,9 +182,9 @@ u8 getdesbit3(u16 sel)
 
 u16 getdesalign(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    return (((entry[index].flags & 0b1000) > 0) ? 4096: 1);           
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	return (((entry[index].flags & 0x08) > 0) ? 4096 : 1);
 }
 
 /*******************************************************************************/
@@ -182,9 +192,9 @@ u16 getdesalign(u16 sel)
 
 bool isdesvalid(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    return ((entry[index].acces & 0b10000000) > 0);
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	return ((entry[index].acces & 0x80) > 0);
 }
 
 /*******************************************************************************/
@@ -192,12 +202,15 @@ bool isdesvalid(u16 sel)
 
 u32 getdessize(u16 sel)
 {
-    gdtdes *entry=GDT_ADDR;
-    u8 index=sel/sizeof(gdtdes);
-    if (((entry[index].acces & 0b10100) == 0) && ((entry[index].acces & 0b01000) > 0) && ((entry[index].acces & 0b0001) > 0) && ((entry[index].flags & 0b0110) == 0))
-        return 32;
-    else
-        return (((entry[index].flags & 0b1000) > 0) ? 32 : 16);
+	gdtdes *entry = GDT_ADDR;
+	u8      index = sel / sizeof(gdtdes);
+	if (((entry[index].acces & 0x14) == 0)
+	    && ((entry[index].acces & 0x08) > 0)
+	    && ((entry[index].acces & 0x01) > 0)
+	    && ((entry[index].flags & 0x06) == 0))
+		return 32;
+	else
+		return (((entry[index].flags & 0x08) > 0) ? 32 : 16);
 }
 /*******************************************************************************/
 /* Créé un descripteur GDT */

@@ -9,7 +9,8 @@
 s8 strcmp(const u8 * src, const u8 * dest)
 {
 	register s8 result;
-	do {
+	do
+	{
 		if ((result = *src - *dest++) != 0)
 			break;
 	}
@@ -20,7 +21,7 @@ s8 strcmp(const u8 * src, const u8 * dest)
 /******************************************************************************/
 /* Trouve la premiere occurence d'un caractère dans une chaine et renvoie un pointeur */
 
-u8 *strchr(const u8 * src, u8 achar)
+u8     *strchr(const u8 * src, u8 achar)
 {
 	for (; *src != achar; ++src)
 		if (*src == 0)
@@ -33,7 +34,7 @@ u8 *strchr(const u8 * src, u8 achar)
 
 u32 strchrpos(const u8 * src, u8 achar)
 {
-	u32 i;
+	u32     i;
 	for (i = 0; *(src + i) != achar; ++i)
 		if (*(src + i) == 0)
 			return 0;
@@ -45,28 +46,29 @@ u32 strchrpos(const u8 * src, u8 achar)
 
 u32 strlen(const u8 * src)
 {
-	u32 size;
+	u32     size;
 
-	for (size = 0; *(src + size) != 0; size++) ;
+	for (size = 0; *(src + size) != 0; size++);
 	return size;
 }
 
 /******************************************************************************/
 /* copie une chaine dans une autre */
-u8 *strcpy(const u8 * src, u8 * dest)
+u8     *strcpy(const u8 * src, u8 * dest)
 {
-	u8 *temp = dest;
-	while ((*dest++ = *src++) != 0) ;
+	u8     *temp = dest;
+	while ((*dest++ = *src++) != 0);
 	return temp;
 }
 
 /******************************************************************************/
 /* copie une portion limité d'une chaine asciiZ*/
 
-u8 *strncpy(const u8 * src, u8 * dest, u32 count)
+u8     *strncpy(const u8 * src, u8 * dest, u32 count)
 {
-	u8 *temp = dest;
-	while (count) {
+	u8     *temp = dest;
+	while (count)
+	{
 		if ((*temp = *src) != 0)
 			src++;
 		temp++;
@@ -78,12 +80,12 @@ u8 *strncpy(const u8 * src, u8 * dest, u32 count)
 /******************************************************************************/
 /* concatene 2 chaines de caractère */
 
-u8 *strcat(const u8 * src, u8 * dest)
+u8     *strcat(const u8 * src, u8 * dest)
 {
-	u8 *temp = dest;
+	u8     *temp = dest;
 	while (*dest != 0)
 		dest++;
-	while ((*dest++ = *src++) != 0) ;
+	while ((*dest++ = *src++) != 0);
 	return temp;
 }
 
@@ -92,7 +94,8 @@ u8 *strcat(const u8 * src, u8 * dest)
 
 void strtolower(u8 * src)
 {
-	while (*src != 0) {
+	while (*src != 0)
+	{
 		if ((*src >= 'A') && (*src <= 'Z'))
 			*src = *src + 'a' - 'A';
 		src++;
@@ -104,7 +107,8 @@ void strtolower(u8 * src)
 
 void strtoupper(u8 * src)
 {
-	while (*src != 0) {
+	while (*src != 0)
+	{
 		if ((*src >= 'a') && (*src <= 'z'))
 			*src = *src - ('a' - 'A');
 		src++;
@@ -116,7 +120,8 @@ void strtoupper(u8 * src)
 
 void strinvertcase(u8 * src)
 {
-	while (*src != 0) {
+	while (*src != 0)
+	{
 		if ((*src >= 'A') && (*src <= 'Z'))
 			*src = *src + 'a' - 'A';
 		else if ((*src >= 'a') && (*src <= 'z'))
@@ -132,7 +137,8 @@ void stronecase(u8 * src)
 {
 	if ((*src >= 'a') && (*src <= 'z'))
 		*src = *src - ('a' - 'A');
-	while (*src != 0) {
+	while (*src != 0)
+	{
 		src++;
 		if ((*src >= 'A') && (*src <= 'Z'))
 			*src = *src + 'a' - 'A';
@@ -152,10 +158,11 @@ void strsetlen(u8 * src, u32 size)
 
 void strinvert(u8 * src)
 {
-	u8 *dst = src + strlen(src) - 1;
-	while (src < dst) {
-		u8 char1 = *dst;
-		u8 char2 = *src;
+	u8     *dst = src + strlen(src) - 1;
+	while (src < dst)
+	{
+		u8      char1 = *dst;
+		u8      char2 = *src;
 		*dst = char2;
 		*src = char1;
 		src++;
@@ -168,8 +175,9 @@ void strinvert(u8 * src)
 
 void strreplace(u8 * src, u8 search, u8 replaced)
 {
-	u8 *pos = strchr(src, search);
-	while (pos != 0) {
+	u8     *pos = strchr(src, search);
+	while (pos != 0)
+	{
 		*pos = replaced;
 		pos = strchr(src, search);
 	}
@@ -178,9 +186,9 @@ void strreplace(u8 * src, u8 search, u8 replaced)
 /******************************************************************************/
 /* Rempli de caractère */
 
-u8 *strfill(u8 * dst, u8 pattern, u32 size)
+u8     *strfill(u8 * dst, u8 pattern, u32 size)
 {
-	u32 i;
+	u32     i;
 	for (i = 0; i <= size; i++)
 		*(dst + i) = pattern;
 	*(dst + i + 1) = '\000';
@@ -192,7 +200,7 @@ u8 *strfill(u8 * dst, u8 pattern, u32 size)
 
 void strleft(u8 * src, u8 * dest, u32 size)
 {
-	u32 i;
+	u32     i;
 	for (i = 0; (*(src + i) != 0) && (i < size); i++)
 		*dest++ = *(src + i);
 	*dest++ = '\000';
@@ -203,8 +211,8 @@ void strleft(u8 * src, u8 * dest, u32 size)
 
 void strright(u8 * src, u8 * dest, u32 size)
 {
-	u32 i;
-	u32 begin = strlen(src) - size;
+	u32     i;
+	u32     begin = strlen(src) - size;
 	for (i = 0; (*(src + i + begin) != 0) && (i < size); i++)
 		*dest++ = *(src + i + begin);
 	*dest++ = '\000';
@@ -215,9 +223,10 @@ void strright(u8 * src, u8 * dest, u32 size)
 
 void strdelete(u8 * src, u32 index, u32 size)
 {
-	u32 i;
-	u32 realsize = strlen(src) - index - size;
-	for (i = 0; (*(src + index + size + i) != 0) && (i < realsize); i++)
+	u32     i;
+	u32     realsize = strlen(src) - index - size;
+	for (i = 0; (*(src + index + size + i) != 0) && (i < realsize);
+	     i++)
 		*(src + index + i) = *(src + index + size + i);
 	*(src + index + i) = '\000';
 }
@@ -227,12 +236,12 @@ void strdelete(u8 * src, u32 index, u32 size)
 
 void strinsert(u8 * src, u8 * dest, u32 index)
 {
-	u32 i;
-	u32 realsize = strlen(src);
-	u32 copysize = strlen(dest) - index;
+	u32     i;
+	u32     realsize = strlen(src);
+	u32     copysize = strlen(dest) - index;
 	for (i = 0; i <= copysize; i++)
 		*(dest + index + realsize + copysize - i) =
-		    *(dest + index + copysize - i);
+			*(dest + index + copysize - i);
 	for (i = 0; (*(src + i) != 0); i++)
 		*(dest + index + i) = *(src + i);
 }
@@ -242,10 +251,12 @@ void strinsert(u8 * src, u8 * dest, u32 index)
 
 void strcompressdelimiter(u8 * src, u8 delim)
 {
-	u8 *pos = strchr(src, delim);
-	while (pos != 0) {
-		u8 i;
-		for (i = 0; (*(pos + i) != 0) && (*(pos + i) == delim); i++) ;
+	u8     *pos = strchr(src, delim);
+	while (pos != 0)
+	{
+		u8      i;
+		for (i = 0; (*(pos + i) != 0) && (*(pos + i) == delim);
+		     i++);
 		if (i > 1)
 			strdelete(pos, 1, i - 1);
 		pos = strchr(pos + 1, delim);
@@ -255,10 +266,10 @@ void strcompressdelimiter(u8 * src, u8 delim)
 /******************************************************************************/
 /* Récupérère l'élément N d'une liste utilisant un délimiteur */
 
-u8 *strgetitem(u8 * src, u8 * dest, u8 delim, u32 index)
+u8     *strgetitem(u8 * src, u8 * dest, u8 delim, u32 index)
 {
-	u32 i;
-	u8 *pos = strgetpointeritem(src, delim, index);
+	u32     i;
+	u8     *pos = strgetpointeritem(src, delim, index);
 	for (i = 0; (*(pos + i) != 0) && (*(pos + i) != delim); i++)
 		*(dest + i) = *(pos + i);
 	*(dest + i) = '\000';
@@ -268,10 +279,10 @@ u8 *strgetitem(u8 * src, u8 * dest, u8 delim, u32 index)
 /******************************************************************************/
 /* Récupérère un pointeur sur l'élément N d'une liste utilisant un délimiteur */
 
-u8 *strgetpointeritem(u8 * src, u8 delim, u32 index)
+u8     *strgetpointeritem(u8 * src, u8 delim, u32 index)
 {
-	u32 i;
-	u8 *pos = src;
+	u32     i;
+	u8     *pos = src;
 	for (i = 0; i < index; i++)
 		pos = strchr(pos + 1, delim);
 	if (*pos == delim)
@@ -284,12 +295,13 @@ u8 *strgetpointeritem(u8 * src, u8 delim, u32 index)
 
 u32 strgetnbitems(u8 * src, u8 delim)
 {
-	u32 number = 0;
+	u32     number = 0;
 	if (*src == 0)
 		return 0;
 	number++;
-	u8 *pos = strchr(src, delim);
-	while (pos != 0) {
+	u8     *pos = strchr(src, delim);
+	while (pos != 0)
+	{
 		pos = strchr(pos + 1, delim);
 		number++;
 	}
@@ -299,16 +311,17 @@ u32 strgetnbitems(u8 * src, u8 delim)
 /******************************************************************************/
 /* Renvoie la base minimum du nombre */
 
-u8 base[] = " 0123456789ABCDEF\000";
+u8      base[] = " 0123456789ABCDEF\000";
 
 u8 strgetminbase(u8 * src)
 {
-	u8 temp[] = "                                           \000";
-	u8 *dst = &temp;
+	u8      temp[] = "                                           \000";
+	u8     *dst = &temp;
 	strtoupper(strcpy(src, &temp));
-	u8 max = 0;
-	while (*dst != 0) {
-		u32 result = strchrpos(&base, *dst++);
+	u8      max = 0;
+	while (*dst != 0)
+	{
+		u32     result = strchrpos(&base, *dst++);
 		if (result == 0)
 			return 0;
 		if (result > max)
@@ -327,29 +340,35 @@ u8 strgetminbase(u8 * src)
 /******************************************************************************/
 /* Renvoie la base du nombre */
 
-u8 hexa[] = "0x\000";
-u8 bases[] = " bodh\000";
-u8 basesnum[] = { 0, 2, 8, 10, 16 };
+u8      hexa[] = "0x\000";
+u8      bases[] = " bodh\000";
+u8      basesnum[] = { 0, 2, 8, 10, 16 };
 
-u8 declaredbase = 10;
-u8 minbase = 0;
+u8      declaredbase = 10;
+u8      minbase = 0;
 u8 strgetbase(u8 * src)
 {
-	u8 temp[] = "                               \000";
+	u8      temp[] = "                               \000";
 	strleft(src, &temp, 2);
-	if (strcmp(&temp, &hexa) == 0) {
+	if (strcmp(&temp, &hexa) == 0)
+	{
 		declaredbase = 16;
-		u8 size = strlen(src);
+		u8      size = strlen(src);
 		strright(src, &temp, size - 2);
 		minbase = strgetminbase(&temp);
-	} else {
+	}
+	else
+	{
 		strright(src, &temp, 1);
 		declaredbase = basesnum[strchrpos(&bases, temp[0])];
-		if (declaredbase > 0) {
-			u8 size = strlen(src);
+		if (declaredbase > 0)
+		{
+			u8      size = strlen(src);
 			strleft(src, &temp, size - 1);
 			minbase = strgetminbase(&temp);
-		} else {
+		}
+		else
+		{
 			minbase = strgetminbase(src);
 			declaredbase = minbase;
 		}
@@ -365,22 +384,23 @@ u8 strgetbase(u8 * src)
 
 u32 strtoint(u8 * src)
 {
-	u8 *temp = src;
-	u32 result = 0;
-	u8 thebase = strgetbase(src);
-	u32 multi = 1;
-	u8 shorter = 0;
+	u8     *temp = src;
+	u32     result = 0;
+	u8      thebase = strgetbase(src);
+	u32     multi = 1;
+	u8      shorter = 0;
 
 	if (thebase == 0)
 		return 0;
 	if (*(src + 1) == 'x')
 		shorter = 2;
-	while (*++temp != 0) ;
+	while (*++temp != 0);
 	while (*temp == 0 || *temp == 'b' || *temp == 'o' || *temp == 'd'
 	       || *temp == 'h')
 		temp--;
-	while (src + shorter <= temp) {
-		u8 achar = *temp--;
+	while (src + shorter <= temp)
+	{
+		u8      achar = *temp--;
 		if ((achar >= 'a') && (achar <= 'z'))
 			achar = achar - ('a' - 'A');
 		result = result + multi * (strchrpos(&base, achar) - 1);

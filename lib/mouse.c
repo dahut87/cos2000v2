@@ -13,7 +13,7 @@
 
 bool initmouse(void)
 {
-	u16 i = 1024;
+	u16     i = 1024;
 
 	outkbd(0x64, 0xA8);	/* autorisé Aux */
 
@@ -69,11 +69,13 @@ void mouse(void)
 	cli();
 	pushf();
 	pushad();
-	u8 mbyte = inb(0x60);
-	s8 changex, changey;
+	u8      mbyte = inb(0x60);
+	s8      changex, changey;
 
-	if (mousereplies > 0) {
-		if (mbyte == 0xFA) {
+	if (mousereplies > 0)
+	{
+		if (mbyte == 0xFA)
+		{
 			mousereplies--;
 			goto endofint;
 		}
@@ -83,39 +85,52 @@ void mouse(void)
 	mpacket[bytepos] = mbyte;
 	bytepos++;
 
-	if (bytepos == 3) {
+	if (bytepos == 3)
+	{
 		bytepos = 0;
-		if (mpacket[1] == 0) {
+		if (mpacket[1] == 0)
+		{
 			changex = 0;
-		} else {
-			changex = (mpacket[0] & 0x10) ?
-			    mpacket[1] - 256 : mpacket[1];
 		}
-		if (mpacket[2] == 0) {
+		else
+		{
+			changex =
+				(mpacket[0] & 0x10) ? mpacket[1] -
+				256 : mpacket[1];
+		}
+		if (mpacket[2] == 0)
+		{
 			changey = 0;
-		} else {
-			changey = -((mpacket[0] & 0x20) ?
-				    mpacket[2] - 256 : mpacket[2]);
+		}
+		else
+		{
+			changey =
+				-((mpacket[0] & 0x20) ? mpacket[2] -
+				  256 : mpacket[2]);
 		}
 
 		mousex += (changex << speed);
 		mousey += (changey << speed);
 
-		if (mousex < 0) {
+		if (mousex < 0)
+		{
 			mousex = 0;
 		}
-		if (mousex >= 65535) {
+		if (mousex >= 65535)
+		{
 			mousex = 65535;
 		}
-		if (mousey < 0) {
+		if (mousey < 0)
+		{
 			mousey = 0;
 		}
-		if (mousey >= 65535) {
+		if (mousey >= 65535)
+		{
 			mousey = 65535;
 		}
-        videoinfos *info=getvideo_info();
-		u16 newx = (u32) mousex * info->currentwidth / 65536;
-		u16 newy = (u32) mousey * info->currentheight / 65536;
+		videoinfos *info = getvideo_info();
+		u16     newx = (u32) mousex * info->currentwidth / 65536;
+		u16     newy = (u32) mousey * info->currentheight / 65536;
 
 		// Retrieve mouse button status from packet
 		mousebut1 = mpacket[0] & 1;
@@ -124,10 +139,10 @@ void mouse(void)
 
 // printf("RX:%d\tRY:%d\tX:%d\tY:%d\tB1:%d\tB2:%d\tB3:%d\t\r\n",changex,changey,mousex,mousey,mousebut1,mousebut2,mousebut3);
 
-        if (!info->isgraphic)
+		if (!info->isgraphic)
 			showchar(newx, newy, 0xDB, 0x0F);
 	}
- endofint:
+      endofint:
 	irqendmaster();
 	irqendslave();
 	popad();

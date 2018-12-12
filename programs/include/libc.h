@@ -4,4 +4,4 @@
 
 #include "types.h";
 
-u32 test_api(void);
+u32     test_api(void);

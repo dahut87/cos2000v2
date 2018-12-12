@@ -41,4 +41,3 @@
 	1:" : "=a" (_v) : "a" (syscall), "b" (arg1), "S" (arg2), "D" (arg3)  : "ecx","edx","memory"); \
 	_v; \
 })
-

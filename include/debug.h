@@ -46,6 +46,6 @@
 #define DBG_FOURBYTE    0b11
 
 
-void setdebugreg(u8 number,u8 *address, u8 type);
-u8* getdebugreg(u8 number);
-u32 disasm(u8 *a, u8 *string, bool show);
+void    setdebugreg(u8 number, u8 * address, u8 type);
+u8     *getdebugreg(u8 number);
+u32     disasm(u8 * a, u8 * string, bool show);

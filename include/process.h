@@ -16,39 +16,39 @@
 #define STATUS_SLEEP  0x2
 
 /* ELF type */
-#define ET_NONE 	0 	    //No file type
-#define ET_REL 	    1 	    //Relocatable file
-#define ET_EXEC 	2 	    //Executable file
-#define ET_DYN 	    3 	    //Shared object file
-#define ET_CORE 	4 	    //Core file
-#define ET_LOOS 	0xfe00 	//Operating system-specific
-#define ET_HIOS 	0xfeff 	//Operating system-specific
-#define ET_LOPROC 	0xff00 	//Processor-specific
-#define ET_HIPROC 	0xffff 	//Processor-specific
+#define ET_NONE 	0	//No file type
+#define ET_REL 	    1		//Relocatable file
+#define ET_EXEC 	2	//Executable file
+#define ET_DYN 	    3		//Shared object file
+#define ET_CORE 	4	//Core file
+#define ET_LOOS 	0xfe00	//Operating system-specific
+#define ET_HIOS 	0xfeff	//Operating system-specific
+#define ET_LOPROC 	0xff00	//Processor-specific
+#define ET_HIPROC 	0xffff	//Processor-specific
 
 /* ELF identification */
-#define	EI_MAG0		    0       //File identification
-#define	EI_MAG1		    1       //File identification
-#define	EI_MAG2		    2       //File identification
-#define	EI_MAG3		    3       //File identification
-#define	EI_CLASS	    4       //File class
-#define	EI_DATA		    5       //Data encoding
-#define	EI_VERSION	    6       //File version
-#define	EI_OSABI 	    7 	    //Operating system/ABI identification
-#define	EI_ABIVERSION 	8 	    //ABI version
-#define	EI_PAD 	        9 	    //Start of padding bytes
-#define	EI_NIDENT 	    16 	    //Size of e_ident[]   
+#define	EI_MAG0		    0	//File identification
+#define	EI_MAG1		    1	//File identification
+#define	EI_MAG2		    2	//File identification
+#define	EI_MAG3		    3	//File identification
+#define	EI_CLASS	    4	//File class
+#define	EI_DATA		    5	//Data encoding
+#define	EI_VERSION	    6	//File version
+#define	EI_OSABI 	    7	//Operating system/ABI identification
+#define	EI_ABIVERSION 	8	//ABI version
+#define	EI_PAD 	        9	//Start of padding bytes
+#define	EI_NIDENT 	    16	//Size of e_ident[]
 
 /* ELF version */
-#define EV_NONE 	0 	//Invalid version
-#define EV_CURRENT 	1 	//Current version
+#define EV_NONE 	0	//Invalid version
+#define EV_CURRENT 	1	//Current version
 
 /* ELF machine type */
 
-#define EM_NONE     0 	//No machine
-#define EM_386 	    3 	//Intel 80386
-#define EM_IA_64 	50 	//Intel IA-64 processor architecture
-#define EM_X86_64 	62 	//AMD x86-64 architecture
+#define EM_NONE     0		//No machine
+#define EM_386 	    3		//Intel 80386
+#define EM_IA_64 	50	//Intel IA-64 processor architecture
+#define EM_X86_64 	62	//AMD x86-64 architecture
 
 /* EI signature */
 #define	ELFMAG0		0x7f
@@ -83,69 +83,73 @@
 #define PF_R	0x4
 
 /* OS identification */
-#define ELFOSABI_NONE 	0 	//No extensions or unspecified
-#define ELFOSABI_LINUX 	3 	//Linux
-#define ELFOSABI_COS2000 16 //COS2000
+#define ELFOSABI_NONE 	0	//No extensions or unspecified
+#define ELFOSABI_LINUX 	3	//Linux
+#define ELFOSABI_COS2000 16	//COS2000
 
 /* ELF header */
-typedef struct elf32 {
-        u8  e_ident[EI_NIDENT];
-        u16      e_type;
-        u16      e_machine;
-        u32      e_version;
-        u8*      e_entry;
-        u32      e_phoff;
-        u32      e_shoff;
-        u32      e_flags;
-        u16      e_ehsize;
-        u16      e_phentsize;
-        u16      e_phnum;
-        u16      e_shentsize;
-        u16      e_shnum;
-        u16      e_shstrndx;
+typedef struct elf32
+{
+	u8      e_ident[EI_NIDENT];
+	u16     e_type;
+	u16     e_machine;
+	u32     e_version;
+	u8     *e_entry;
+	u32     e_phoff;
+	u32     e_shoff;
+	u32     e_flags;
+	u16     e_ehsize;
+	u16     e_phentsize;
+	u16     e_phnum;
+	u16     e_shentsize;
+	u16     e_shnum;
+	u16     e_shstrndx;
 } elf32;
 
-typedef struct elf32p{
-	u32 	p_type;
-	u32 	p_offset;
-	u8* 	p_vaddr;
-	u8* 	p_paddr;
-	u32 	p_filesz;
-	u32	    p_memsz;
-	u32	    p_flags;
-	u32 	p_align;
+typedef struct elf32p
+{
+	u32     p_type;
+	u32     p_offset;
+	u8     *p_vaddr;
+	u8     *p_paddr;
+	u32     p_filesz;
+	u32     p_memsz;
+	u32     p_flags;
+	u32     p_align;
 } elf32p;
 
 
-typedef	struct stackdef {
-		u32 esp0;
-		u16 ss0;
-	} stackdef __attribute__ ((packed));
+typedef struct stackdef
+{
+	u32     esp0;
+	u16     ss0;
+} stackdef __attribute__ ((packed));
 
 
-typedef struct process {
-    u32 pid;
-    bool kernel;
-    regs dump;
-    stackdef kstack;
-    pd *pdd;
-    u32 result;
-    u8 status;
-    u8 *exec_low;
-    u8 *exec_high;
-    u8 *bss_low;
-    u8 *bss_high;
-    struct process *parent;
-    page_t page_head;
-    u32 entry;
+typedef struct process
+{
+	u32     pid;
+	bool    kernel;
+	regs    dump;
+	stackdef kstack;
+	pd     *pdd;
+	u32     result;
+	u8      status;
+	u8     *exec_low;
+	u8     *exec_high;
+	u8     *bss_low;
+	u8     *bss_high;
+	struct process *parent;
+	page_t  page_head;
+	u32     entry;
 } process __attribute__ ((packed));
 
-void task_init();
-u32 task_getfreePID ();
-u32 task_usePID (u32 pid);
-u32 task_create(u8 *code,bool kerneltask);
-u32 elf_test(u8 *src);
-u32 elf_load(u8 *src, u32 pid);
-void task_switch(u32 pid, bool fromkernelmode);
+void    task_init();
+u32     task_getfreePID();
+u32     task_usePID(u32 pid);
+u32     task_create(u8 * code, bool kerneltask);
+u32     elf_test(u8 * src);
+u32     elf_load(u8 * src, u32 pid);
+void    task_switch(u32 pid, bool fromkernelmode);
 process *getcurrentprocess();
-void task_run(u32 pid);
+void    task_run(u32 pid);
