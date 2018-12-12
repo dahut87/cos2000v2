@@ -123,12 +123,12 @@ u32 elf_load(u8 * src, u32 pid)
 
 void task_init()
 {
-	u32     i = 0;
+	u32     i = 1;
 	processes = (process *) vmalloc(sizeof(process) * MAXNUMPROCESS);
-	while (i++ < MAXNUMPROCESS)
+	while (i < MAXNUMPROCESS)
 	{
 		processes[i].pid = NULL;
-		processes[i].status = STATUS_FREE;
+		processes[i++].status = STATUS_FREE;
 	}
 	processes[0].dump.ss = SEL_KERNEL_STACK;
 	processes[0].dump.esp = KERNEL_STACK_ADDR;
