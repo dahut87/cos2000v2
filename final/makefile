@@ -39,6 +39,8 @@ floppy.img.final:
 littleclean:
 	rm -f *.final
 
+togit: clean
+
 clean:
 	rm -f *.before
 	rm -f *.part1
