@@ -10,7 +10,7 @@ CHANGEPERM=chmod 644
 all: libs.o
 	sync
 
-togit: clean indent clean
+togit: clean indent
 
 libs.o:$(OBJS)
 	$(LINK) libs.o $(OBJS)
@@ -29,10 +29,13 @@ indent:
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
+	$(REMOVE) *.c~
 	$(CHANGEPERM) ./*/*.c
 	$(CONVERT) ./*/*.c
 	$(INDENT) ./*/*.c
+	$(REMOVE) */*.c~
 	$(CHANGEPERM) ../include/*.h
 	$(CONVERT) ../include/*.h
 	$(INDENT) ../include/*.h
+	$(REMOVE) ../include/*.h~
 	sync

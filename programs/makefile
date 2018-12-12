@@ -11,7 +11,7 @@ CHANGEPERM=chmod 644
 all: lib/libs.a $(EXECS) 
 	sync
 
-togit: clean indent clean
+togit: clean indent
 
 lib/libs.a:
 	make -C lib
@@ -34,4 +34,5 @@ indent:
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
+	$(REMOVE) *.c~
 	sync

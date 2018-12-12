@@ -11,7 +11,7 @@ CHANGEPERM=chmod 644
 all: libs.a
 	sync
 
-togit: clean indent clean
+togit: clean indent
 
 libs.a:libs.o
 	$(ARCH) $@ $^
@@ -32,7 +32,9 @@ indent:
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
+	$(REMOVE) *.c~
 	$(CHANGEPERM) ../include/*.h
 	$(CONVERT) ../include/*.h
 	$(INDENT) ../include/*.h
+	$(REMOVE) ../include/*.h~
 	sync

@@ -9,7 +9,7 @@ CHANGEPERM=chmod 644
 all: system.sys
 	sync
 
-togit: clean indent clean
+togit: clean indent
 
 system.sys: multiboot.o system.o ../lib/libs.o
 	$(LINK) system.sys multiboot.o system.o ../lib/libs.o
@@ -33,4 +33,5 @@ indent:
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
+	$(REMOVE) *.c~
 	sync
