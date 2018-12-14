@@ -123,6 +123,17 @@ u8     *getstring(u8 * temp)
 
 /******************************************************************************/
 /* Fonction qui attend l'appuie d'une touche générant un code ASCII puis le retourne */
+/* SYSCALL 
+{
+"ID":1,
+"LIBRARY":"libsys",
+"NAME":"waitkey",
+"INTERNALNAME":"waitascii",
+"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
+"ARGS": [],
+"RETURN":"u8"
+}
+END */
 
 u8 waitascii(void)
 {

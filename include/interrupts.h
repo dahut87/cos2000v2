@@ -86,8 +86,8 @@
 		dump->esp = (u32) oldesp + sizeof(exception_stack_noerror);\
 	else\
 	{\
-		dump->esp = (u32) ((exception_stack_user*) caller)->esp;\
-		dump->ss = (u32) ((exception_stack_user*) caller)->ss;\
+		dump->esp = (u32) ((exception_stack_noerror_user*) caller)->esp;\
+		dump->ss = (u32) ((exception_stack_noerror_user*) caller)->ss;\
 	}\
 })
 

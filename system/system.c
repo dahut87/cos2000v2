@@ -58,44 +58,39 @@ int main(u32 magic, u32 addr)
 	print("\033[2J\r\n\000");
 	logo();
 
-	print("\033[37m\033[0m -Chargement noyaux");
-	ok();
-
-	print("\033[37m\033[0m -Initilisation de la memoire (GDT)");
+	print("\033[37m\033[0m -Initilisation de la memoire virtuelle");
 	initgdt(&&next);
       next:
-	ok();
-
-	print("\033[37m\033[0m -Initilisation de la pagination (PAGING)");
 	initpaging();
 	remap_memory(VESA_FBMEM);
 	ok();
 
-	print("\033[37m\033[0m -Initilisation des taches (TSR)");
+	print("\033[37m\033[0m -Initilisation des processus");
 	inittr();
 	initretry(&&retry);
 	task_init();
+	initsyscall();
 	ok();
 
-	print("\033[37m\033[0m -Initilisation des interruptions (IDT/PIC)");
+	print("\033[37m\033[0m -Initilisation des interruptions");
 	initidt();
 	initpic();
 	sti();
 	ok();
 
-	print(" -Installation du handler timer (IRQ 0)");
+	print(" -Installation de l'horloge systeme (IRQ 0)");
 	setidt((u32) timer, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 32);
 	enableirq(0);
 	ok();
 
-	print(" -Installation du handler clavier (IRQ 1)");
+	print(" -Installation du pilote clavier (IRQ 1)");
 	setidt((u32) keyboard, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
 	enableirq(1);
 	ok();
 
-	print(" -Installation du handler souris (IRQ12+Cascade IRQ2)");
+	print(" -Installation du pilote souris (IRQ12+IRQ2)");
 	setidt((u32) mouse, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
 	enableirq(2);
@@ -104,8 +99,7 @@ int main(u32 magic, u32 addr)
 		warning();
 	else
 		ok();
-	printf(" -Installation des appels systemes utilisateur et du FPU");
-	initsyscall();
+	printf(" -Installation du coprocesseur arithmetique");
 	finit();
 	ok();
 

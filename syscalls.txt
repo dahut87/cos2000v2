@@ -1,0 +1,65 @@
+[
+{
+"ID":4, 
+"NAME":"getticks",
+"LIBRARY":"libsys",
+"INTERNALNAME":"gettimer",
+"DESCRIPTION":"Return the internal value of the timer",
+"ARGS": [],
+"RETURN":"u32"
+}
+
+,
+{
+"ID":5,
+"LIBRARY":"libsys",
+"NAME":"exit",
+"INTERNALNAME":"exit",
+"DESCRIPTION":"End a task for user or kernel domain",
+"ARGS": [
+{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
+],
+"RETURN":"void"
+}
+
+,
+{
+"ID":2,
+"LIBRARY":"libvideo",
+"NAME":"print",
+"INTERNALNAME":"print",
+"DESCRIPTION":"Show a string on the screen",
+"ARGS": [
+{"TYPE":"u8*","NAME":"string","DESCRIPTION":"string to show in ascii format"}
+],
+"RETURN":"u32"
+}
+
+,
+{
+"ID":1,
+"LIBRARY":"libsys",
+"NAME":"waitkey",
+"INTERNALNAME":"waitascii",
+"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
+"ARGS": [],
+"RETURN":"u8"
+}
+
+,
+{
+"ID":0,
+"LIBRARY":"libsys",
+"NAME":"testapi",
+"INTERNALNAME":"testapi",
+"DESCRIPTION":"Simple function to test if SYSCALL API is correctly running",
+"ARGS": [
+{"TYPE":"u32","NAME":"arg1","DESCRIPTION":"first argument of your choice"},
+{"TYPE":"u32","NAME":"arg2","DESCRIPTION":"second argument of your choice"},
+{"TYPE":"u32","NAME":"arg3","DESCRIPTION":"third argument of your choice"}
+],
+"RETURN":"u32",
+"DUMP":"yes"
+}
+
+]

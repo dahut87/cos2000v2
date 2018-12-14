@@ -1,8 +1,9 @@
 /*******************************************************************************/
-/* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
+/* COS2000 - Compatible Operating System - LGPL v3 - Horde Nicolas             */
 /*                                                                             */
 
+#include "libsys.h";
+#include "syscall.h";
 #include "types.h";
 
-u32     libc_testapi(void);
-u32     libc_exit(u32 errorcode);
+/* FOR INSERTING */

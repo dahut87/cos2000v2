@@ -94,7 +94,7 @@ int test(void)
 
 int testtask()
 {
-	print("*** Creation d'une tache");
+	print("*** Creation d'une tache\r\n");
 	u32     pid = task_create(&programs_test, false);
 	task_run(pid);
 }

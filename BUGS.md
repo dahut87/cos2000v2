@@ -6,10 +6,6 @@
 * Les modes VGA ne fonctionnent pas tous.
 * Ralentissement lors du défilemment de la console en VESA.
 
-### MEMOIRE
-
-La commande mem plante parfois ?!
-
 ### 3D
 
 La 3D utiliser sauvagement la mémoire sans malloc !!

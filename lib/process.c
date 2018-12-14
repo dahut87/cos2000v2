@@ -59,6 +59,28 @@ u32 elf_test(u8 * src)
 }
 
 /*******************************************************************************/
+/* Met fin à une tâche */
+/* SYSCALL 
+{
+"ID":5,
+"LIBRARY":"libsys",
+"NAME":"exit",
+"INTERNALNAME":"exit",
+"DESCRIPTION":"End a task for user or kernel domain",
+"ARGS": [
+{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
+],
+"RETURN":"void"
+}
+END */
+
+void exit()
+{
+	task_delete(getcurrentpid());
+	task_switch(0, false);
+}
+
+/*******************************************************************************/
 /* Charge le fichier ELF en mémoire et mets à jour les informations sur le processus */
 
 u32 elf_load(u8 * src, u32 pid)

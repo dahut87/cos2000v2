@@ -66,24 +66,9 @@ void sysenter_handler(void)
 	sti();
 	switch (dump->eax)
 	{
-     		case 4:
-			dump->eax=(u32) gettimer();
-			break;
-     		case 5:
-			exit(dump->ebx);
-			break;
-     		case 2:
-			dump->eax=(u32) print(dump->ebx);
-			break;
-     		case 1:
-			dump->eax=(u32) waitascii();
-			break;
-     		case 0:
-			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
-			break;
-
+/* FOR INSERTING */
 		default:
-			printf("Appel syscall vers fonction inexistante en %Y:%Y\r\n", dump->cs, dump->eip);
+			printf("Appel syscall vers fonction inexistante en %Y:%Y", dump->cs, dump->eip);
 			break;
 	}
 	restdebugcpu();

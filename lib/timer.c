@@ -16,6 +16,17 @@ static u32 time = 0;
 
 /******************************************************************************/
 /* Récupère la valeur du timer */
+/* SYSCALL 
+{
+"ID":4, 
+"NAME":"getticks",
+"LIBRARY":"libsys",
+"INTERNALNAME":"gettimer",
+"DESCRIPTION":"Return the internal value of the timer",
+"ARGS": [],
+"RETURN":"u32"
+}
+END */
 
 u32 gettimer(void)
 {

@@ -2,29 +2,74 @@
 
 APIs given by COS2000 libraries
 
-###  LIBC 
 
-All fonction in the "libc" library.
+###  LIBSYS
+
+All fonctions in the "libsys" library.
 
 ------
 
-`u32     libc_testapi(void);`
+`u32 getticks(void);`
 
-*Description: function to test if the syscall mecanism is running.*
+*Description:Return the internal value of the timer*
 
-* syscall id : **0**
+* syscall id : **4**
 * arguments : **0**
-* results : **yes (always 0x66666666)**
+* results : **u32**
+* dump of register cpu: **no**
 
 ------
 
-`u32     libc_exit(u32 errorcode);`
+`void exit(u32 resultcode);`
 
-*Description: tell system that the user process is now finish. Free all ressources affected.*
+*Description:End a task for user or kernel domain*
+
+* syscall id : **5**
+* arguments : **1**
+* * argument 1 : **u32 resultcode** *Code result of the execution*
+* results : **void**
+* dump of register cpu: **no**
+
+------
+
+`u8 waitkey(void);`
+
+*Description:Wait for user to press a key and return the ascii code pressed*
 
 * syscall id : **1**
-* arguments : **1**
-* * argument 1 : **u32 pid** *PID process to free*
-* results : **no**
+* arguments : **0**
+* results : **u8**
+* dump of register cpu: **no**
 
 ------
+
+`u32 testapi(u32 arg1, u32 arg2, u32 arg3);`
+
+*Description:Simple function to test if SYSCALL API is correctly running*
+
+* syscall id : **0**
+* arguments : **3**
+* * argument 1 : **u32 arg1** *first argument of your choice*
+* * argument 2 : **u32 arg2** *second argument of your choice*
+* * argument 3 : **u32 arg3** *third argument of your choice*
+* results : **u32**
+* dump of register cpu: **yes**
+
+
+###  LIBVIDEO
+
+All fonctions in the "libvideo" library.
+
+------
+
+`u32 print(u8* string);`
+
+*Description:Show a string on the screen*
+
+* syscall id : **2**
+* arguments : **1**
+* * argument 1 : **u8* string** *string to show in ascii format*
+* results : **u32**
+* dump of register cpu: **no**
+
+

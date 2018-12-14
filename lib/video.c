@@ -1033,6 +1033,19 @@ void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
 
 /*******************************************************************************/
 /* affiche une chaine de caractère a l'écran */
+/* SYSCALL 
+{
+"ID":2,
+"LIBRARY":"libvideo",
+"NAME":"print",
+"INTERNALNAME":"print",
+"DESCRIPTION":"Show a string on the screen",
+"ARGS": [
+{"TYPE":"u8*","NAME":"string","DESCRIPTION":"string to show in ascii format"}
+],
+"RETURN":"u32"
+}
+END */
 
 u32 print(u8 * string)
 {
