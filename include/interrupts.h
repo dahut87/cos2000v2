@@ -339,5 +339,5 @@ void    makeidtdes(u32 offset, u16 select, u16 type, idtdes * desc);
 void    initpic(void);
 void    enableirq(u8 irq);
 void    disableirq(u8 irq);
-void    cpuerror(const u8 * src, const regs * stack);
+void    cpuerror(const u8 * src, const regs * stack, bool returnto);
 #endif

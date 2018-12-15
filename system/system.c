@@ -85,13 +85,13 @@ int main(u32 magic, u32 addr)
 	ok();
 
 	print(" -Installation du pilote clavier (IRQ 1)");
-	setidt((u32) keyboard, SEL_KERNEL_CODE,
+	setidt((u32) keyboard_handler, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
 	enableirq(1);
 	ok();
 
 	print(" -Installation du pilote souris (IRQ12+IRQ2)");
-	setidt((u32) mouse, SEL_KERNEL_CODE,
+	setidt((u32) mouse_handler, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
 	enableirq(2);
 	enableirq(12);

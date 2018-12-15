@@ -8,7 +8,7 @@
 
 u32 print(u8* string)
 {
-	syscall1(2,(u32) string);
+	return syscall1(2,(u32) string);
 }
 
 

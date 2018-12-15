@@ -15,9 +15,20 @@
   * %eax System call number.
   * %ebx Arg1
   * %esi Arg2
-  * %edi Arg3
-/*******************************************************************************/
+  * %edi Arg3*/
 
+/*******************************************************************************/
+/* Initialise les appels système par SYSENTER/SYSEXIT */
+
+void initsyscall(void)
+{
+	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
+	wrmsr(0x175, 0x60000, 0x0);
+	wrmsr(0x176, &sysenter_handler, 0x0);
+	return;
+}
+
+/*******************************************************************************/
 /* Fonction permettant de tester le fonctionnement de SYSENTER */
 /* SYSCALL 
 {
@@ -43,26 +54,16 @@ u32 testapi(u32 arg1, u32 arg2, u32 arg3, regs* dump)
 }
 
 /*******************************************************************************/
-
-/* Initialise les appels système par SYSENTER/SYSEXIT */
-
-void initsyscall(void)
-{
-	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
-	wrmsr(0x175, 0x60000, 0x0);
-	wrmsr(0x176, &sysenter_handler + 6, 0x0);
-}
-
-/*******************************************************************************/
-
 /* Entrée pour les appels système SYSENTER */
 
-void sysenter_handler(void)
+__attribute__ ((noreturn)) void sysenter_handler(void)
 {
 	cli();
 	regs   *dump;
 	dumpcpu();
 	getESP(dump);
+	dump->cs=SEL_USER_CODE;
+	dump->eip=dump->edx;
 	sti();
 	switch (dump->eax)
 	{
@@ -76,5 +77,4 @@ void sysenter_handler(void)
 }
 
 /*******************************************************************************/
-
 

@@ -34,6 +34,25 @@ static u8 *msg[] = {
 static u8 space[] = " ";
 
 /******************************************************************************/
+/* Affiche une erreur CPU et fige l'ordinateur */
+
+void cpuerror(const u8 * src, const regs * stack, bool returnto)
+{
+	printf("\033[31m*** ERREUR CPU : %s *** \r\n", src);
+	if (stack != NULL)
+		show_cpu(stack);
+	print("<Appuyer une touche pour continuer>\033[0m\r\n");
+	sti();
+	waitascii();
+	if (!returnto)
+	{
+		print("Retour en force au SHELL\r\n");
+		initselectors(getinitretry());
+
+	}
+}
+
+/******************************************************************************/
 /* Annule les FLAGs CPU */
 
 bool cansetflag(u32 flag)

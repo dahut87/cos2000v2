@@ -22,7 +22,7 @@ harddisk: final/harddisk.img.final
 uefi: final/harddiskuefi.img.final
 
 install:
-	(sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix)
+	(sudo apt-get install gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix)
 
 togit:	
 	make -C system togit

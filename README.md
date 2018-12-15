@@ -63,7 +63,6 @@ Compilation:
 
 Nom | Paquet | Version
 --- | --- | ---
-NASM | nasm | 2.11.08
 gcc | gcc | 5.4.0 20160609
 GNU Make | make | 4.1
 Outils divers | binutils | 2.26-8
@@ -106,7 +105,7 @@ Puis cloner le source chez vous avec la commande :
 
 Sous linux - Debian & Ubuntu like
 
-`sudo apt-get install nasm gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils`
+`sudo apt-get install gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils`
 
 ou sinon, depuis un terminal disposé sur le répertoire cos2000
 

@@ -146,9 +146,13 @@ for lib in alllibs:
                        if numargs>0:
                             textargs=textargs+","
                        textargs=textargs+"(u32) "+syscall['ARGS'][i]['NAME']
+                 if syscall['RETURN']!='void':
+                       textargs="return "+textargs+");"
+                 else:
+                       textargs=textargs+");\n	return;"
                  text=text+getfunction(syscall)+"""
 {
-	"""+textargs+""");
+	"""+textargs+"""
 }
 
 """

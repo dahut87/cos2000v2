@@ -1,5 +1,5 @@
 GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -I ../include -m32 -fno-pie -no-pie -c -o
-ASM=nasm -f elf -o
+ASM=gcc -nostdinc -ffreestanding -fno-builtin -m32 -c -fno-pie -no-pie
 LINK=ld -m elf_i386 -T linker.lds -n -o
 CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
@@ -18,7 +18,7 @@ system.o:
 	$(GCC) system.o system.c
 
 multiboot.o:
-	$(ASM) multiboot.o multiboot.asm -dVESA=$(VESA)
+	$(ASM) multiboot.S -DVESA=$(VESA)
 
 clean:
 	$(REMOVE) *.o

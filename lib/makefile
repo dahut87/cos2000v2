@@ -1,4 +1,4 @@
-CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F elf_i386 -fno-pie -no-pie -I ../include
+CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F elf_i386 -fno-pie -no-pie -I ../include -c
 LINK=ld -m elf_i386 -r -o
 SRCS= $(wildcard *.c)
 OBJS= $(SRCS:.c=.o)
@@ -15,6 +15,17 @@ togit: clean indent
 libs.o:$(OBJS)
 	$(LINK) libs.o $(OBJS)
 
+handlers.o:handlers.c
+		$(CC) -mgeneral-regs-only $^
+
+keyboard.o:keyboard.c
+		$(CC) -mgeneral-regs-only $^
+
+mouse.o:mouse.c
+		$(CC) -mgeneral-regs-only $^
+
+syscall.o:syscall.c
+		$(CC) -fomit-frame-pointer $^
 .o: .c 
 	$(CC) $^
 

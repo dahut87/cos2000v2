@@ -64,11 +64,8 @@ void outmsecmd(u8 command)
 /******************************************************************************/
 /* Handler d'interruption de la souris IRQ 12 */
 
-void mouse(void)
+__attribute__((interrupt)) void mouse_handler(exception_stack_noerror *caller)
 {
-	cli();
-	pushf();
-	pushad();
 	u8      mbyte = inb(0x60);
 	s8      changex, changey;
 
@@ -145,11 +142,6 @@ void mouse(void)
       endofint:
 	irqendmaster();
 	irqendslave();
-	popad();
-	popf();
-	sti();
-	leave();
-	iret();
 }
 
 /*******************************************************************************/

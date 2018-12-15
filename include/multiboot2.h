@@ -1,8 +1,6 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
-#include "types.h"
-
 #ifndef MULTIBOOT
 #   define MULTIBOOT
 
@@ -71,6 +69,7 @@
 #   define MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED 1
 #   define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
 
+#include "types.h"
 struct multiboot_header
 {
 	/*  Must be MULTIBOOT_MAGIC - see above. */
@@ -388,13 +387,5 @@ struct multiboot_tag_load_base_addr
 	u32     size;
 	u32     load_base_addr;
 };
-
-u32     getgrubinfo(u8 type);
-u8     *getgrubinfo_cmdline(void);
-u32     getgrubinfo_ram(void);
-struct multiboot_tag_mmap *getgrubinfo_mem(void);
-struct multiboot_tag_framebuffer *getgrubinfo_fb(void);
-void    getgrubinfo_all(void);
-void    initmultiboot(const u32 addr);
 
 #endif
