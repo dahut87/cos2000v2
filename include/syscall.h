@@ -47,4 +47,5 @@
 
 /* Vers 6 arguments maximum */
 void    initsyscall(void);
-__attribute__ ((noreturn)) void sysenter_handler(void);
+__attribute__ ((noreturn)) void sysenter_handler(regs *dump);
+

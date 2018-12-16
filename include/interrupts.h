@@ -48,14 +48,9 @@
 				/* fréquence pour timer dans un PC ou AT */
 #   define HZ             100	/* Fréquence d'horloge (ajutste logiciellement sur IBM-PC) */
 
-#   define getESP(mem) ({ \
-        asm volatile ("movl %%esp,%[tomem];":: [tomem] "m" (mem)); \
+#   define setESP(mem) ({ \
+        asm volatile ("movl %[frommem],%%esp;":[frommem] "=m" (mem):); \
 })
-
-#   define getEBP(mem) ({ \
-        asm volatile ("movl %%ebp,%[tomem];":: [tomem] "m" (mem)); \
-})
-
 
 #   define savecpu(dump,caller,oldesp) ({\
 	getEBP(oldesp);\
@@ -168,24 +163,18 @@
         pushl %%eax":::);\
 })
 
-#   define restcpu()  ({\
+#   define restcpu_kernel() ({\
 	asm("\
         popl %%eax \n \
         popl %%edx \n \
         mov $0xC0000080, %%ecx \n \
 	wrmsr\n \
         popl %%eax\n \
-	mov %%eax,%%dr7 \n \
         popl %%eax \n \
-	mov %%eax,%%dr6 \n \
         popl %%eax \n \
-	mov %%eax,%%dr3 \n \
         popl %%eax \n \
-	mov %%eax,%%dr2 \n \
         popl %%eax \n \
-	mov %%eax,%%dr1 \n \
         popl %%eax \n \
-	mov %%eax,%%dr0 \n \
         popl %%eax \n \
         popl %%eax \n \
 	mov %%eax,%%cr3 \n \
@@ -196,15 +185,26 @@
         popl %%esi\n \
         popl %%edx\n \
         popl %%ecx\n \
+        mov 36(%%esp),%%eax\n \
+        mov 32(%%esp),%%ebx\n \
+        mov %%ebx,-4(%%eax)\n \
+        mov 28(%%esp),%%ebx\n \
+        mov %%ebx,-8(%%eax)\n \
+        mov 24(%%esp),%%ebx\n \
+        mov %%ebx,-12(%%eax)\n \
         popl %%ebx\n \
         popl %%eax\n \
         popl %%gs\n \
         popl %%fs\n \
         popl %%es\n \
-  	popl %%ds\n \"::);\
+        popl %%ds\n \
+        add $12,%%esp\n \
+  	  popl %%esp\n \
+        sub $12,%%esp\n \
+        iret ":::);\
 })
 
-#   define restdebugcpu() ({\
+#   define restcpu_user() ({\
 	asm("\
         popl %%eax \n \
         popl %%edx \n \
@@ -233,6 +233,7 @@
         popl %%es\n \
   	popl %%ds":::);\
 })
+
 
 /*
 lors d'un iret en mode user:

@@ -235,7 +235,10 @@ void task_switch(u32 pid, bool fromkernelmode)
 		setTSS(0x0, 0x0);
 	current->dump.eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
 	createdump(current->dump);
-	restdebugcpu();
+	if (current->dump.cs==SEL_KERNEL_CODE)
+		restcpu_kernel();
+	else
+		restcpu_user();
 	iret();
 }
 

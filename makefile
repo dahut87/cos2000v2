@@ -9,6 +9,11 @@ bits64: ARCH=bits64
 bits64: lib/libs.o system/system.sys
 	sync
 
+syscall: clean remakeapi all
+
+remakeapi:
+	python makesyscall.py
+
 programs: programs/test lib/TEST/test.c
 
 lib/TEST/test.c:

@@ -22,6 +22,25 @@ static idtdes idt[IDT_SIZE];
 
 static u32 retry_address;
 
+extern wrapper_exception0;
+extern wrapper_exception1;
+extern wrapper_exception2;
+extern wrapper_exception3;
+extern wrapper_exception4;
+extern wrapper_exception5;
+extern wrapper_exception6;
+extern wrapper_exception7;
+extern wrapper_exception8;
+extern wrapper_exception9;
+extern wrapper_exception10;
+extern wrapper_exception11;
+extern wrapper_exception12;
+extern wrapper_exception13;
+extern wrapper_exception14;
+extern wrapper_exception15;
+extern wrapper_exception16;
+extern wrapper_exception17;
+extern wrapper_exception18;
 /******************************************************************************/
 /* Initialise la reprise après erreur */
 
@@ -149,43 +168,43 @@ void putidt(u32 offset, u16 select, u16 type, u16 index)
 void initidt(void)
 {
 	u16     i;
-	putidt((u32) exception0, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception0, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 0);
-	putidt((u32) exception1, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception1, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 1);
-	putidt((u32) exception2, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception2, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 2);
-	putidt((u32) exception3, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception3, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 3);
-	putidt((u32) exception4, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception4, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 4);
-	putidt((u32) exception5, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception5, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 5);
-	putidt((u32) exception6, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception6, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 6);
-	putidt((u32) exception7, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception7, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 7);
-	putidt((u32) exception8, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception8, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 8);
-	putidt((u32) exception9, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception9, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 9);
-	putidt((u32) exception10, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception10, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 10);
-	putidt((u32) exception11, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception11, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 11);
-	putidt((u32) exception12, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception12, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 12);
-	putidt((u32) exception13, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception13, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 13);
-	putidt((u32) exception14, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception14, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 14);
-	putidt((u32) exception15, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception15, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 15);
-	putidt((u32) exception16, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception16, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 16);
-	putidt((u32) exception17, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception17, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 17);
-	putidt((u32) exception18, SEL_KERNEL_CODE,
+	putidt((u32) &wrapper_exception18, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 18);
 	for (i = 19; i < 32; i++)
 	{

@@ -22,156 +22,6 @@ __attribute__((interrupt)) void interruption(exception_stack_noerror *caller)
 /******************************************************************************/
 /* Les expections */
 
-void exception0()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#DE Divide error", dump, false);
-}
-
-void exception1()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	changevc(6);
-	clearscreen();
-	show_lightcpu(dump);
-	printf("\r\n\033[7m[P]\033[0m PAS A PAS \033[7m D \033[0m PAS A PAS DETAILLE \033[7m C \033[0m CONTINUER \033[7m S \033[0m STOPPER \033[7m V \033[0m VOIR \033[7m S \033[0m SCINDER");
-	sti();
-	u8      ascii = waitascii();
-	cli();
-	if (ascii == 'P' || ascii == 'p')
-		setdebugreg(0,
-			    caller->eip + disasm(caller->eip, NULL, false),
-			    DBG_EXEC);
-	else if (ascii == 'D' || ascii == 'd')
-		setdebugreg(0, 0, DBG_CLEAR);
-	else if (ascii == 'C' || ascii == 'c')
-		setdebugreg(0, 0, DBG_CLEAR);
-	else if (ascii == 'S' || ascii == 's')
-	{
-		changevc(0);
-		sti();
-		initselectors(getinitretry());
-	}
-	changevc(0);
-	restdebugcpu();
-	iret();
-}
-
-void exception2()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("NMI Non-maskable hardware interrupt", dump, false);
-}
-
-void exception3()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#BP INT3 instruction", dump, true);
-	iret();
-}
-
-void exception4()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#OF INTO instruction detected overflow", dump, false);
-}
-
-void exception5()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#BR BOUND instruction detected overrange", dump, false);
-}
-
-void exception6()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#UD Invalid instruction opcode", dump, false);
-}
-
-void exception7()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#NM No coprocessor", dump, false);
-}
-
-void exception8()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#DF Double fault", dump, false);
-}
-
-void exception9()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("Coprocessor segment overrun", dump, false);
-}
-
-void exception10()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#TS Invalid task state segment (TSS)", dump, false);
-}
-
-void exception11()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#NP Segment not present", dump, false);
-}
-
-void exception12()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#SS Stack fault", dump, false);
-}
-
-void exception13()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu(dump, caller, oldesp);
-	cpuerror("#GP General protection fault (GPF)", dump, false);
-}
-
 static u8 ex14_errors1[] =
 	"Supervisory process tried to read a non-present page entry";
 static u8 ex14_errors2[] =
@@ -193,75 +43,135 @@ static u8 *ex14_errors[] =
 	&ex14_errors5, &ex14_errors6, &ex14_errors7, &ex14_errors8
 };
 
-void exception14()
+__attribute__ ((noreturn)) void exception_handler(regs *dump)
 {
-	regs   *dump;
-	exception_stack *caller;
-	u32    *oldesp;
-	getEBP(oldesp);
-	dumpcpu();
-	getESP(dump);
-	dump->ebp = *oldesp;
-	dump->eip = caller->eip;
-	dump->cs = caller->cs;
-	if (caller->cs == SEL_KERNEL_CODE)
-		dump->esp = (u32) oldesp + sizeof(exception_stack);
+	u32 exception=dump->eip;
+	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
+	bool noerror,user;
+	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
+	{
+		noerror=true;
+		dump->eip = caller->eip;
+		dump->cs = caller->cs;
+		dump->eflags = caller->eflags;
+		if (dump->cs==SEL_KERNEL_CODE)
+		{
+			dump->esp = (u32) caller + sizeof(exception_stack_noerror);
+			user=false;
+		}
+		else
+		{
+			dump->esp = (u32) ((exception_stack_noerror_user*) caller)->esp;
+			dump->ss = (u32) ((exception_stack_noerror_user*) caller)->ss;
+			user=true;
+		}
+	}
 	else
 	{
-		dump->esp = (u32) ((exception_stack_user *) caller)->esp;
-		dump->ss = (u32) ((exception_stack_user *) caller)->ss;
+		noerror=false;
+		dump->eip = ((exception_stack*)caller)->eip;
+		dump->cs = ((exception_stack*)caller)->cs;
+		if (dump->cs==SEL_KERNEL_CODE)
+		{
+			dump->esp = (u32) caller + sizeof(exception_stack);
+			user=false;
+		}
+		else
+		{
+			dump->esp = (u32) ((exception_stack_user*) caller)->esp;
+			dump->ss = (u32) ((exception_stack_user*) caller)->ss;
+			user=true;
+		}
 	}
-	if (dump->cr2 >= USER_CODE && dump->cr2 < USER_STACK)
+	switch (exception)
 	{
-		virtual_range_new(getcurrentprocess()->pdd,
-				  (u8 *) (dump->cr2 & 0xFFFFF000),
-				  PAGESIZE, PAGE_ALL);
+		case 0:
+			cpuerror("#DE Divide error", dump, false);
+		case 1:
+			changevc(6);
+			clearscreen();
+			show_lightcpu(dump);
+			printf("\r\n\033[7m[P]\033[0m PAS A PAS \033[7m D \033[0m PAS A PAS DETAILLE \033[7m C \033[0m CONTINUER \033[7m S \033[0m STOPPER \033[7m V \033[0m VOIR \033[7m S \033[0m SCINDER");
+			sti();
+			u8      ascii = waitascii();
+			cli();
+			if (ascii == 'P' || ascii == 'p')
+				setdebugreg(0,
+					    caller->eip + disasm(caller->eip, NULL, false),
+					    DBG_EXEC);
+			else if (ascii == 'D' || ascii == 'd')
+				setdebugreg(0, 0, DBG_CLEAR);
+			else if (ascii == 'C' || ascii == 'c')
+				setdebugreg(0, 0, DBG_CLEAR);
+			else if (ascii == 'S' || ascii == 's')
+			{
+				changevc(0);
+				sti();
+				initselectors(getinitretry());
+			}
+			changevc(0);
+			goto endofexception;
+		case 2:
+			cpuerror("NMI Non-maskable hardware interrupt", dump, false);
+		case 3:
+			cpuerror("#BP INT3 instruction", dump, true);
+			iret();
+		case 4:
+			cpuerror("#OF INTO instruction detected overflow", dump, false);
+		case 5:
+			cpuerror("#BR BOUND instruction detected overrange", dump, false);
+		case 6:
+			cpuerror("#UD Invalid instruction opcode", dump, false);
+		case 7:
+			cpuerror("#NM No coprocessor", dump, false);
+		case 8:
+			cpuerror("#DF Double fault", dump, false);
+		case 9:
+			cpuerror("Coprocessor segment overrun", dump, false);	
+		case 10:
+			cpuerror("#TS Invalid task state segment (TSS)", dump, false);
+		case 11:
+			cpuerror("#NP Segment not present", dump, false);
+		case 12:
+			cpuerror("#SS Stack fault", dump, false);
+		case 13:
+			cpuerror("#GP General protection fault (GPF)", dump, false);
+		case 14:
+			if (dump->cr2 >= USER_CODE && dump->cr2 < USER_STACK)
+			{
+				virtual_range_new(getcurrentprocess()->pdd,
+						  (u8 *) (dump->cr2 & 0xFFFFF000),
+						  PAGESIZE, PAGE_ALL);
+			}
+			else
+			{
+				printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",
+					 ex14_errors[((exception_stack*) caller)->error_code & 0xF], dump->cr2,
+					 dump->cs, dump->eip);
+				cpuerror("#PGF Page fault", dump, false);
+			}
+			goto endofexception;
+		case 15:
+			cpuerror("(reserved)", dump, false);
+		case 16:
+			cpuerror("#MF Coprocessor error", dump, false);
+		case 17:
+			cpuerror("#AC Alignment check", dump, false);
+		case 18: 
+			cpuerror("#MC Machine check", dump, false);
 	}
-	else
-	{
-		printf("Page fault - %s at adress %Y cs:eip - %Y:%Y\r\n",
-		       ex14_errors[caller->error_code & 0xF], dump->cr2,
-		       dump->cs, dump->eip);
-		cpuerror("#PGF Page fault", dump, false);
-	}
-	restdebugcpu();
-	iret();
-}
-
-void exception15()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("(reserved)", dump, false);
-}
-
-void exception16()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#MF Coprocessor error", dump, false);
-}
-
-void exception17()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#AC Alignment check", dump, false);
-}
-
-void exception18()
-{
-	regs   *dump;
-	exception_stack_noerror *caller;
-	u32    *oldesp;
-	savecpu_noerror(dump, caller, oldesp);
-	cpuerror("#MC Machine check", dump, false);
+	endofexception:
+		if (dump->cs==SEL_KERNEL_CODE)
+		{
+			setESP(dump);
+			restcpu_kernel();
+		}
+		else
+		{
+			setESP(dump);
+			restcpu_user();
+			iret();
+		}
 }
 
 /******************************************************************************/

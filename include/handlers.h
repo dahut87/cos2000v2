@@ -2,7 +2,7 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "types.h"
-
+__attribute__ ((noreturn)) void exception_handler(regs *dump);
 __attribute__((interrupt)) void interruption(exception_stack_noerror *caller);
 void exception0();
 void exception1();

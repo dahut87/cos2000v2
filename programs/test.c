@@ -8,8 +8,8 @@
 
 void main(void)
 {
-	//u32     result = testapi(0x1234,0x88888888,0x2505);
+	u32     result = testapi(0x1234,0x88888888,0x2505);
 	print("ceci est un test d'appel");
 	waitkey();
-	//exit(result);
+	exit(result);
 }

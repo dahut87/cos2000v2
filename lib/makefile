@@ -1,7 +1,10 @@
 CC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -m32 -F elf_i386 -fno-pie -no-pie -I ../include -c
+ASM=gcc -nostdinc -ffreestanding -fno-builtin -m32 -c -fno-pie -no-pie
 LINK=ld -m elf_i386 -r -o
 SRCS= $(wildcard *.c)
 OBJS= $(SRCS:.c=.o)
+SRCASM= $(wildcard *.S)
+OBJASM= $(SRCASM:.S=.o)
 CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
 REMOVE=rm -f
@@ -12,8 +15,11 @@ all: libs.o
 
 togit: clean indent
 
-libs.o:$(OBJS)
-	$(LINK) libs.o $(OBJS)
+libs.o:$(OBJS) $(OBJASM)
+	$(LINK) libs.o $(OBJS) $(OBJASM)
+
+.o: .S
+		$(ASM) $^
 
 handlers.o:handlers.c
 		$(CC) -mgeneral-regs-only $^

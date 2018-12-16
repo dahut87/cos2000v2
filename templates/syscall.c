@@ -17,6 +17,8 @@
   * %esi Arg2
   * %edi Arg3*/
 
+extern wrapper_sysenter;
+
 /*******************************************************************************/
 /* Initialise les appels système par SYSENTER/SYSEXIT */
 
@@ -24,7 +26,7 @@ void initsyscall(void)
 {
 	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
 	wrmsr(0x175, 0x60000, 0x0);
-	wrmsr(0x176, &sysenter_handler, 0x0);
+	wrmsr(0x176, &wrapper_sysenter, 0x0);
 	return;
 }
 
@@ -55,15 +57,8 @@ u32 testapi(u32 arg1, u32 arg2, u32 arg3, regs* dump)
 
 /*******************************************************************************/
 /* Entrée pour les appels système SYSENTER */
-
-__attribute__ ((noreturn)) void sysenter_handler(void)
+__attribute__ ((noreturn)) void sysenter_handler(regs *dump)
 {
-	cli();
-	regs   *dump;
-	dumpcpu();
-	getESP(dump);
-	dump->cs=SEL_USER_CODE;
-	dump->eip=dump->edx;
 	sti();
 	switch (dump->eax)
 	{
@@ -72,7 +67,10 @@ __attribute__ ((noreturn)) void sysenter_handler(void)
 			printf("Appel syscall vers fonction inexistante en %Y:%Y", dump->cs, dump->eip);
 			break;
 	}
-	restdebugcpu();
+      //dump->eflags &= ~(1 << 6);
+      dump->eflags |= (1 << 6);
+	setESP(dump);
+	restcpu_user();
 	sysexit();
 }
 
