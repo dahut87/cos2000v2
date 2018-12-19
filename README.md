@@ -125,6 +125,8 @@ Autres commandes de compilation de COS2000
 * `make test` lance l'émulation QEMU en 32 bits sur disque dur
 * `make test64` lance l'émulation QEMU en 64 bits sur disque dur en UEFI
 * `make clean` supprime les fichers compilés
+* `make syscall` réactualise les librairies du domaine utilisateur
+* `make programs` compile les programmes du domaine utilisateur
 * `VESA=no make test` préfixe à utiliser (VESA=no) pour faire appel au pilote VGA et non pas VESA
 
 #### Utilisation
@@ -193,6 +195,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * `include` - fichier d'entête C
 * `lib` - librairies pour le noyau
 * `makefile` - Makefile du projet
+* `templates` - Modèles utilisés pour générer des libraires du domaine utilisateur
 * `programs` - programmes pour le domaine utilisateur
 * *  `include` - fichier d'entête C
 * *  `lib` - librairies pour le domaine utilisateur

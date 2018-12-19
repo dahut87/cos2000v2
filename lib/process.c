@@ -8,8 +8,8 @@
 #include "gdt.h"
 
 process *processes;
-process *current;
-u32     lastpid;
+pid_t current;
+pid_t lastpid;
 
 
 static u8 elf_errors1[] = "Aucune signature ELF";
@@ -33,7 +33,7 @@ static u8 *elf_errors[] =
  5 - pas bon OS
  6 - pas bon type machine */
 
-u32 elf_test(u8 * src)
+u32 iself(u8 * src)
 {
 	elf32  *header = (elf32 *) src;
 	if (header->e_ident[EI_MAG0] == ELFMAG0
@@ -65,7 +65,7 @@ u32 elf_test(u8 * src)
 "ID":5,
 "LIBRARY":"libsys",
 "NAME":"exit",
-"INTERNALNAME":"exit",
+"INTERNALNAME":"processexit",
 "DESCRIPTION":"End a task for user or kernel domain",
 "ARGS": [
 {"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
@@ -74,16 +74,16 @@ u32 elf_test(u8 * src)
 }
 END */
 
-void exit()
+void processexit()
 {
-	task_delete(getcurrentpid());
-	task_switch(0, false);
+	deletetask(getcurrentpid());
+	switchtask(0, false);
 }
 
 /*******************************************************************************/
 /* Charge le fichier ELF en mémoire et mets à jour les informations sur le processus */
 
-u32 elf_load(u8 * src, u32 pid)
+u32 loadelf(u8 * src, pid_t pid)
 {
 	u8     *ptr;
 	u8      code;
@@ -119,13 +119,13 @@ u32 elf_load(u8 * src, u32 pid)
 			}
 			if (program->p_flags == PF_X + PF_R)
 			{
-				processes[pid].exec_low = (u8 *) v_begin;
-				processes[pid].exec_high = (u8 *) v_end;
+				processes[(u32)pid].exec_low = (u8 *) v_begin;
+				processes[(u32)pid].exec_high = (u8 *) v_end;
 			}
 			if (program->p_flags == PF_W + PF_R)
 			{
-				processes[pid].bss_low = (u8 *) v_begin;
-				processes[pid].bss_high = (u8 *) v_end;
+				processes[(u32)pid].bss_low = (u8 *) v_begin;
+				processes[(u32)pid].bss_high = (u8 *) v_end;
 			}
 			memcpy((u8 *) (src + program->p_offset),
 			       (u8 *) v_begin, program->p_filesz, 0);
@@ -136,14 +136,13 @@ u32 elf_load(u8 * src, u32 pid)
 					ptr[i] = 0;
 		}
 	}
-	processes[pid].entry = header->e_entry;
 	return header->e_entry;
 }
 
 /*******************************************************************************/
 /* Initialise la liste des processus */
 
-void task_init()
+void initprocesses()
 {
 	u32     i = 1;
 	processes = (process *) vmalloc(sizeof(process) * MAXNUMPROCESS);
@@ -152,34 +151,18 @@ void task_init()
 		processes[i].pid = NULL;
 		processes[i++].status = STATUS_FREE;
 	}
-	processes[0].dump.ss = SEL_KERNEL_STACK;
-	processes[0].dump.esp = KERNEL_STACK_ADDR;
-	processes[0].dump.eflags = 0x0;
-	processes[0].dump.cs = SEL_KERNEL_CODE;
-	processes[0].dump.eip = getinitretry();
-	processes[0].dump.ds = SEL_KERNEL_DATA;
-	processes[0].dump.es = SEL_KERNEL_DATA;
-	processes[0].dump.fs = SEL_KERNEL_DATA;
-	processes[0].dump.gs = SEL_KERNEL_DATA;
-	processes[0].dump.cr3 = KERNEL_PD_ADDR;
-	processes[0].dump.eax = 0;
-	processes[0].dump.ecx = 0;
-	processes[0].dump.edx = 0;
-	processes[0].dump.ebx = 0;
-	processes[0].dump.ebp = 0;
-	processes[0].dump.esi = 0;
-	processes[0].dump.edi = 0;
+	createtask(0,getinitretry());
 	processes[0].result = 0;
 	processes[0].status = STATUS_READY;
-	processes[0].kernel = true;
-	current = &processes[0];
+	processes[0].iskernel = true;
+	current = 0;
 	lastpid = NULL;
 }
 
 /*******************************************************************************/
 /* Récupère un emplacement dans la liste des processus */
 
-u32 task_getfreePID()
+pid_t getfreepid()
 {
 	u32     i = lastpid;
 	u32     parsed = 0;
@@ -194,21 +177,13 @@ u32 task_getfreePID()
 		printf("PANIC: plus d'emplacement disponible pour un novueau processus\n");
 		return NULL;
 	}
-	return i;
-}
-
-/*******************************************************************************/
-/* Récupère les informations sur le processus courant */
-
-process *getcurrentprocess()
-{
-	return current;
+	return (pid_t)i;
 }
 
 /*******************************************************************************/
 /* Récupère le PID du processus courant */
 
-u32 getcurrentpid()
+pid_t getcurrentpid()
 {
 	return current->pid;
 }
@@ -217,7 +192,7 @@ u32 getcurrentpid()
 /*******************************************************************************/
 /* Determine le dernier PID occupé */
 
-u32 task_usePID(u32 pid)
+void usepid(pid_t pid)
 {
 	lastpid = pid;
 }
@@ -225,10 +200,10 @@ u32 task_usePID(u32 pid)
 /*******************************************************************************/
 /* Bascule vers une tâche */
 
-void task_switch(u32 pid, bool fromkernelmode)
+void switchtask(tid_t pid, bool fromkernelmode)
 {
-	process *previous = current;
-	current = &processes[pid];
+	pid_t previous = current;
+	current = &processes[(u32)pid];
 	if (!current->kernel)
 		setTSS(current->kstack.ss0, current->kstack.esp0);
 	else
@@ -243,101 +218,202 @@ void task_switch(u32 pid, bool fromkernelmode)
 }
 
 /*******************************************************************************/
-/* Execute une tâche */
+/* Détruit une tâche */
 
-void task_run(u32 pid)
+void deletetask(tid_t tid)
 {
-	if (processes[pid].status == STATUS_READY)
-	{
-		processes[pid].status = STATUS_RUN;
-		task_switch(pid, false);
-	}
+	stoptask
+
 }
 
 /*******************************************************************************/
 /* Execute une tâche */
 
-void task_delete(u32 pid)
+void runtask(tid_t tid)
 {
-	if (processes[pid].status == STATUS_READY
-	    || processes[pid].status == STATUS_RUN)
+	if (processes[(u32)pid].status == STATUS_READY)
 	{
-		processes[pid].status = STATUS_FREE;
+		processes[(u32)pid].status = STATUS_RUN;
+		switchtask(u32)pid, false);
 	}
 }
 
 /*******************************************************************************/
 /* Initialise une tâche */
 
-u32 task_create(u8 * code, bool kerneltask)
+tid_t createtask(pid_t pid,u8 *entry)
 {
-	process *previous = current;
-	u32     pid = task_getfreePID();
-	task_usePID(pid);
+	pid_t previous = current;
+	pid_t pid = getfreepid();
+	usepid(pid);
 	page   *kstack;
-	processes[pid].pid = pid;
-	processes[pid].pdd = virtual_pd_create();
-	TAILQ_INIT(&processes[pid].page_head);
-	if (kerneltask)
+	processes[(u32)pid].pid = (u32)pid;
+	processes[(u32)pid].pdd = virtual_pd_create();
+	TAILQ_INIT(&processes[(u32)pid].page_head);
+	if (&processes[(u32)pid].iskernel)
 	{
-		processes[pid].dump.ss = SEL_KERNEL_STACK;
-		processes[pid].dump.esp =
+		processes[(u32)pid].dump.ss = SEL_KERNEL_STACK;
+		processes[(u32)pid].dump.esp =
 			(u32) kstack->vaddr + PAGESIZE - 16;
-		processes[pid].dump.eflags = 0x0;
-		processes[pid].dump.cs = SEL_KERNEL_CODE;
-		processes[pid].dump.eip = elf_load(code, pid);
-		if (processes[pid].dump.eip == NULL)
+		processes[(u32)pid].dump.eflags = 0x0;
+		processes[(u32)pid].dump.cs = SEL_KERNEL_CODE;
+		processes[(u32)pid].dump.eip = elf_load(code, pid);
+		if (processes[(u32)pid].dump.eip == NULL)
 			return NULL;
-		processes[pid].dump.ds = SEL_KERNEL_DATA;
-		processes[pid].dump.es = SEL_KERNEL_DATA;
-		processes[pid].dump.fs = SEL_KERNEL_DATA;
-		processes[pid].dump.gs = SEL_KERNEL_DATA;
-		processes[pid].dump.cr3 = KERNEL_PD_ADDR;
-		processes[pid].dump.eax = 0;
-		processes[pid].dump.ecx = 0;
-		processes[pid].dump.edx = 0;
-		processes[pid].dump.ebx = 0;
-		processes[pid].dump.ebp = 0;
-		processes[pid].dump.esi = 0;
-		processes[pid].dump.edi = 0;
-		processes[pid].result = 0;
-		processes[pid].status = STATUS_READY;
-		processes[pid].kernel = true;
+		processes[(u32)pid].dump.ds = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.es = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.fs = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.gs = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.cr3 = KERNEL_PD_ADDR;
+		processes[(u32)pid].dump.eax = 0;
+		processes[(u32)pid].dump.ecx = 0;
+		processes[(u32)pid].dump.edx = 0;
+		processes[(u32)pid].dump.ebx = 0;
+		processes[(u32)pid].dump.ebp = 0;
+		processes[(u32)pid].dump.esi = 0;
+		processes[(u32)pid].dump.edi = 0;
+		processes[(u32)pid].result = 0;
+		processes[(u32)pid].status = STATUS_READY;
+		processes[(u32)pid].kernel = true;
 		current = previous;
 	}
 	else
 	{
-		current = &processes[pid];
-		setcr3(processes[pid].pdd->addr->paddr);
+		current = &processes[(u32)pid];
+		setCR3(processes[(u32)pid].pdd->addr->paddr);
 		kstack = virtual_page_getfree();
-		processes[pid].dump.ss = SEL_USER_STACK | RPL_RING3;
-		processes[pid].dump.esp = USER_STACK - 16;
-		processes[pid].dump.eflags = 0x0;
-		processes[pid].dump.cs = SEL_USER_CODE | RPL_RING3;
-		processes[pid].dump.eip = elf_load(code, pid);
-		if (processes[pid].dump.eip == NULL)
+		processes[(u32)pid].dump.ss = SEL_USER_STACK | RPL_RING3;
+		processes[(u32)pid].dump.esp = USER_STACK - 16;
+		processes[(u32)pid].dump.eflags = 0x0;
+		processes[(u32)pid].dump.cs = SEL_USER_CODE | RPL_RING3;
+		processes[(u32)pid].dump.eip = elf_load(code, pid);
+		if (processes[(u32)pid].dump.eip == NULL)
 			return NULL;
-		processes[pid].dump.ds = SEL_USER_DATA | RPL_RING3;
-		processes[pid].dump.es = SEL_USER_DATA | RPL_RING3;
-		processes[pid].dump.fs = SEL_USER_DATA | RPL_RING3;
-		processes[pid].dump.gs = SEL_USER_DATA | RPL_RING3;
-		processes[pid].dump.cr3 =
-			(u32) processes[pid].pdd->addr->paddr;
-		processes[pid].kstack.ss0 = SEL_KERNEL_STACK;
-		processes[pid].kstack.esp0 =
+		processes[(u32)pid].dump.ds = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.es = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.fs = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.gs = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.cr3 =
+			(u32) processes[(u32)pid].pdd->addr->paddr;
+		processes[(u32)pid].kstack.ss0 = SEL_KERNEL_STACK;
+		processes[(u32)pid].kstack.esp0 =
 			(u32) kstack->vaddr + PAGESIZE - 16;
-		processes[pid].dump.eax = 0;
-		processes[pid].dump.ecx = 0;
-		processes[pid].dump.edx = 0;
-		processes[pid].dump.ebx = 0;
-		processes[pid].dump.ebp = 0;
-		processes[pid].dump.esi = 0;
-		processes[pid].dump.edi = 0;
-		processes[pid].result = 0;
-		processes[pid].status = STATUS_READY;
-		processes[pid].kernel = false;
+		processes[(u32)pid].dump.eax = 0;
+		processes[(u32)pid].dump.ecx = 0;
+		processes[(u32)pid].dump.edx = 0;
+		processes[(u32)pid].dump.ebx = 0;
+		processes[(u32)pid].dump.ebp = 0;
+		processes[(u32)pid].dump.esi = 0;
+		processes[(u32)pid].dump.edi = 0;
+		processes[(u32)pid].result = 0;
+		processes[(u32)pid].status = STATUS_READY;
+		processes[(u32)pid].kernel = false;
 		current = previous;
-		setcr3(current->dump.cr3);
+		setCR3(current->dump.cr3);
 	}
 	return pid;
 }
+
+/*******************************************************************************/
+/* Arrête une tâche */
+
+void stoptask(tid_t tid)
+{
+
+}
+
+/*******************************************************************************/
+/* Initialise un processus */
+
+pid_t createprocess(u8 *src, bool kerneltask)
+{
+	pid_t previous = current;
+	pid_t pid = getfreepid();
+	usepid(pid);
+	page   *kstack;
+	processes[(u32)pid].pid = (u32)pid;
+	processes[(u32)pid].pdd = virtual_pd_create();
+	TAILQ_INIT(&processes[(u32)pid].page_head);
+	processes[(u32)pid].entry = elf_load(code, pid);
+		
+if (processes[(u32)pid].dump.eip == NULL)
+			return NULL;
+		processes[(u32)pid].dump.ds = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.es = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.fs = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.gs = SEL_KERNEL_DATA;
+		processes[(u32)pid].dump.cr3 = KERNEL_PD_ADDR;
+		processes[(u32)pid].dump.eax = 0;
+		processes[(u32)pid].dump.ecx = 0;
+		processes[(u32)pid].dump.edx = 0;
+		processes[(u32)pid].dump.ebx = 0;
+		processes[(u32)pid].dump.ebp = 0;
+		processes[(u32)pid].dump.esi = 0;
+		processes[(u32)pid].dump.edi = 0;
+		processes[(u32)pid].result = 0;
+		processes[(u32)pid].status = STATUS_READY;
+		processes[(u32)pid].kernel = true;
+		current = previous;
+	}
+	else
+	{
+		current = &processes[(u32)pid];
+		setCR3(processes[(u32)pid].pdd->addr->paddr);
+		kstack = virtual_page_getfree();
+		processes[(u32)pid].dump.ss = SEL_USER_STACK | RPL_RING3;
+		processes[(u32)pid].dump.esp = USER_STACK - 16;
+		processes[(u32)pid].dump.eflags = 0x0;
+		processes[(u32)pid].dump.cs = SEL_USER_CODE | RPL_RING3;
+		processes[(u32)pid].dump.eip = elf_load(code, pid);
+		if (processes[(u32)pid].dump.eip == NULL)
+			return NULL;
+		processes[(u32)pid].dump.ds = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.es = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.fs = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.gs = SEL_USER_DATA | RPL_RING3;
+		processes[(u32)pid].dump.cr3 =
+			(u32) processes[(u32)pid].pdd->addr->paddr;
+		processes[(u32)pid].kstack.ss0 = SEL_KERNEL_STACK;
+		processes[(u32)pid].kstack.esp0 =
+			(u32) kstack->vaddr + PAGESIZE - 16;
+		processes[(u32)pid].dump.eax = 0;
+		processes[(u32)pid].dump.ecx = 0;
+		processes[(u32)pid].dump.edx = 0;
+		processes[(u32)pid].dump.ebx = 0;
+		processes[(u32)pid].dump.ebp = 0;
+		processes[(u32)pid].dump.esi = 0;
+		processes[(u32)pid].dump.edi = 0;
+		processes[(u32)pid].result = 0;
+		processes[(u32)pid].status = STATUS_READY;
+		processes[(u32)pid].kernel = false;
+		current = previous;
+		setCR3(current->dump.cr3);
+	}
+	return pid;
+}
+
+/*******************************************************************************/
+/* Détruit un processus */
+
+void deleteprocess(pid_t pid)
+{
+
+}
+
+/*******************************************************************************/
+/* Execute un processus */
+
+void runprocess(pid_t pid)
+{
+
+}
+
+/*******************************************************************************/
+/* Arrête un processus */
+
+void stopprocess(pid_t pid)
+{
+
+}
+
+/*******************************************************************************/

@@ -9,11 +9,14 @@
 #define MAXPIDVALUE	    0xFFFF
 #define MAXNUMPROCESS	256
 
-#define STATUS_FREE   0x0
-#define STATUS_ZOMBIE 0xFF
-#define STATUS_READY  0xF0
-#define STATUS_RUN    0x1
-#define STATUS_SLEEP  0x2
+#define PROCESS_STATUS_FREE   0x0
+#define PROCESS_STATUS_READY  0xF0
+#define PROCESS_STATUS_RUN    0x1
+#define PROCESS_STATUS_SLEEP  0x2
+
+#define TASK_STATUS_READY	0x0
+#define TASK_STATUS_RUN		0x1
+#define TASK_STATUS_STOP	0xFF
 
 /* ELF type */
 #define ET_NONE 	0	//No file type
@@ -104,7 +107,7 @@ typedef struct elf32
 	u16     e_shentsize;
 	u16     e_shnum;
 	u16     e_shstrndx;
-} elf32;
+} elf32  __attribute__ ((packed));
 
 typedef struct elf32p
 {
@@ -116,41 +119,94 @@ typedef struct elf32p
 	u32     p_memsz;
 	u32     p_flags;
 	u32     p_align;
-} elf32p;
+} elf32p  __attribute__ ((packed));
 
+typedef unsigned int pid_t;
 
-typedef struct stackdef
+typedef struct tid_t
+{
+	pid_t pid;
+	u32 number;
+} tid_t __attribute__ ((packed));
+
+typedef struct stack
 {
 	u32     esp0;
 	u16     ss0;
-} stackdef __attribute__ ((packed));
+} stack __attribute__ ((packed));
 
+typedef struct task
+{
+	tid_t tid;
+	stack kernel_stack;
+	u32	status;
+	regs    dump;
+} task __attribute__ ((packed));
+
+typedef struct childs
+{
+	pid_t	pid;
+      TAILQ_ENTRY(childs) tailq;
+} childs __attribute__ ((packed));
+
+typedef TAILQ_HEAD(childs_s, childs) childs_t;
+
+typedef struct others
+{
+	pid_t	pid;
+      TAILQ_ENTRY(others) tailq;
+} others __attribute__ ((packed));
+
+typedef TAILQ_HEAD(others_s, others) others_t;
 
 typedef struct process
 {
-	u32     pid;
-	bool    kernel;
-	regs    dump;
-	stackdef kstack;
+	pid_t   pid;
+	pid_t   parent;
+	bool    iskernel;
 	pd     *pdd;
+	s8	  priority;
+	childs  *allchilds;
+	others  *allothers;
 	u32     result;
 	u8      status;
 	u8     *exec_low;
 	u8     *exec_high;
 	u8     *bss_low;
 	u8     *bss_high;
-	struct process *parent;
 	page_t  page_head;
 	u32     entry;
 } process __attribute__ ((packed));
 
-u32     getcurrentpid();
-void    task_init();
-u32     task_getfreePID();
-u32     task_usePID(u32 pid);
-u32     task_create(u8 * code, bool kerneltask);
-u32     elf_test(u8 * src);
-u32     elf_load(u8 * src, u32 pid);
-void    task_switch(u32 pid, bool fromkernelmode);
-process *getcurrentprocess();
-void    task_run(u32 pid);
+
+pid_t     getcurrentpid();
+pid_t     getparentpid();
+pid_t     getfreepid();
+void      usepid(pid_t pid);
+
+void      stop();
+void      wait();
+pid_t     fork();
+pid_t     clone();
+pid_t     exec(u8* entry, u8* args, bool kerneltask);
+
+void      switchtask(tid_t tid, bool fromkernelmode);
+tid_t     getnexttask();
+
+tid_t     createtask(pid_t pid,u8 *entry);
+void      deletetask(pid_t pid);
+void      runtask(tid_t tid);
+void      stoptask(pid_t pid);
+
+pid_t     createprocess(u8 src, bool kerneltask);
+void      deleteprocess(pid_t pid);
+void      runprocess(pid_t pid);
+void      stopprocess(pid_t pid);
+
+
+void      setpriority(pid_t pid,s8 priority);
+
+void      initprocesses();
+
+u32     iself(u8 * src);
+u32     loadelf(u8 * src, pid_t pid);

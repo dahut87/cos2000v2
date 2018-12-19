@@ -63,7 +63,7 @@
 
 #   define MALLOC_MINIMUM		16
 
-#   define setcr3(addr) \
+#   define setCR3(addr) \
     asm volatile ("mov %[memaddr], %%eax; mov %%eax, %%cr3"::[memaddr] "m" (addr) );
 
 /* Malloc, pour l'attribution de mémoire en heap */
