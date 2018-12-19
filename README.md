@@ -63,7 +63,7 @@ Compilation:
 
 Nom | Paquet | Version
 --- | --- | ---
-gcc | gcc | 5.4.0 20160609
+gcc | gcc | *>7.0*
 GNU Make | make | 4.1
 Outils divers | binutils | 2.26-8
 
@@ -222,16 +222,16 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * affichage de chaîne de caractères (prinfs,sprintf,vsprintf) avec type (bin,hexa,octal,float,double,string,char),
 * mode protégé limité à 4Go de mémoire vive (32 bits),
 * gestion avancée de la mémoire (vmalloc).
+* chargeur ELF32,
+* espace utilisateur et appels systèmes,
+* liste d'API automatiquement mise à jour,
 
 #### En cours
 
-* espace utilisateur et appels systèmes,
 * ordonnanceur de tâche (par TSS),
-* liste d'API automatiquement mise à jour,
 
 #### A faire
 
-* chargeur ELF32,
 * pilote IDE/ATA (PIO mode),
 * fonctions affichage image PNG,
 * double buffering,

@@ -14,9 +14,65 @@
 /******************************************************************************/
 /* Déclenché lors de l'appel d'une interruption */
 
-__attribute__((interrupt)) void interruption(exception_stack_noerror *caller)
+__attribute__ ((noreturn)) void interruption_handler(regs *dump)
 {
-	print("Appel d'une interruption\r\n");
+	u32 interruption=dump->eip;
+	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
+	bool noerror,user;
+	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
+	{
+		noerror=true;
+		dump->eip = caller->eip;
+		dump->cs = caller->cs;
+		dump->eflags = caller->eflags;
+		if (dump->cs==SEL_KERNEL_CODE)
+		{
+			dump->esp = (u32) caller + sizeof(exception_stack_noerror);
+			user=false;
+		}
+		else
+		{
+			dump->esp = (u32) ((exception_stack_noerror_user*) caller)->esp;
+			dump->ss = (u32) ((exception_stack_noerror_user*) caller)->ss;
+			user=true;
+		}
+	}
+	else
+	{
+		noerror=false;
+		dump->eip = ((exception_stack*)caller)->eip;
+		dump->cs = ((exception_stack*)caller)->cs;
+		if (dump->cs==SEL_KERNEL_CODE)
+		{
+			dump->esp = (u32) caller + sizeof(exception_stack);
+			user=false;
+		}
+		else
+		{
+			dump->esp = (u32) ((exception_stack_user*) caller)->esp;
+			dump->ss = (u32) ((exception_stack_user*) caller)->ss;
+			user=true;
+		}
+	}
+	switch (interruption)
+	{
+		case 20:
+			show_lightcpu(dump);
+			break;
+		default:
+			print("Appel d'une interruption\r\n");
+	}
+	if (dump->cs==SEL_KERNEL_CODE)
+		{
+			setESP(dump);
+			restcpu_kernel();
+		}
+		else
+		{
+			setESP(dump);
+			restcpu_user();
+			iret();
+		}
 }
 
 /******************************************************************************/
@@ -178,7 +234,8 @@ __attribute__ ((noreturn)) void exception_handler(regs *dump)
 /* Les IRQ par défaut */
 
 __attribute__((interrupt)) void irq0(exception_stack_noerror *caller)
-{	print("irq 0");
+{	
+	print("irq 0");
 	irqendmaster();
 }
 
@@ -267,8 +324,6 @@ __attribute__((interrupt)) void irq13(exception_stack_noerror *caller)
 	print("irq 13");
 	irqendslave();
 	irqendmaster();
-	popad();
-	popf();
 }
 
 __attribute__((interrupt)) void irq14(exception_stack_noerror *caller)

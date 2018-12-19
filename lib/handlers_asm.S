@@ -12,7 +12,46 @@ pushl %esp
 pushf 
 pushl %cs
 pushl $\num
-jmp dumpcpu
+jmp exception_suite
+.endm
+
+.macro  semidumpcpu
+pushl %ds
+pushl %es
+pushl %fs
+pushl %gs
+pushl %eax
+pushl %ebx
+pushl %ecx
+pushl %edx
+pushl %esi
+pushl %edi
+pushl %ebp
+mov %cr0, %eax 
+pushl %eax
+mov %cr2, %eax 
+pushl %eax
+mov %cr3, %eax 
+pushl %eax
+mov %cr4, %eax 
+pushl %eax 
+mov %dr0, %eax 
+pushl %eax
+mov %dr1, %eax 
+pushl %eax
+mov %dr2, %eax 
+pushl %eax
+mov %dr3, %eax 
+pushl %eax
+mov %dr6, %eax 
+pushl %eax
+mov %dr7, %eax 
+pushl %eax
+mov $0xC0000080, %ecx 
+rdmsr 
+pushl %edx 
+pushl %eax
+pushl %esp
 .endm
 
 exception 0
@@ -35,6 +74,10 @@ exception 16
 exception 17
 exception 18
 
+exception_suite:
+semidumpcpu
+call exception_handler
+
 .global wrapper_sysenter
 wrapper_sysenter:
 pushl %ss
@@ -42,79 +85,25 @@ pushl %esp
 pushf 
 pushl %cs
 pushl $0x00
-pushl %ds
-pushl %es
-pushl %fs
-pushl %gs
-pushl %eax
-pushl %ebx
-pushl %ecx
-pushl %edx
-pushl %esi
-pushl %edi
-pushl %ebp
-mov %cr0, %eax 
-pushl %eax
-mov %cr2, %eax 
-pushl %eax
-mov %cr3, %eax 
-pushl %eax
-mov %cr4, %eax 
-pushl %eax 
-mov %dr0, %eax 
-pushl %eax
-mov %dr1, %eax 
-pushl %eax
-mov %dr2, %eax 
-pushl %eax
-mov %dr3, %eax 
-pushl %eax
-mov %dr6, %eax 
-pushl %eax
-mov %dr7, %eax 
-pushl %eax
-mov $0xC0000080, %ecx 
-rdmsr 
-pushl %edx 
-pushl %eax
-pushl %esp
+semidumpcpu
 call sysenter_handler
 
-dumpcpu:
-pushl %ds
-pushl %es
-pushl %fs
-pushl %gs
-pushl %eax
-pushl %ebx
-pushl %ecx
-pushl %edx
-pushl %esi
-pushl %edi
-pushl %ebp
-mov %cr0, %eax 
-pushl %eax
-mov %cr2, %eax 
-pushl %eax
-mov %cr3, %eax 
-pushl %eax
-mov %cr4, %eax 
-pushl %eax 
-mov %dr0, %eax 
-pushl %eax
-mov %dr1, %eax 
-pushl %eax
-mov %dr2, %eax 
-pushl %eax
-mov %dr3, %eax 
-pushl %eax
-mov %dr6, %eax 
-pushl %eax
-mov %dr7, %eax 
-pushl %eax
-mov $0xC0000080, %ecx 
-rdmsr 
-pushl %edx 
-pushl %eax
+.global wrapper_interruption
+wrapper_interruption:
+pushl %ss
 pushl %esp
-call exception_handler
+pushf 
+pushl %cs
+pushl $0x00
+semidumpcpu
+call interruption_handler
+
+.global wrapper_timer
+wrapper_timer:
+pushl %ss
+pushl %esp
+pushf 
+pushl %cs
+pushl $0x00
+semidumpcpu
+call timer_handler

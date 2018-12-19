@@ -30,7 +30,7 @@ void initgdt(u32 offset)
 
 	tss0.trapflag = 0x00;
 	tss0.iomap = 0x00;
-	tss0.esp0 = 0x00;
+	tss0.esp0 = 0x6000;
 	tss0.ss0 = SEL_TSS;
 
 	makegdtdes(&tss0, 0x67, SEG_PRESENT | SEG_CODE | SEG_RING3 | SEG_ACCESSED, 0x00, &gdt[7]);	/* descripteur de tss */

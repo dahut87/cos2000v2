@@ -41,6 +41,7 @@ extern wrapper_exception15;
 extern wrapper_exception16;
 extern wrapper_exception17;
 extern wrapper_exception18;
+extern wrapper_interruption;
 /******************************************************************************/
 /* Initialise la reprise après erreur */
 
@@ -208,7 +209,7 @@ void initidt(void)
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 18);
 	for (i = 19; i < 32; i++)
 	{
-		putidt((u32) interruption, SEL_KERNEL_CODE,
+		putidt((u32) &wrapper_interruption, SEL_KERNEL_CODE,
 		       ENTRY_PRESENT | ENTRY_RING3 | TRAPGATE, i);
 	}
 	putidt((u32) irq0, SEL_KERNEL_CODE,
@@ -229,7 +230,7 @@ void initidt(void)
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 39);
 	for (i = 40; i < 96; i++)
 	{
-		putidt((u32) interruption, SEL_KERNEL_CODE,
+		putidt((u32) &wrapper_interruption, SEL_KERNEL_CODE,
 		       ENTRY_PRESENT | ENTRY_RING3 | TRAPGATE, i);
 	}
 	putidt((u32) irq8, SEL_KERNEL_CODE,
@@ -250,7 +251,7 @@ void initidt(void)
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 103);
 	for (i = 104; i < IDT_SIZE; i++)
 	{
-		putidt((u32) interruption, SEL_KERNEL_CODE,
+		putidt((u32) &wrapper_interruption, SEL_KERNEL_CODE,
 		       ENTRY_PRESENT | ENTRY_RING0 | TRAPGATE, i);
 	}
 	/* initialise le registre idt */

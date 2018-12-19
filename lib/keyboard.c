@@ -364,7 +364,6 @@ unsigned convert(u32 keypressed)
 __attribute__((interrupt)) void keyboard_handler(exception_stack_noerror *caller)
 {
 	u8      scancode, ascii;
-	cli();
 	while ((inb(0x64) & 1) == 0);
 	scancode = inb(0x60);
 	ascii = convert(scancode);

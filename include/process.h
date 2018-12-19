@@ -185,7 +185,6 @@ typedef struct process
 pid_t     getcurrentpid(void);
 pid_t     getparentpid(void);
 pid_t     getfreepid(void);
-void      usepid(pid_t pid);
 tid_t	getcurrenttid(void);
 tid_t	maketid(pid_t pid, u32 number);
 

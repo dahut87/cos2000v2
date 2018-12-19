@@ -95,6 +95,8 @@ u32 loadelf(u8 * src, pid_t pid)
 	header = (elf32 *) src;
 	program = (elf32p *) (src + header->e_phoff);
 	code = iself(src);
+	process *aprocess=findprocess(pid);
+	if (aprocess==NULL) return NULL;
 	if (code != 0)
 	{
 		printf("Erreur de chargement ELF, %s !\r\n",
@@ -119,13 +121,13 @@ u32 loadelf(u8 * src, pid_t pid)
 			}
 			if (program->p_flags == PF_X + PF_R)
 			{
-				processes[(u32)pid].exec_low = (u8 *) v_begin;
-				processes[(u32)pid].exec_high = (u8 *) v_end;
+				aprocess->exec_low = (u8 *) v_begin;
+				aprocess->exec_high = (u8 *) v_end;
 			}
 			if (program->p_flags == PF_W + PF_R)
 			{
-				processes[(u32)pid].bss_low = (u8 *) v_begin;
-				processes[(u32)pid].bss_high = (u8 *) v_end;
+				aprocess->bss_low = (u8 *) v_begin;
+				aprocess->bss_high = (u8 *) v_end;
 			}
 			memcpy((u8 *) (src + program->p_offset),
 			       (u8 *) v_begin, program->p_filesz, 0);
@@ -144,19 +146,21 @@ u32 loadelf(u8 * src, pid_t pid)
 
 void initprocesses(void)
 {
-	u32     i = 1;
+	u32     i = 0;
 	processes = (process *) vmalloc(sizeof(process) * MAXNUMPROCESS);
 	while (i < MAXNUMPROCESS)
 	{
 		processes[i].pid = NULL;
 		processes[i++].status = PROCESS_STATUS_FREE;
 	}
-	createtask(0,getinitretry(),true);
-	processes[0].result = 0;
-	processes[0].status = PROCESS_STATUS_READY;
-	processes[0].iskernel = true;
-	current = maketid(0,0);
-	lastpid = NULL;
+	pid_t pid=getfreepid();
+	process *aprocess=findprocess(pid);
+	if (aprocess==NULL) return NULL;
+	aprocess->pid = pid;
+	aprocess->result = 0;
+	aprocess->status = PROCESS_STATUS_READY;
+	aprocess->iskernel = true;
+	current=createtask(pid,getinitretry(),true);
 }
 
 /*******************************************************************************/
@@ -166,8 +170,8 @@ pid_t getfreepid(void)
 {
 	u32     i = lastpid;
 	u32     parsed = 0;
-	while (processes[++i].status != PROCESS_STATUS_FREE
-	       && ++parsed < MAXNUMPROCESS)
+	while (processes[i++].status != PROCESS_STATUS_FREE
+	       && parsed++ < MAXNUMPROCESS)
 	{
 		if (i >= MAXNUMPROCESS)
 			i = 0;
@@ -177,6 +181,7 @@ pid_t getfreepid(void)
 		printf("PANIC: plus d'emplacement disponible pour un novueau processus\n");
 		return NULL;
 	}
+	lastpid=i;
 	return (pid_t)i;
 }
 
@@ -185,15 +190,15 @@ pid_t getfreepid(void)
 
 tid_t getfreeptid(pid_t pid)
 {
-	tid_t new;
-	new.pid=pid;
-	task_t *task_head= &processes[(u32)pid].task_head;
+	process *aprocess=findprocess(pid);
+	if (aprocess==NULL) return maketid(0,0);
+	u32 number=0;
 	task *next;
-	TAILQ_FOREACH(next, task_head, tailq)
-		if (next->tid.number>new.number)
-			new.number=next->tid.number;
-	next->tid.number++;
-	return new;
+	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
+		if (next->tid.number>number)
+			number=next->tid.number;
+	number++;
+	return maketid(pid,number);
 }
 
 /*******************************************************************************/
@@ -228,7 +233,10 @@ tid_t	maketid(pid_t pid, u32 number)
 
 process* findprocess(pid_t pid)
 {
-	return &processes[(u32)pid];
+	if ((u32)pid>0)
+		return &processes[(u32)pid-1];
+	else
+		return NULL;
 }
 
 /*******************************************************************************/
@@ -236,15 +244,7 @@ process* findprocess(pid_t pid)
 
 process* findcurrentprocess(void)
 {
-	return &processes[(u32)getcurrentpid()];
-}
-
-/*******************************************************************************/
-/* Determine le dernier PID occupé */
-
-void usepid(pid_t pid)
-{
-	lastpid = pid;
+	return &processes[(u32)getcurrentpid()-1];
 }
 
 /*******************************************************************************/
@@ -254,7 +254,9 @@ void switchtask(tid_t tid)
 {
 	tid_t previous = current;
 	task *atask = findtask(tid);
+	if (atask==NULL) return;
 	process *aprocess=findprocess(tid.pid);
+	if (aprocess==NULL) return;
 	if (!aprocess->iskernel)
 		setTSS(atask->kernel_stack.ss0, atask->kernel_stack.esp0);
 	else
@@ -273,9 +275,10 @@ void switchtask(tid_t tid)
 
 task* findtask(tid_t tid)
 {
-	task_t *task_head= &processes[(u32)tid.pid].task_head;
+	process *aprocess=findprocess(tid.pid);
+	if (aprocess==NULL) return NULL;
 	task *next;
-	TAILQ_FOREACH(next, task_head, tailq)
+	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
 		if (next->tid.number==tid.number)
 			return next;
 }
@@ -296,7 +299,9 @@ void deletetask(tid_t tid)
 {
 	stoptask(tid);
 	process* aprocess=findprocess(tid.pid);
+	if (aprocess==NULL) return;
 	task *atask=findtask(tid);
+	if (atask==NULL) return;
 	TAILQ_REMOVE(&aprocess->task_head, atask, tailq);
 	vfree(atask);
 }
@@ -307,6 +312,7 @@ void deletetask(tid_t tid)
 void runtask(tid_t tid)
 {
 	task *atask=findtask(tid);
+	if (atask==NULL) return;
 	if (atask->status == TASK_STATUS_READY)
 	{
 		atask->status = TASK_STATUS_RUN;
@@ -322,6 +328,7 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	tid_t tid;
 	tid.pid=pid;
 	process* aprocess=findprocess(pid);
+	if (aprocess==NULL) return maketid(0,0);
 	task *new = (task *) vmalloc(sizeof(task));
 	TAILQ_INSERT_TAIL(&aprocess->task_head, new, tailq);
 	page *astack = virtual_page_getfree();
@@ -355,7 +362,6 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	}
 	new->tid=getfreeptid(pid);
 	new->dump.eip = aprocess->entry;
-	new->status=TASK_STATUS_READY;
 	new->dump.eax = 0;
 	new->dump.ecx = 0;
 	new->dump.edx = 0;
@@ -372,8 +378,9 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 
 void stoptask(tid_t tid)
 {
-	task *current=findtask(tid);
-	current->status=TASK_STATUS_STOP;
+	task *atask=findtask(tid);
+	if (atask==NULL) return;
+	atask->status=TASK_STATUS_STOP;
 }
 
 /*******************************************************************************/
@@ -384,18 +391,24 @@ pid_t createprocess(u8 *src, bool kerneltask)
 	tid_t previous = current;
 	current.pid = getfreepid();
 	current.number = 0;
-	usepid(current.pid);
 	process* new=findcurrentprocess();
+	if (new==NULL) return NULL;
 	new->pid = current.pid;
 	new->pdd = virtual_pd_create();
 	TAILQ_INIT(&new->page_head);
+	TAILQ_INIT(&new->task_head);
 	new->iskernel=kerneltask;
 	setCR3(new->pdd->addr->paddr);
 	new->entry = loadelf(src, new->pid);
 	createtask(new->pid,new->entry, new->iskernel);
 	current = previous;
 	process* old=findcurrentprocess();
-	setCR3(old->pdd->addr->paddr);
+	if (old==NULL) return NULL;
+	u32 cr3=KERNEL_PD_ADDR;
+	if (old->pdd!=NULL)
+		cr3=old->pdd->addr->paddr;
+	setCR3(cr3);
+	new->status=PROCESS_STATUS_READY;
 	return new->pid;
 }
 
@@ -406,6 +419,7 @@ void deleteprocess(pid_t pid)
 {
 	stopprocess(pid);
 	process* aprocess=findprocess(pid);
+	if (aprocess==NULL) return;
 	task *next;
 	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
 		deletetask(next->tid);
@@ -419,11 +433,13 @@ void deleteprocess(pid_t pid)
 void runprocess(pid_t pid)
 {
 	process* aprocess=findprocess(pid);
+	if (aprocess==NULL) return;
 	if (aprocess->status == PROCESS_STATUS_READY)
 	{
 		aprocess->status = PROCESS_STATUS_RUN;
-		tid_t tid=maketid(pid,0);
+		tid_t tid=maketid(pid,1);
 		task *atask=findtask(tid);
+		if (atask==NULL) return;
 		atask->status=TASK_STATUS_RUN;
 		switchtask(tid);
 	}
@@ -435,6 +451,7 @@ void runprocess(pid_t pid)
 void stopprocess(pid_t pid)
 {
 	process* aprocess=findprocess(pid);
+	if (aprocess==NULL) return;
 	if (aprocess->status == PROCESS_STATUS_RUN)
 	{
 		aprocess->status = PROCESS_STATUS_READY;

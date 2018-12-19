@@ -25,6 +25,8 @@ static u8 errormsg[] =
 	"\033[150C\033[8D\033[37m\033[1m[\033[31mERREUR\033[37m]\033[0m";
 static u8 key = 0;
 
+extern wrapper_timer;
+
 void ok()
 {
 	print(okmsg);
@@ -78,20 +80,20 @@ int main(u32 magic, u32 addr)
 	sti();
 	ok();
 
-	print(" -Installation de l'horloge systeme (IRQ 0)");
-	setidt((u32) timer, SEL_KERNEL_CODE,
+	print(" -Installation de l'ordonnanceur et horloge systeme (IRQ 0)");
+	setidt((u32) &wrapper_timer, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 32);
 	enableirq(0);
 	ok();
 
 	print(" -Installation du pilote clavier (IRQ 1)");
-	setidt((u32) keyboard_handler, SEL_KERNEL_CODE,
+	setidt((u32) &keyboard_handler, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 33);
 	enableirq(1);
 	ok();
 
 	print(" -Installation du pilote souris (IRQ12+IRQ2)");
-	setidt((u32) mouse_handler, SEL_KERNEL_CODE,
+	setidt((u32) &mouse_handler, SEL_KERNEL_CODE,
 	       ENTRY_PRESENT | ENTRY_RING0 | INTGATE, 100);
 	enableirq(2);
 	enableirq(12);
