@@ -342,7 +342,7 @@ void virtual_pd_page_add(pd * dst, u8 * vaddr, u8 * paddr, u32 flags)
 	if (dst == NULL)
 		if (vaddr > (u8 *) USER_CODE)
 		{
-			print("ERREUR: Adresse %X n'est pas dans l'espace noyau !\n", vaddr);
+			printf("ERREUR: Adresse %X n'est pas dans l'espace noyau !\n", vaddr);
 			return;
 		}
 	pdir = (u32 *) (0xFFFFF000 | (((u32) vaddr & 0xFFC00000) >> 20));

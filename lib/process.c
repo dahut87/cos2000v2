@@ -77,7 +77,7 @@ END */
 void processexit(void)
 {
 	deleteprocess(getcurrentpid());
-	switchtask(maketid(0,0));
+	switchtask(maketid(1,1));
 }
 
 /*******************************************************************************/
@@ -160,6 +160,7 @@ void initprocesses(void)
 	aprocess->result = 0;
 	aprocess->status = PROCESS_STATUS_READY;
 	aprocess->iskernel = true;
+	TAILQ_INIT(&aprocess->task_head);
 	current=createtask(pid,getinitretry(),true);
 }
 
@@ -257,6 +258,7 @@ void switchtask(tid_t tid)
 	if (atask==NULL) return;
 	process *aprocess=findprocess(tid.pid);
 	if (aprocess==NULL) return;
+	current = tid;
 	if (!aprocess->iskernel)
 		setTSS(atask->kernel_stack.ss0, atask->kernel_stack.esp0);
 	else
