@@ -139,7 +139,7 @@ __attribute__ ((noreturn)) void exception_handler(regs *dump)
 		case 14:
 			if (dump->cr2 >= USER_CODE && dump->cr2 < USER_STACK)
 			{
-				virtual_range_new(getcurrentprocess()->pdd,
+				virtual_range_new(findcurrentprocess()->pdd,
 						  (u8 *) (dump->cr2 & 0xFFFFF000),
 						  PAGESIZE, PAGE_ALL);
 			}

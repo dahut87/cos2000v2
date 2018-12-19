@@ -19,6 +19,7 @@
 #include "3D/man.c"
 #include "memory.h"
 #include "syscall.h"
+#include "process.h"
 
 static command commands[] = {
 	{"reboot", "", &rebootnow},
@@ -95,8 +96,8 @@ int test(void)
 int testtask()
 {
 	print("*** Creation d'une tache\r\n");
-	u32     pid = task_create(&programs_test, false);
-	task_run(pid);
+	pid_t pid = createprocess(&programs_test, false);
+	runprocess(pid);
 }
 
 /*******************************************************************************/

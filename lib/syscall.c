@@ -62,20 +62,20 @@ __attribute__ ((noreturn)) void sysenter_handler(regs *dump)
 	sti();
 	switch (dump->eax)
 	{
-     		case 4:
-			dump->eax=(u32) gettimer();
-			break;
-     		case 5:
-			exit(dump->ebx);
-			break;
      		case 2:
 			dump->eax=(u32) print(dump->ebx);
+			break;
+     		case 0:
+			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
+			break;
+     		case 4:
+			dump->eax=(u32) gettimer();
 			break;
      		case 1:
 			dump->eax=(u32) waitascii();
 			break;
-     		case 0:
-			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
+     		case 5:
+			processexit(dump->ebx);
 			break;
 
 		default:

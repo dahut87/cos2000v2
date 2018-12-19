@@ -9,6 +9,20 @@ All fonctions in the "libsys" library.
 
 ------
 
+`u32 testapi(u32 arg1, u32 arg2, u32 arg3);`
+
+*Description:Simple function to test if SYSCALL API is correctly running*
+
+* syscall id : **0**
+* arguments : **3**
+* * argument 1 : **u32 arg1** *first argument of your choice*
+* * argument 2 : **u32 arg2** *second argument of your choice*
+* * argument 3 : **u32 arg3** *third argument of your choice*
+* results : **u32**
+* dump of register cpu: **yes**
+
+------
+
 `u32 getticks(void);`
 
 *Description:Return the internal value of the timer*
@@ -16,18 +30,6 @@ All fonctions in the "libsys" library.
 * syscall id : **4**
 * arguments : **0**
 * results : **u32**
-* dump of register cpu: **no**
-
-------
-
-`void exit(u32 resultcode);`
-
-*Description:End a task for user or kernel domain*
-
-* syscall id : **5**
-* arguments : **1**
-* * argument 1 : **u32 resultcode** *Code result of the execution*
-* results : **void**
 * dump of register cpu: **no**
 
 ------
@@ -43,17 +45,15 @@ All fonctions in the "libsys" library.
 
 ------
 
-`u32 testapi(u32 arg1, u32 arg2, u32 arg3);`
+`void exit(u32 resultcode);`
 
-*Description:Simple function to test if SYSCALL API is correctly running*
+*Description:End a task for user or kernel domain*
 
-* syscall id : **0**
-* arguments : **3**
-* * argument 1 : **u32 arg1** *first argument of your choice*
-* * argument 2 : **u32 arg2** *second argument of your choice*
-* * argument 3 : **u32 arg3** *third argument of your choice*
-* results : **u32**
-* dump of register cpu: **yes**
+* syscall id : **5**
+* arguments : **1**
+* * argument 1 : **u32 resultcode** *Code result of the execution*
+* results : **void**
+* dump of register cpu: **no**
 
 
 ###  LIBVIDEO

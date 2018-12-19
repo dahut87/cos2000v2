@@ -141,23 +141,26 @@ typedef struct task
 	stack kernel_stack;
 	u32	status;
 	regs    dump;
+      TAILQ_ENTRY(task) tailq;
 } task __attribute__ ((packed));
 
-typedef struct childs
+typedef TAILQ_HEAD(task_s, task) task_t;
+
+typedef struct child
 {
 	pid_t	pid;
-      TAILQ_ENTRY(childs) tailq;
-} childs __attribute__ ((packed));
+      TAILQ_ENTRY(child) tailq;
+} child __attribute__ ((packed));
 
-typedef TAILQ_HEAD(childs_s, childs) childs_t;
+typedef TAILQ_HEAD(child_s, child) child_t;
 
-typedef struct others
+typedef struct other
 {
 	pid_t	pid;
-      TAILQ_ENTRY(others) tailq;
-} others __attribute__ ((packed));
+      TAILQ_ENTRY(other) tailq;
+} other __attribute__ ((packed));
 
-typedef TAILQ_HEAD(others_s, others) others_t;
+typedef TAILQ_HEAD(other_s, other) other_t;
 
 typedef struct process
 {
@@ -166,8 +169,6 @@ typedef struct process
 	bool    iskernel;
 	pd     *pdd;
 	s8	  priority;
-	childs  *allchilds;
-	others  *allothers;
 	u32     result;
 	u8      status;
 	u8     *exec_low;
@@ -175,30 +176,39 @@ typedef struct process
 	u8     *bss_low;
 	u8     *bss_high;
 	page_t  page_head;
+	task_t  task_head;
+      child_t child_head;
+	other_t other_head;
 	u32     entry;
 } process __attribute__ ((packed));
 
-
-pid_t     getcurrentpid();
-pid_t     getparentpid();
-pid_t     getfreepid();
+pid_t     getcurrentpid(void);
+pid_t     getparentpid(void);
+pid_t     getfreepid(void);
 void      usepid(pid_t pid);
+tid_t	getcurrenttid(void);
+tid_t	maketid(pid_t pid, u32 number);
 
-void      stop();
-void      wait();
-pid_t     fork();
-pid_t     clone();
+void      stop(void);
+void      wait(void);
+pid_t     fork(void);
+pid_t     clone(void);
 pid_t     exec(u8* entry, u8* args, bool kerneltask);
 
-void      switchtask(tid_t tid, bool fromkernelmode);
-tid_t     getnexttask();
+void      switchtask(tid_t tid);
+tid_t     getnexttask(void);
 
-tid_t     createtask(pid_t pid,u8 *entry);
-void      deletetask(pid_t pid);
+task* findtask(tid_t tid);
+task* findcurrenttask(void);
+process* findprocess(pid_t pid);
+process* findcurrentprocess(void);
+
+tid_t createtask(pid_t pid,u8 *entry, bool kerneltask);
+void      deletetask(tid_t tid);
 void      runtask(tid_t tid);
-void      stoptask(pid_t pid);
+void      stoptask(tid_t tid);
 
-pid_t     createprocess(u8 src, bool kerneltask);
+pid_t createprocess(u8 *src, bool kerneltask);
 void      deleteprocess(pid_t pid);
 void      runprocess(pid_t pid);
 void      stopprocess(pid_t pid);
@@ -206,7 +216,7 @@ void      stopprocess(pid_t pid);
 
 void      setpriority(pid_t pid,s8 priority);
 
-void      initprocesses();
+void      initprocesses(void);
 
 u32     iself(u8 * src);
 u32     loadelf(u8 * src, pid_t pid);

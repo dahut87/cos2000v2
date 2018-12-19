@@ -22,13 +22,13 @@ libs.o:$(OBJS) $(OBJASM)
 		$(ASM) $^
 
 handlers.o:handlers.c
-		$(CC) -mgeneral-regs-only $^
+		$(CC)  -mno-sse $^
 
 keyboard.o:keyboard.c
-		$(CC) -mgeneral-regs-only $^
+		$(CC)  -mno-sse $^
 
 mouse.o:mouse.c
-		$(CC) -mgeneral-regs-only $^
+		$(CC)  -mno-sse $^
 
 syscall.o:syscall.c
 		$(CC) -fomit-frame-pointer $^

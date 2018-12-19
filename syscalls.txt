@@ -1,29 +1,5 @@
 [
 {
-"ID":4, 
-"NAME":"getticks",
-"LIBRARY":"libsys",
-"INTERNALNAME":"gettimer",
-"DESCRIPTION":"Return the internal value of the timer",
-"ARGS": [],
-"RETURN":"u32"
-}
-
-,
-{
-"ID":5,
-"LIBRARY":"libsys",
-"NAME":"exit",
-"INTERNALNAME":"exit",
-"DESCRIPTION":"End a task for user or kernel domain",
-"ARGS": [
-{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
-],
-"RETURN":"void"
-}
-
-,
-{
 "ID":2,
 "LIBRARY":"libvideo",
 "NAME":"print",
@@ -33,17 +9,6 @@
 {"TYPE":"u8*","NAME":"string","DESCRIPTION":"string to show in ascii format"}
 ],
 "RETURN":"u32"
-}
-
-,
-{
-"ID":1,
-"LIBRARY":"libsys",
-"NAME":"waitkey",
-"INTERNALNAME":"waitascii",
-"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
-"ARGS": [],
-"RETURN":"u8"
 }
 
 ,
@@ -60,6 +25,41 @@
 ],
 "RETURN":"u32",
 "DUMP":"yes"
+}
+
+,
+{
+"ID":4, 
+"NAME":"getticks",
+"LIBRARY":"libsys",
+"INTERNALNAME":"gettimer",
+"DESCRIPTION":"Return the internal value of the timer",
+"ARGS": [],
+"RETURN":"u32"
+}
+
+,
+{
+"ID":1,
+"LIBRARY":"libsys",
+"NAME":"waitkey",
+"INTERNALNAME":"waitascii",
+"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
+"ARGS": [],
+"RETURN":"u8"
+}
+
+,
+{
+"ID":5,
+"LIBRARY":"libsys",
+"NAME":"exit",
+"INTERNALNAME":"processexit",
+"DESCRIPTION":"End a task for user or kernel domain",
+"ARGS": [
+{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
+],
+"RETURN":"void"
 }
 
 ]

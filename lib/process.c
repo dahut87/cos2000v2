@@ -8,7 +8,7 @@
 #include "gdt.h"
 
 process *processes;
-pid_t current;
+tid_t current;
 pid_t lastpid;
 
 
@@ -74,10 +74,10 @@ u32 iself(u8 * src)
 }
 END */
 
-void processexit()
+void processexit(void)
 {
-	deletetask(getcurrentpid());
-	switchtask(0, false);
+	deleteprocess(getcurrentpid());
+	switchtask(maketid(0,0));
 }
 
 /*******************************************************************************/
@@ -94,7 +94,7 @@ u32 loadelf(u8 * src, pid_t pid)
 
 	header = (elf32 *) src;
 	program = (elf32p *) (src + header->e_phoff);
-	code = elf_test(src);
+	code = iself(src);
 	if (code != 0)
 	{
 		printf("Erreur de chargement ELF, %s !\r\n",
@@ -142,31 +142,31 @@ u32 loadelf(u8 * src, pid_t pid)
 /*******************************************************************************/
 /* Initialise la liste des processus */
 
-void initprocesses()
+void initprocesses(void)
 {
 	u32     i = 1;
 	processes = (process *) vmalloc(sizeof(process) * MAXNUMPROCESS);
 	while (i < MAXNUMPROCESS)
 	{
 		processes[i].pid = NULL;
-		processes[i++].status = STATUS_FREE;
+		processes[i++].status = PROCESS_STATUS_FREE;
 	}
-	createtask(0,getinitretry());
+	createtask(0,getinitretry(),true);
 	processes[0].result = 0;
-	processes[0].status = STATUS_READY;
+	processes[0].status = PROCESS_STATUS_READY;
 	processes[0].iskernel = true;
-	current = 0;
+	current = maketid(0,0);
 	lastpid = NULL;
 }
 
 /*******************************************************************************/
 /* Récupère un emplacement dans la liste des processus */
 
-pid_t getfreepid()
+pid_t getfreepid(void)
 {
 	u32     i = lastpid;
 	u32     parsed = 0;
-	while (processes[++i].status != STATUS_FREE
+	while (processes[++i].status != PROCESS_STATUS_FREE
 	       && ++parsed < MAXNUMPROCESS)
 	{
 		if (i >= MAXNUMPROCESS)
@@ -181,13 +181,63 @@ pid_t getfreepid()
 }
 
 /*******************************************************************************/
-/* Récupère le PID du processus courant */
+/* Récupère un emplacement dans la liste des tâche du processus donné */
 
-pid_t getcurrentpid()
+tid_t getfreeptid(pid_t pid)
 {
-	return current->pid;
+	tid_t new;
+	new.pid=pid;
+	task_t *task_head= &processes[(u32)pid].task_head;
+	task *next;
+	TAILQ_FOREACH(next, task_head, tailq)
+		if (next->tid.number>new.number)
+			new.number=next->tid.number;
+	next->tid.number++;
+	return new;
 }
 
+/*******************************************************************************/
+/* Récupère le PID du processus courant */
+
+pid_t getcurrentpid(void)
+{
+	return current.pid;
+}
+
+/*******************************************************************************/
+/* Récupère le TID de la tâche courante */
+
+tid_t getcurrenttid(void)
+{
+	return current;
+}
+
+/*******************************************************************************/
+/* Change la tâche désigné dans le TID */
+
+tid_t	maketid(pid_t pid, u32 number)
+{
+	tid_t newtid;
+	newtid.pid=pid;
+	newtid.number=number;
+	return newtid;
+}
+
+/*******************************************************************************/
+/* Récupère l'adresse d'un processus */
+
+process* findprocess(pid_t pid)
+{
+	return &processes[(u32)pid];
+}
+
+/*******************************************************************************/
+/* Récupère l'adresse du processus courant */
+
+process* findcurrentprocess(void)
+{
+	return &processes[(u32)getcurrentpid()];
+}
 
 /*******************************************************************************/
 /* Determine le dernier PID occupé */
@@ -200,17 +250,18 @@ void usepid(pid_t pid)
 /*******************************************************************************/
 /* Bascule vers une tâche */
 
-void switchtask(tid_t pid, bool fromkernelmode)
+void switchtask(tid_t tid)
 {
-	pid_t previous = current;
-	current = &processes[(u32)pid];
-	if (!current->kernel)
-		setTSS(current->kstack.ss0, current->kstack.esp0);
+	tid_t previous = current;
+	task *atask = findtask(tid);
+	process *aprocess=findprocess(tid.pid);
+	if (!aprocess->iskernel)
+		setTSS(atask->kernel_stack.ss0, atask->kernel_stack.esp0);
 	else
 		setTSS(0x0, 0x0);
-	current->dump.eflags = (current->dump.eflags | 0x200) & 0xFFFFBFFF;
-	createdump(current->dump);
-	if (current->dump.cs==SEL_KERNEL_CODE)
+	atask->dump.eflags = (atask->dump.eflags | 0x200) & 0xFFFFBFFF;
+	createdump(atask->dump);
+	if (atask->dump.cs==SEL_KERNEL_CODE)
 		restcpu_kernel();
 	else
 		restcpu_user();
@@ -218,12 +269,36 @@ void switchtask(tid_t pid, bool fromkernelmode)
 }
 
 /*******************************************************************************/
+/* Cherche l'adresse d'une tâche */
+
+task* findtask(tid_t tid)
+{
+	task_t *task_head= &processes[(u32)tid.pid].task_head;
+	task *next;
+	TAILQ_FOREACH(next, task_head, tailq)
+		if (next->tid.number==tid.number)
+			return next;
+}
+
+/*******************************************************************************/
+/* Cherche l'adresse de la tâche courante */
+
+task* findcurrenttask(void)
+{
+	return findtask(getcurrenttid());
+}
+
+
+/*******************************************************************************/
 /* Détruit une tâche */
 
 void deletetask(tid_t tid)
 {
-	stoptask
-
+	stoptask(tid);
+	process* aprocess=findprocess(tid.pid);
+	task *atask=findtask(tid);
+	TAILQ_REMOVE(&aprocess->task_head, atask, tailq);
+	vfree(atask);
 }
 
 /*******************************************************************************/
@@ -231,87 +306,65 @@ void deletetask(tid_t tid)
 
 void runtask(tid_t tid)
 {
-	if (processes[(u32)pid].status == STATUS_READY)
+	task *atask=findtask(tid);
+	if (atask->status == TASK_STATUS_READY)
 	{
-		processes[(u32)pid].status = STATUS_RUN;
-		switchtask(u32)pid, false);
+		atask->status = TASK_STATUS_RUN;
+		switchtask(tid);
 	}
 }
 
 /*******************************************************************************/
 /* Initialise une tâche */
 
-tid_t createtask(pid_t pid,u8 *entry)
+tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 {
-	pid_t previous = current;
-	pid_t pid = getfreepid();
-	usepid(pid);
-	page   *kstack;
-	processes[(u32)pid].pid = (u32)pid;
-	processes[(u32)pid].pdd = virtual_pd_create();
-	TAILQ_INIT(&processes[(u32)pid].page_head);
-	if (&processes[(u32)pid].iskernel)
+	tid_t tid;
+	tid.pid=pid;
+	process* aprocess=findprocess(pid);
+	task *new = (task *) vmalloc(sizeof(task));
+	TAILQ_INSERT_TAIL(&aprocess->task_head, new, tailq);
+	page *astack = virtual_page_getfree();
+	if (kerneltask)
 	{
-		processes[(u32)pid].dump.ss = SEL_KERNEL_STACK;
-		processes[(u32)pid].dump.esp =
-			(u32) kstack->vaddr + PAGESIZE - 16;
-		processes[(u32)pid].dump.eflags = 0x0;
-		processes[(u32)pid].dump.cs = SEL_KERNEL_CODE;
-		processes[(u32)pid].dump.eip = elf_load(code, pid);
-		if (processes[(u32)pid].dump.eip == NULL)
-			return NULL;
-		processes[(u32)pid].dump.ds = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.es = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.fs = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.gs = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.cr3 = KERNEL_PD_ADDR;
-		processes[(u32)pid].dump.eax = 0;
-		processes[(u32)pid].dump.ecx = 0;
-		processes[(u32)pid].dump.edx = 0;
-		processes[(u32)pid].dump.ebx = 0;
-		processes[(u32)pid].dump.ebp = 0;
-		processes[(u32)pid].dump.esi = 0;
-		processes[(u32)pid].dump.edi = 0;
-		processes[(u32)pid].result = 0;
-		processes[(u32)pid].status = STATUS_READY;
-		processes[(u32)pid].kernel = true;
-		current = previous;
+		new->dump.ss = SEL_KERNEL_STACK;
+		new->dump.esp =
+			(u32) astack->vaddr + PAGESIZE - 16;
+		new->dump.eflags = 0x0;
+		new->dump.cs = SEL_KERNEL_CODE;
+		new->dump.ds = SEL_KERNEL_DATA;
+		new->dump.es = SEL_KERNEL_DATA;
+		new->dump.fs = SEL_KERNEL_DATA;
+		new->dump.gs = SEL_KERNEL_DATA;
+		new->dump.cr3 = KERNEL_PD_ADDR;
 	}
 	else
 	{
-		current = &processes[(u32)pid];
-		setCR3(processes[(u32)pid].pdd->addr->paddr);
-		kstack = virtual_page_getfree();
-		processes[(u32)pid].dump.ss = SEL_USER_STACK | RPL_RING3;
-		processes[(u32)pid].dump.esp = USER_STACK - 16;
-		processes[(u32)pid].dump.eflags = 0x0;
-		processes[(u32)pid].dump.cs = SEL_USER_CODE | RPL_RING3;
-		processes[(u32)pid].dump.eip = elf_load(code, pid);
-		if (processes[(u32)pid].dump.eip == NULL)
-			return NULL;
-		processes[(u32)pid].dump.ds = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.es = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.fs = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.gs = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.cr3 =
-			(u32) processes[(u32)pid].pdd->addr->paddr;
-		processes[(u32)pid].kstack.ss0 = SEL_KERNEL_STACK;
-		processes[(u32)pid].kstack.esp0 =
-			(u32) kstack->vaddr + PAGESIZE - 16;
-		processes[(u32)pid].dump.eax = 0;
-		processes[(u32)pid].dump.ecx = 0;
-		processes[(u32)pid].dump.edx = 0;
-		processes[(u32)pid].dump.ebx = 0;
-		processes[(u32)pid].dump.ebp = 0;
-		processes[(u32)pid].dump.esi = 0;
-		processes[(u32)pid].dump.edi = 0;
-		processes[(u32)pid].result = 0;
-		processes[(u32)pid].status = STATUS_READY;
-		processes[(u32)pid].kernel = false;
-		current = previous;
-		setCR3(current->dump.cr3);
+		new->kernel_stack.ss0 = SEL_KERNEL_STACK;
+		new->kernel_stack.esp0 =
+			(u32) astack->vaddr + PAGESIZE - 16;
+		new->dump.ss = SEL_USER_STACK | RPL_RING3;
+		new->dump.esp = USER_STACK - 16;
+		new->dump.eflags = 0x0;
+		new->dump.cs = SEL_USER_CODE | RPL_RING3;
+		new->dump.ds = SEL_USER_DATA | RPL_RING3;
+		new->dump.es = SEL_USER_DATA | RPL_RING3;
+		new->dump.fs = SEL_USER_DATA | RPL_RING3;
+		new->dump.gs = SEL_USER_DATA | RPL_RING3;
+		new->dump.cr3 = aprocess->pdd->addr->paddr;
 	}
-	return pid;
+	new->tid=getfreeptid(pid);
+	new->dump.eip = aprocess->entry;
+	new->status=TASK_STATUS_READY;
+	new->dump.eax = 0;
+	new->dump.ecx = 0;
+	new->dump.edx = 0;
+	new->dump.ebx = 0;
+	new->dump.ebp = 0;
+	new->dump.esi = 0;
+	new->dump.edi = 0;
+	new->status = TASK_STATUS_READY;
+	return new->tid;
 }
 
 /*******************************************************************************/
@@ -319,7 +372,8 @@ tid_t createtask(pid_t pid,u8 *entry)
 
 void stoptask(tid_t tid)
 {
-
+	task *current=findtask(tid);
+	current->status=TASK_STATUS_STOP;
 }
 
 /*******************************************************************************/
@@ -327,69 +381,22 @@ void stoptask(tid_t tid)
 
 pid_t createprocess(u8 *src, bool kerneltask)
 {
-	pid_t previous = current;
-	pid_t pid = getfreepid();
-	usepid(pid);
-	page   *kstack;
-	processes[(u32)pid].pid = (u32)pid;
-	processes[(u32)pid].pdd = virtual_pd_create();
-	TAILQ_INIT(&processes[(u32)pid].page_head);
-	processes[(u32)pid].entry = elf_load(code, pid);
-		
-if (processes[(u32)pid].dump.eip == NULL)
-			return NULL;
-		processes[(u32)pid].dump.ds = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.es = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.fs = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.gs = SEL_KERNEL_DATA;
-		processes[(u32)pid].dump.cr3 = KERNEL_PD_ADDR;
-		processes[(u32)pid].dump.eax = 0;
-		processes[(u32)pid].dump.ecx = 0;
-		processes[(u32)pid].dump.edx = 0;
-		processes[(u32)pid].dump.ebx = 0;
-		processes[(u32)pid].dump.ebp = 0;
-		processes[(u32)pid].dump.esi = 0;
-		processes[(u32)pid].dump.edi = 0;
-		processes[(u32)pid].result = 0;
-		processes[(u32)pid].status = STATUS_READY;
-		processes[(u32)pid].kernel = true;
-		current = previous;
-	}
-	else
-	{
-		current = &processes[(u32)pid];
-		setCR3(processes[(u32)pid].pdd->addr->paddr);
-		kstack = virtual_page_getfree();
-		processes[(u32)pid].dump.ss = SEL_USER_STACK | RPL_RING3;
-		processes[(u32)pid].dump.esp = USER_STACK - 16;
-		processes[(u32)pid].dump.eflags = 0x0;
-		processes[(u32)pid].dump.cs = SEL_USER_CODE | RPL_RING3;
-		processes[(u32)pid].dump.eip = elf_load(code, pid);
-		if (processes[(u32)pid].dump.eip == NULL)
-			return NULL;
-		processes[(u32)pid].dump.ds = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.es = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.fs = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.gs = SEL_USER_DATA | RPL_RING3;
-		processes[(u32)pid].dump.cr3 =
-			(u32) processes[(u32)pid].pdd->addr->paddr;
-		processes[(u32)pid].kstack.ss0 = SEL_KERNEL_STACK;
-		processes[(u32)pid].kstack.esp0 =
-			(u32) kstack->vaddr + PAGESIZE - 16;
-		processes[(u32)pid].dump.eax = 0;
-		processes[(u32)pid].dump.ecx = 0;
-		processes[(u32)pid].dump.edx = 0;
-		processes[(u32)pid].dump.ebx = 0;
-		processes[(u32)pid].dump.ebp = 0;
-		processes[(u32)pid].dump.esi = 0;
-		processes[(u32)pid].dump.edi = 0;
-		processes[(u32)pid].result = 0;
-		processes[(u32)pid].status = STATUS_READY;
-		processes[(u32)pid].kernel = false;
-		current = previous;
-		setCR3(current->dump.cr3);
-	}
-	return pid;
+	tid_t previous = current;
+	current.pid = getfreepid();
+	current.number = 0;
+	usepid(current.pid);
+	process* new=findcurrentprocess();
+	new->pid = current.pid;
+	new->pdd = virtual_pd_create();
+	TAILQ_INIT(&new->page_head);
+	new->iskernel=kerneltask;
+	setCR3(new->pdd->addr->paddr);
+	new->entry = loadelf(src, new->pid);
+	createtask(new->pid,new->entry, new->iskernel);
+	current = previous;
+	process* old=findcurrentprocess();
+	setCR3(old->pdd->addr->paddr);
+	return new->pid;
 }
 
 /*******************************************************************************/
@@ -397,7 +404,13 @@ if (processes[(u32)pid].dump.eip == NULL)
 
 void deleteprocess(pid_t pid)
 {
-
+	stopprocess(pid);
+	process* aprocess=findprocess(pid);
+	task *next;
+	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
+		deletetask(next->tid);
+	aprocess->status = PROCESS_STATUS_FREE;
+	
 }
 
 /*******************************************************************************/
@@ -405,7 +418,15 @@ void deleteprocess(pid_t pid)
 
 void runprocess(pid_t pid)
 {
-
+	process* aprocess=findprocess(pid);
+	if (aprocess->status == PROCESS_STATUS_READY)
+	{
+		aprocess->status = PROCESS_STATUS_RUN;
+		tid_t tid=maketid(pid,0);
+		task *atask=findtask(tid);
+		atask->status=TASK_STATUS_RUN;
+		switchtask(tid);
+	}
 }
 
 /*******************************************************************************/
@@ -413,7 +434,14 @@ void runprocess(pid_t pid)
 
 void stopprocess(pid_t pid)
 {
-
+	process* aprocess=findprocess(pid);
+	if (aprocess->status == PROCESS_STATUS_RUN)
+	{
+		aprocess->status = PROCESS_STATUS_READY;
+		task *next;
+		TAILQ_FOREACH(next, &aprocess->task_head, tailq)
+		next->status=TASK_STATUS_READY;
+	}
 }
 
 /*******************************************************************************/
