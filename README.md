@@ -224,11 +224,12 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * gestion avancée de la mémoire (vmalloc).
 * chargeur ELF32,
 * espace utilisateur et appels systèmes,
-* liste d'API automatiquement mise à jour,
+* ordonnanceur de tâche (par TSS),
 
 #### En cours
 
-* ordonnanceur de tâche (par TSS),
+* correction de bogues - stabilisation du projet
+* liste d'API automatiquement mise à jour avec intégration de librairies & header,
 
 #### A faire
 

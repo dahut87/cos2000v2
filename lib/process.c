@@ -70,7 +70,7 @@ u32 iself(u8 * src)
 "ARGS": [
 {"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
 ],
-"RETURN":"void"
+"RETURN":"u32"
 }
 END */
 
@@ -158,10 +158,12 @@ void initprocesses(void)
 	if (aprocess==NULL) return NULL;
 	aprocess->pid = pid;
 	aprocess->result = 0;
-	aprocess->status = PROCESS_STATUS_READY;
+	aprocess->status = PROCESS_STATUS_RUN;
 	aprocess->iskernel = true;
 	TAILQ_INIT(&aprocess->task_head);
 	current=createtask(pid,getinitretry(),true);
+	task *atask = findtask(current);
+	atask->status = TASK_STATUS_RUN;
 }
 
 /*******************************************************************************/
@@ -169,6 +171,8 @@ void initprocesses(void)
 
 pid_t getfreepid(void)
 {
+	if (lastpid==0 || lastpid>MAXNUMPROCESS)
+		lastpid==1;
 	u32     i = lastpid;
 	u32     parsed = 0;
 	while (processes[i++].status != PROCESS_STATUS_FREE
@@ -260,9 +264,15 @@ void switchtask(tid_t tid)
 	if (aprocess==NULL) return;
 	current = tid;
 	if (!aprocess->iskernel)
+	{
 		setTSS(atask->kernel_stack.ss0, atask->kernel_stack.esp0);
+		wrmsr(0x175, atask->syscall_stack.esp0, 0x0);
+	}
 	else
+	{
 		setTSS(0x0, 0x0);
+		wrmsr(0x175, 0x0, 0x0);
+	}	
 	atask->dump.eflags = (atask->dump.eflags | 0x200) & 0xFFFFBFFF;
 	createdump(atask->dump);
 	if (atask->dump.cs==SEL_KERNEL_CODE)
@@ -270,6 +280,42 @@ void switchtask(tid_t tid)
 	else
 		restcpu_user();
 	iret();
+}
+
+
+/*******************************************************************************/
+/* Cherche le prochain processus */
+process* getnextprocess(pid_t pid)
+{
+	u32     i = (u32) pid;
+	while (processes[i++].status != PROCESS_STATUS_RUN)
+	{
+		if (i >= MAXNUMPROCESS)
+			i = 0;
+	}
+	return &processes[i-1];
+}
+
+/*******************************************************************************/
+/* Cherche la prochaine tâche */
+task*     getnexttask(void)
+{
+	process *aprocess=findcurrentprocess();
+	u32 flag=0;
+	task *next;
+	while(flag<2) {
+		if (aprocess==NULL) return NULL;
+		TAILQ_FOREACH(next, &aprocess->task_head, tailq)
+		{
+			if (next->status == TASK_STATUS_RUN)
+				if (current.pid != next->tid.pid || next->tid.number>current.number)
+					return next;
+				if (current.pid==next->tid.pid && current.number==next->tid.number)
+					flag++;
+		}
+		aprocess=getnextprocess(aprocess->pid);
+	}
+	return NULL;
 }
 
 /*******************************************************************************/
@@ -284,6 +330,7 @@ task* findtask(tid_t tid)
 		if (next->tid.number==tid.number)
 			return next;
 }
+
 
 /*******************************************************************************/
 /* Cherche l'adresse de la tâche courante */
@@ -333,12 +380,14 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	if (aprocess==NULL) return maketid(0,0);
 	task *new = (task *) vmalloc(sizeof(task));
 	TAILQ_INSERT_TAIL(&aprocess->task_head, new, tailq);
-	page *astack = virtual_page_getfree();
+	page *apage = virtual_page_getfree();
 	if (kerneltask)
 	{
 		new->dump.ss = SEL_KERNEL_STACK;
-		new->dump.esp =
-			(u32) astack->vaddr + PAGESIZE - 16;
+		if (pid!=1)
+			new->dump.esp =
+			(u32) apage->vaddr + PAGESIZE - 16;
+		new->dump.esp = KERNEL_STACK_ADDR;
 		new->dump.eflags = 0x0;
 		new->dump.cs = SEL_KERNEL_CODE;
 		new->dump.ds = SEL_KERNEL_DATA;
@@ -351,7 +400,11 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	{
 		new->kernel_stack.ss0 = SEL_KERNEL_STACK;
 		new->kernel_stack.esp0 =
-			(u32) astack->vaddr + PAGESIZE - 16;
+			(u32) apage->vaddr + PAGESIZE - 16;
+		page *apage = virtual_page_getfree();
+		new->syscall_stack.ss0 = SEL_KERNEL_STACK;
+		new->syscall_stack.esp0 =
+			(u32) apage->vaddr + PAGESIZE - 16;
 		new->dump.ss = SEL_USER_STACK | RPL_RING3;
 		new->dump.esp = USER_STACK - 16;
 		new->dump.eflags = 0x0;
@@ -363,7 +416,10 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 		new->dump.cr3 = aprocess->pdd->addr->paddr;
 	}
 	new->tid=getfreeptid(pid);
-	new->dump.eip = aprocess->entry;
+	if (entry==NULL)
+		new->dump.eip = aprocess->entry;
+	else
+		new->dump.eip = entry;		
 	new->dump.eax = 0;
 	new->dump.ecx = 0;
 	new->dump.edx = 0;

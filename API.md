@@ -9,6 +9,17 @@ All fonctions in the "libsys" library.
 
 ------
 
+`u32 getticks(void);`
+
+*Description:Return the internal value of the timer*
+
+* syscall id : **4**
+* arguments : **0**
+* results : **u32**
+* dump of register cpu: **no**
+
+------
+
 `u32 testapi(u32 arg1, u32 arg2, u32 arg3);`
 
 *Description:Simple function to test if SYSCALL API is correctly running*
@@ -23,17 +34,6 @@ All fonctions in the "libsys" library.
 
 ------
 
-`u32 getticks(void);`
-
-*Description:Return the internal value of the timer*
-
-* syscall id : **4**
-* arguments : **0**
-* results : **u32**
-* dump of register cpu: **no**
-
-------
-
 `u8 waitkey(void);`
 
 *Description:Wait for user to press a key and return the ascii code pressed*
@@ -45,14 +45,14 @@ All fonctions in the "libsys" library.
 
 ------
 
-`void exit(u32 resultcode);`
+`u32 exit(u32 resultcode);`
 
 *Description:End a task for user or kernel domain*
 
 * syscall id : **5**
 * arguments : **1**
 * * argument 1 : **u32 resultcode** *Code result of the execution*
-* results : **void**
+* results : **u32**
 * dump of register cpu: **no**
 
 

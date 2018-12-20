@@ -25,7 +25,7 @@ extern wrapper_sysenter;
 void initsyscall(void)
 {
 	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
-	wrmsr(0x175, 0x60000, 0x0);
+	wrmsr(0x175, NULL, 0x0);
 	wrmsr(0x176, &wrapper_sysenter, 0x0);
 	return;
 }
@@ -62,20 +62,20 @@ __attribute__ ((noreturn)) void sysenter_handler(regs *dump)
 	sti();
 	switch (dump->eax)
 	{
+     		case 4:
+			dump->eax=(u32) gettimer();
+			break;
      		case 2:
 			dump->eax=(u32) print(dump->ebx);
 			break;
      		case 0:
 			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
 			break;
-     		case 4:
-			dump->eax=(u32) gettimer();
-			break;
      		case 1:
 			dump->eax=(u32) waitascii();
 			break;
      		case 5:
-			processexit(dump->ebx);
+			dump->eax=(u32) processexit(dump->ebx);
 			break;
 
 		default:

@@ -40,6 +40,7 @@ clean:
 	$(REMOVE) *.c~
 	$(REMOVE) */*.c~
 	$(REMOVE) ../include/*.h~
+	$(REMOVE) ./TEST/*.c
 	sync
 
 indent:

@@ -92,11 +92,14 @@ int test(void)
 /* Test l'usage de création de tâche */
 
 #include "TEST/test.c"
-
+#include "TEST/test2.c"
 int testtask()
 {
 	print("*** Creation d'une tache\r\n");
-	pid_t pid = createprocess(&programs_test, false);
+	pid_t pid;
+	pid = createprocess(&programs_test2, false);
+	runprocess(pid);
+	pid = createprocess(&programs_test, false);
 	runprocess(pid);
 }
 

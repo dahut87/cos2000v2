@@ -14,10 +14,13 @@ syscall: clean remakeapi all
 remakeapi:
 	python makesyscall.py
 
-programs: programs/test lib/TEST/test.c
+programs: programs/test lib/TEST/test.c lib/TEST/test2.c
 
 lib/TEST/test.c:
 	xxd -i programs/test lib/TEST/test.c
+
+lib/TEST/test2.c:
+	xxd -i programs/test2 lib/TEST/test2.c
 
 programs/test:
 	make -C programs

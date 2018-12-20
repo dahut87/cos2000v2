@@ -1,5 +1,16 @@
 [
 {
+"ID":4, 
+"NAME":"getticks",
+"LIBRARY":"libsys",
+"INTERNALNAME":"gettimer",
+"DESCRIPTION":"Return the internal value of the timer",
+"ARGS": [],
+"RETURN":"u32"
+}
+
+,
+{
 "ID":2,
 "LIBRARY":"libvideo",
 "NAME":"print",
@@ -29,17 +40,6 @@
 
 ,
 {
-"ID":4, 
-"NAME":"getticks",
-"LIBRARY":"libsys",
-"INTERNALNAME":"gettimer",
-"DESCRIPTION":"Return the internal value of the timer",
-"ARGS": [],
-"RETURN":"u32"
-}
-
-,
-{
 "ID":1,
 "LIBRARY":"libsys",
 "NAME":"waitkey",
@@ -59,7 +59,7 @@
 "ARGS": [
 {"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
 ],
-"RETURN":"void"
+"RETURN":"u32"
 }
 
 ]

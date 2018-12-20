@@ -139,6 +139,7 @@ typedef struct task
 {
 	tid_t tid;
 	stack kernel_stack;
+	stack syscall_stack;
 	u32	status;
 	regs    dump;
       TAILQ_ENTRY(task) tailq;
@@ -195,8 +196,8 @@ pid_t     clone(void);
 pid_t     exec(u8* entry, u8* args, bool kerneltask);
 
 void      switchtask(tid_t tid);
-tid_t     getnexttask(void);
-
+process* getnextprocess(pid_t pid);
+task*     getnexttask(void);
 task* findtask(tid_t tid);
 task* findcurrenttask(void);
 process* findprocess(pid_t pid);

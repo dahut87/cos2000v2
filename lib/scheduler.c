@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "vga.h"
 #include "gdt.h"
+#include "process.h"
 
 static u8 curs[4] = { "-\\|/" };
 
@@ -39,7 +40,6 @@ u32 gettimer(void)
 
 __attribute__ ((noreturn)) void timer_handler(regs *dump)
 {
-	u32 interruption=dump->eip;
 	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
 	bool noerror,user;
 	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
@@ -77,21 +77,28 @@ __attribute__ ((noreturn)) void timer_handler(regs *dump)
 			user=true;
 		}
 	}
+	irqendmaster();
 	showchar(0, 0, curs[curspos], 7);
 	curspos = (curspos + 1) & 0x3;
 	time++;
-	irqendmaster();
+	task *new=getnexttask();
+	if (new!=NULL)
+	{
+		task *old=findcurrenttask();
+		memcpy(&dump, &old->dump, sizeof(dump), 0);
+		switchtask(new->tid);
+	}
 	if (dump->cs==SEL_KERNEL_CODE)
-		{
-			setESP(dump);
-			restcpu_kernel();
-		}
-		else
-		{
-			setESP(dump);
-			restcpu_user();
-			iret();
-		}
+	{
+		setESP(dump);
+		restcpu_kernel();
+	}
+	else
+	{
+		setESP(dump);
+		restcpu_user();
+		iret();
+	}
 }
 
 

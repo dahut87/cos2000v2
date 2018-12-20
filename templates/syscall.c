@@ -25,7 +25,7 @@ extern wrapper_sysenter;
 void initsyscall(void)
 {
 	wrmsr(0x174, SEL_KERNEL_CODE, 0x0);
-	wrmsr(0x175, 0x60000, 0x0);
+	wrmsr(0x175, NULL, 0x0);
 	wrmsr(0x176, &wrapper_sysenter, 0x0);
 	return;
 }
