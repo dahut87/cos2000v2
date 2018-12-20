@@ -7,6 +7,9 @@
 #   define _ASM
 
 /******************************************************************************/
+
+#   define int20 asm("int $0x14")
+
 #   define halt() asm("hlt"::)
 
 #   define sti() asm("sti"::)

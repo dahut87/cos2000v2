@@ -10,7 +10,7 @@ void main(void)
 {
 	while (true)
 	{
-		if (getticks()%10==0)
+		if (getticks()%100000==0)
 			print("[TEST]\r\n");
 	}
 	exit(1);

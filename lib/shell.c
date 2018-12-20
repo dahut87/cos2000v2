@@ -449,8 +449,7 @@ int showinfo()
 
 int showregs()
 {
-	regs    dump;
-	show_cpu(&dump);
+	int20;
 	return 0;
 }
 

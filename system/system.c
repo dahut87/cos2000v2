@@ -26,6 +26,7 @@ static u8 errormsg[] =
 static u8 key = 0;
 
 extern wrapper_timer;
+extern wrapper_interruption20;
 
 void ok()
 {
@@ -77,6 +78,8 @@ int main(u32 magic, u32 addr)
 	print("\033[37m\033[0m -Initilisation des interruptions");
 	initidt();
 	initpic();
+	setidt((u32) &wrapper_interruption20, SEL_KERNEL_CODE,
+		 ENTRY_PRESENT | ENTRY_RING3 | TRAPGATE, 20);
 	sti();
 	ok();
 

@@ -76,8 +76,10 @@ END */
 
 void processexit(void)
 {
+	cli();
 	deleteprocess(getcurrentpid());
 	switchtask(maketid(1,1));
+	sti();
 }
 
 /*******************************************************************************/
@@ -257,6 +259,7 @@ process* findcurrentprocess(void)
 
 void switchtask(tid_t tid)
 {
+	cli();
 	tid_t previous = current;
 	task *atask = findtask(tid);
 	if (atask==NULL) return;
@@ -346,6 +349,7 @@ task* findcurrenttask(void)
 
 void deletetask(tid_t tid)
 {
+	cli();
 	stoptask(tid);
 	process* aprocess=findprocess(tid.pid);
 	if (aprocess==NULL) return;
@@ -353,6 +357,7 @@ void deletetask(tid_t tid)
 	if (atask==NULL) return;
 	TAILQ_REMOVE(&aprocess->task_head, atask, tailq);
 	vfree(atask);
+	sti();
 }
 
 /*******************************************************************************/
@@ -360,6 +365,7 @@ void deletetask(tid_t tid)
 
 void runtask(tid_t tid)
 {
+	cli();
 	task *atask=findtask(tid);
 	if (atask==NULL) return;
 	if (atask->status == TASK_STATUS_READY)
@@ -367,6 +373,7 @@ void runtask(tid_t tid)
 		atask->status = TASK_STATUS_RUN;
 		switchtask(tid);
 	}
+	sti();
 }
 
 /*******************************************************************************/
@@ -374,6 +381,7 @@ void runtask(tid_t tid)
 
 tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 {
+	cli();
 	tid_t tid;
 	tid.pid=pid;
 	process* aprocess=findprocess(pid);
@@ -429,6 +437,7 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	new->dump.edi = 0;
 	new->status = TASK_STATUS_READY;
 	return new->tid;
+	sti();
 }
 
 /*******************************************************************************/
@@ -436,9 +445,11 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 
 void stoptask(tid_t tid)
 {
+	cli();
 	task *atask=findtask(tid);
 	if (atask==NULL) return;
 	atask->status=TASK_STATUS_STOP;
+	sti();
 }
 
 /*******************************************************************************/
@@ -446,6 +457,7 @@ void stoptask(tid_t tid)
 
 pid_t createprocess(u8 *src, bool kerneltask)
 {
+	cli();
 	tid_t previous = current;
 	current.pid = getfreepid();
 	current.number = 0;
@@ -467,6 +479,7 @@ pid_t createprocess(u8 *src, bool kerneltask)
 		cr3=old->pdd->addr->paddr;
 	setCR3(cr3);
 	new->status=PROCESS_STATUS_READY;
+	sti();
 	return new->pid;
 }
 
@@ -475,6 +488,7 @@ pid_t createprocess(u8 *src, bool kerneltask)
 
 void deleteprocess(pid_t pid)
 {
+	cli();
 	stopprocess(pid);
 	process* aprocess=findprocess(pid);
 	if (aprocess==NULL) return;
@@ -482,7 +496,7 @@ void deleteprocess(pid_t pid)
 	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
 		deletetask(next->tid);
 	aprocess->status = PROCESS_STATUS_FREE;
-	
+	sti();
 }
 
 /*******************************************************************************/
@@ -490,6 +504,7 @@ void deleteprocess(pid_t pid)
 
 void runprocess(pid_t pid)
 {
+	cli();
 	process* aprocess=findprocess(pid);
 	if (aprocess==NULL) return;
 	if (aprocess->status == PROCESS_STATUS_READY)
@@ -501,6 +516,7 @@ void runprocess(pid_t pid)
 		atask->status=TASK_STATUS_RUN;
 		switchtask(tid);
 	}
+	sti();
 }
 
 /*******************************************************************************/

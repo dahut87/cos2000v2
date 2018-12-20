@@ -66,6 +66,7 @@ void outmsecmd(u8 command)
 
 __attribute__((interrupt)) void mouse_handler(exception_stack_noerror *caller)
 {
+	cli();
 	u8      mbyte = inb(0x60);
 	s8      changex, changey;
 
@@ -142,6 +143,7 @@ __attribute__((interrupt)) void mouse_handler(exception_stack_noerror *caller)
       endofint:
 	irqendmaster();
 	irqendslave();
+	sti();
 }
 
 /*******************************************************************************/

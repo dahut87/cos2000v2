@@ -247,8 +247,7 @@ unsigned convert(u32 keypressed)
 
 	else if (key == SCAN_F9)
 	{
-		regs    dump;
-		show_cpu(&dump);
+		int20;
 	}
 
 	else if (key == SCAN_F10)
@@ -363,6 +362,7 @@ unsigned convert(u32 keypressed)
 
 __attribute__((interrupt)) void keyboard_handler(exception_stack_noerror *caller)
 {
+	cli();
 	u8      scancode, ascii;
 	while ((inb(0x64) & 1) == 0);
 	scancode = inb(0x60);
@@ -375,6 +375,7 @@ __attribute__((interrupt)) void keyboard_handler(exception_stack_noerror *caller
 		bufferascii[ptrascii] = ascii;
 	}
 	irqendmaster();
+	sti();
 }
 
 /******************************************************************************/

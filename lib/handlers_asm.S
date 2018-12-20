@@ -16,6 +16,7 @@ jmp exception_suite
 .endm
 
 .macro  semidumpcpu
+cli
 pushl %ds
 pushl %es
 pushl %fs
@@ -87,6 +88,16 @@ pushl %cs
 pushl $0x00
 semidumpcpu
 call sysenter_handler
+
+.global wrapper_interruption20
+wrapper_interruption20:
+pushl %ss
+pushl %esp
+pushf 
+pushl %cs
+pushl $0x14
+semidumpcpu
+call interruption_handler
 
 .global wrapper_interruption
 wrapper_interruption:
