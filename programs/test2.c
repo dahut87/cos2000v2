@@ -8,6 +8,7 @@
 
 void main(void)
 {
+	print("demarrage...\r\n");
 	while (true)
 	{
 		if (getticks()%100000==0)

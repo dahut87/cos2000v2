@@ -152,10 +152,10 @@ void initprocesses(void)
 	processes = (process *) vmalloc(sizeof(process) * MAXNUMPROCESS);
 	while (i < MAXNUMPROCESS)
 	{
-		processes[i].pid = NULL;
+		processes[i].pid = i+1;
 		processes[i++].status = PROCESS_STATUS_FREE;
 	}
-	pid_t pid=getfreepid();
+	pid_t pid=(pid_t)1;
 	process *aprocess=findprocess(pid);
 	if (aprocess==NULL) return NULL;
 	aprocess->pid = pid;
@@ -173,23 +173,17 @@ void initprocesses(void)
 
 pid_t getfreepid(void)
 {
-	if (lastpid==0 || lastpid>MAXNUMPROCESS)
-		lastpid==1;
-	u32     i = lastpid;
-	u32     parsed = 0;
-	while (processes[i++].status != PROCESS_STATUS_FREE
-	       && parsed++ < MAXNUMPROCESS)
-	{
-		if (i >= MAXNUMPROCESS)
-			i = 0;
-	}
-	if (parsed > MAXNUMPROCESS)
+	if ((u32)lastpid==0 || lastpid>MAXNUMPROCESS)
+		lastpid=(pid_t)1;
+	process* aprocess=findprocess(lastpid);
+	aprocess=getnextprocess(aprocess, PROCESS_STATUS_FREE);
+	if (aprocess == NULL)
 	{
 		printf("PANIC: plus d'emplacement disponible pour un novueau processus\n");
 		return NULL;
 	}
-	lastpid=i;
-	return (pid_t)i;
+	lastpid=aprocess->pid;
+	return lastpid;
 }
 
 /*******************************************************************************/
@@ -285,40 +279,74 @@ void switchtask(tid_t tid)
 	iret();
 }
 
-
 /*******************************************************************************/
 /* Cherche le prochain processus */
-process* getnextprocess(pid_t pid)
+
+process* getnextprocess(process* aprocess, u32 status)
 {
-	u32     i = (u32) pid;
-	while (processes[i++].status != PROCESS_STATUS_RUN)
+	u32     i = (u32) aprocess->pid;
+	u32     parsed = 0;
+	while (parsed++ < MAXNUMPROCESS && ((status != PROCESS_STATUS_ALL && processes[i++].status != status) ||
+	 (status == PROCESS_STATUS_ALL && processes[i++].status == PROCESS_STATUS_FREE)))
 	{
 		if (i >= MAXNUMPROCESS)
 			i = 0;
 	}
-	return &processes[i-1];
+	if (parsed > MAXNUMPROCESS)
+		return NULL;
+	else	
+		return &processes[i-1];
+}
+
+/*******************************************************************************/
+/* Cherche la prochaine tâche du processus */
+
+task* getnexttask(task *atask, u32 status)
+{
+	task *next=atask;
+	while (next!=NULL)
+	{
+		next=TAILQ_NEXT(next, tailq);
+		if (next!=NULL && (status == TASK_STATUS_ALL || next->status == status))
+			return next;
+	}
+	return NULL;
 }
 
 /*******************************************************************************/
 /* Cherche la prochaine tâche */
-task*     getnexttask(void)
+
+task* getschedule(void)
 {
 	process *aprocess=findcurrentprocess();
+	task *next=findcurrenttask();
 	u32 flag=0;
-	task *next;
 	while(flag<2) {
 		if (aprocess==NULL) return NULL;
-		TAILQ_FOREACH(next, &aprocess->task_head, tailq)
+		if (next==NULL)
+			next=findfirsttask(aprocess);
+		while(true)
 		{
-			if (next->status == TASK_STATUS_RUN)
-				if (current.pid != next->tid.pid || next->tid.number>current.number)
-					return next;
+			if (next!=NULL)
 				if (current.pid==next->tid.pid && current.number==next->tid.number)
 					flag++;
-		}
-		aprocess=getnextprocess(aprocess->pid);
+				else
+					return next;
+			else
+				break;
+			next=getnexttask(next,TASK_STATUS_RUN);
+		}			
+		aprocess=getnextprocess(aprocess,PROCESS_STATUS_RUN);
 	}
-	return NULL;
+}
+
+/*******************************************************************************/
+/* Cherche la première tâche du processeur */
+
+task* findfirsttask(process* aprocess)
+{
+	task *first;
+	return TAILQ_FIRST(&aprocess->task_head);
 }
 
 /*******************************************************************************/
@@ -371,7 +399,7 @@ void runtask(tid_t tid)
 	if (atask->status == TASK_STATUS_READY)
 	{
 		atask->status = TASK_STATUS_RUN;
-		switchtask(tid);
+		//switchtask(tid);
 	}
 	sti();
 }
@@ -463,7 +491,7 @@ pid_t createprocess(u8 *src, bool kerneltask)
 	current.number = 0;
 	process* new=findcurrentprocess();
 	if (new==NULL) return NULL;
-	new->pid = current.pid;
+	//new->pid = current.pid;
 	new->pdd = virtual_pd_create();
 	TAILQ_INIT(&new->page_head);
 	TAILQ_INIT(&new->task_head);
@@ -514,7 +542,7 @@ void runprocess(pid_t pid)
 		task *atask=findtask(tid);
 		if (atask==NULL) return;
 		atask->status=TASK_STATUS_RUN;
-		switchtask(tid);
+		//switchtask(tid);
 	}
 	sti();
 }

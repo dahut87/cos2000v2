@@ -81,11 +81,11 @@ __attribute__ ((noreturn)) void timer_handler(regs *dump)
 	showchar(0, 0, curs[curspos], 7);
 	curspos = (curspos + 1) & 0x3;
 	time++;
-	task *new=getnexttask();
+	task *new=getschedule();
 	if (new!=NULL)
 	{
 		task *old=findcurrenttask();
-		memcpy(&dump, &old->dump, sizeof(dump), 0);
+		memcpy(dump, &old->dump, sizeof(regs), 0);
 		switchtask(new->tid);
 	}
 	if (dump->cs==SEL_KERNEL_CODE)

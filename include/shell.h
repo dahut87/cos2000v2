@@ -30,3 +30,4 @@ int     detectpci();
 int     showmem();
 int     testmem();
 int     testtask();
+int	  ps();

@@ -45,6 +45,7 @@ static command commands[] = {
 	{"mem", "", &showmem},
 	{"testmem", "", &testmem},
 	{"testtask", "", &testtask},
+	{"ps", "", &ps},
 };
 
 /*******************************************************************************/
@@ -86,6 +87,21 @@ int test(void)
 {
 	print("Fonction de test !\r\n");
 	return;
+}
+
+/*******************************************************************************/
+/* Afiche les processus */
+
+int ps()
+{
+	print("Processus en memoire\r\n[   PID  | Status |\r\n");
+	process* aprocess=findprocess((pid_t)1);	
+	while(true)
+	{
+		printf("|%Y|%Y|\r\n",(u32)aprocess->pid,aprocess->status);
+		aprocess=getnextprocess(aprocess,PROCESS_STATUS_ALL);
+		if (aprocess==NULL || aprocess->pid==(pid_t)1) break; 
+	}
 }
 
 /*******************************************************************************/

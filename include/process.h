@@ -10,13 +10,15 @@
 #define MAXNUMPROCESS	256
 
 #define PROCESS_STATUS_FREE   0x0
-#define PROCESS_STATUS_READY  0xF0
-#define PROCESS_STATUS_RUN    0x1
-#define PROCESS_STATUS_SLEEP  0x2
+#define PROCESS_STATUS_READY  0x1
+#define PROCESS_STATUS_RUN    0x2
+#define PROCESS_STATUS_SLEEP  0x3
+#define PROCESS_STATUS_ALL    0xFF
 
 #define TASK_STATUS_READY	0x0
 #define TASK_STATUS_RUN		0x1
-#define TASK_STATUS_STOP	0xFF
+#define TASK_STATUS_STOP	0x2
+#define TASK_STATUS_ALL		0xFF
 
 /* ELF type */
 #define ET_NONE 	0	//No file type
@@ -196,12 +198,14 @@ pid_t     clone(void);
 pid_t     exec(u8* entry, u8* args, bool kerneltask);
 
 void      switchtask(tid_t tid);
-process* getnextprocess(pid_t pid);
-task*     getnexttask(void);
+process* getnextprocess(process *aprocess, u32 status);
+task* getnexttask(task* atask, u32 status);
+task*     getschedule(void);
 task* findtask(tid_t tid);
 task* findcurrenttask(void);
 process* findprocess(pid_t pid);
 process* findcurrentprocess(void);
+task* findfirsttask(process* aprocess);
 
 tid_t createtask(pid_t pid,u8 *entry, bool kerneltask);
 void      deletetask(tid_t tid);
