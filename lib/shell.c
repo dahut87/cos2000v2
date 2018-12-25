@@ -109,12 +109,19 @@ int ps()
 		if (aprocess==NULL || aprocess->pid==(pid_t)1) break; 
 	}
 	print("\r\n\r\n*** Taches en memoire\r\n|   TID  |   PID  |Status| CS |   EIP  | SS |   ESP  |\r\n");
-	task* atask=findtask(maketid(1,1));	
+	aprocess=findprocess((pid_t)1);
+	task* atask;
 	while(true)
-	{
-		printf("|%Y|%Y| %s|%hY|%Y|%hY|%Y|\r\n",(u32)atask->tid.number,(u32)atask->tid.pid,taskstatus[atask->status],atask->dump.cs,atask->dump.eip,atask->dump.ss,atask->dump.esp);
-		atask=getnexttask(atask,TASK_STATUS_ALL);
-		if (atask==NULL || atask->tid.number==1) break; 
+	{	
+		atask=findfirsttask(aprocess);
+		while(true)
+		{
+			printf("|%Y|%Y| %s|%hY|%Y|%hY|%Y|\r\n",(u32)atask->tid.number,(u32)atask->tid.pid,taskstatus[atask->status],atask->dump.cs,atask->dump.eip,atask->dump.ss,atask->dump.esp);
+			atask=getnexttask(atask,TASK_STATUS_ALL);
+			if (atask==NULL || (atask->tid.number==1 && atask->tid.pid==1)) break; 
+		}
+		aprocess=getnextprocess(aprocess,PROCESS_STATUS_ALL);
+		if (aprocess==NULL || aprocess->pid==(pid_t)1) break; 
 	}
 }
 
@@ -129,8 +136,8 @@ int testtask()
 	pid_t pid;
 	pid = createprocess(&programs_test2, false);
 	runprocess(pid);
-	pid = createprocess(&programs_test, false);
-	runprocess(pid);
+	//pid = createprocess(&programs_test, false);
+	//runprocess(pid);
 }
 
 /*******************************************************************************/
