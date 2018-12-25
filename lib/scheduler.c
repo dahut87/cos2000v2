@@ -42,13 +42,13 @@ __attribute__ ((noreturn)) void timer_handler(regs *dump)
 {
 	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
 	bool noerror,user;
-	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
+	if ((caller->cs & 0xFFF8)==SEL_KERNEL_CODE || (caller->cs & 0xFFF8)==SEL_USER_CODE)
 	{
 		noerror=true;
 		dump->eip = caller->eip;
 		dump->cs = caller->cs;
 		dump->eflags = caller->eflags;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack_noerror);
 			user=false;
@@ -65,7 +65,7 @@ __attribute__ ((noreturn)) void timer_handler(regs *dump)
 		noerror=false;
 		dump->eip = ((exception_stack*)caller)->eip;
 		dump->cs = ((exception_stack*)caller)->cs;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack);
 			user=false;
@@ -88,7 +88,7 @@ __attribute__ ((noreturn)) void timer_handler(regs *dump)
 		memcpy(dump, &old->dump, sizeof(regs), 0);
 		switchtask(new->tid);
 	}
-	if (dump->cs==SEL_KERNEL_CODE)
+	if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 	{
 		setESP(dump);
 		restcpu_kernel();

@@ -11,7 +11,7 @@ void main(void)
 	print("demarrage...\r\n");
 	while (true)
 	{
-		if (getticks()%100000==0)
+		if (getticks()%100==0)
 			print("[TEST]\r\n");
 	}
 	exit(1);

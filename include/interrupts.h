@@ -249,33 +249,62 @@ lors d'un iret en mode kernel:
 /* save pile */
 typedef struct regs
 {
-	u64     efer;
-	u32     dr7;
-	u32     dr6;
-	u32     dr3;
-	u32     dr2;
-	u32     dr1;
-	u32     dr0;
-	u32     cr4;
-	u32     cr3;
-	u32     cr2;
-	u32     cr0;
-	u32     ebp;
-	u32     edi;
-	u32     esi;
-	u32     edx;
-	u32     ecx;
-	u32     ebx;
-	u32     eax;
-	u32     gs;
-	u32     fs;
-	u32     es;
-	u32     ds;
-	u32     eip;
-	u32     cs;
-	u32     eflags;
-	u32     esp;
-	u32     ss;
+	union {
+		struct {
+			u64     efer;
+			u32     dr7;
+			u32     dr6;
+			u32     dr3;
+			u32     dr2;
+			u32     dr1;
+			u32     dr0;
+			u32     cr4;
+			u32     cr3;
+			u32     cr2;
+			u32     cr0;
+			u32     ebp;
+			u32     edi;
+			u32     esi;
+			u32     edx;
+			u32     ecx;
+			u32     ebx;
+			u32     eax;
+			u32     gs;
+			u32     fs;
+			u32     es;
+			u32     ds;
+			u32     eip;
+			u32     cs;
+			u32     eflags;
+			u32     esp;
+			u32     ss;
+		};
+		struct {
+			u32     efer_low, efer_high;
+			u32     dummy[13*sizeof(u32)];
+			u16     dx,hdx;
+			u16     cx,hcx;
+			u16     bx,hbx;
+			u16     ax,hax;
+			u16     gsl,dummy_gs;
+			u16     fsl,dummy_fs;
+			u16     esl,dummy_es;
+			u16     dsl,dummy_ds;
+			u16     ip,hip;
+			u16     csl,dummy_cs;
+			u16     flags,hflags;
+			u16     sp,hsp;
+			u16     ssl,dummy_ss;
+		};
+		struct {
+			u64    dummy2;
+			u32    dummy3[13*sizeof(u32)];
+			u8     dl,dh,dx2,hdx2;
+			u8     cl,ch,cx2,hcx2;
+			u8     bl,bh,bx2,hbx2;
+			u8     al,ah,ax2,hax2;
+		};
+	}
 } regs __attribute__ ((packed));
 
 /* exception pile depuis code kernel*/

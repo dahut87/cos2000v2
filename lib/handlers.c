@@ -19,13 +19,13 @@ __attribute__ ((noreturn)) void interruption_handler(regs *dump)
 	u32 interruption=dump->eip;
 	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
 	bool noerror,user;
-	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
+	if ((caller->cs & 0xFFF8)==SEL_KERNEL_CODE || (caller->cs & 0xFFF8)==SEL_USER_CODE)
 	{
 		noerror=true;
 		dump->eip = caller->eip;
 		dump->cs = caller->cs;
 		dump->eflags = caller->eflags;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack_noerror);
 			user=false;
@@ -42,7 +42,7 @@ __attribute__ ((noreturn)) void interruption_handler(regs *dump)
 		noerror=false;
 		dump->eip = ((exception_stack*)caller)->eip;
 		dump->cs = ((exception_stack*)caller)->cs;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack);
 			user=false;
@@ -62,7 +62,7 @@ __attribute__ ((noreturn)) void interruption_handler(regs *dump)
 		default:
 			print("Appel d'une interruption\r\n");
 	}
-	if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			setESP(dump);
 			restcpu_kernel();
@@ -104,13 +104,13 @@ __attribute__ ((noreturn)) void exception_handler(regs *dump)
 	u32 exception=dump->eip;
 	exception_stack_noerror *caller = (exception_stack_noerror*) ((u32*)dump->esp+1);
 	bool noerror,user;
-	if (caller->cs==SEL_KERNEL_CODE || caller->cs==SEL_USER_CODE)
+	if ((caller->cs & 0xFFF8)==SEL_KERNEL_CODE || (caller->cs & 0xFFF8)==SEL_USER_CODE)
 	{
 		noerror=true;
 		dump->eip = caller->eip;
 		dump->cs = caller->cs;
 		dump->eflags = caller->eflags;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack_noerror);
 			user=false;
@@ -127,7 +127,7 @@ __attribute__ ((noreturn)) void exception_handler(regs *dump)
 		noerror=false;
 		dump->eip = ((exception_stack*)caller)->eip;
 		dump->cs = ((exception_stack*)caller)->cs;
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			dump->esp = (u32) caller + sizeof(exception_stack);
 			user=false;
@@ -217,7 +217,7 @@ __attribute__ ((noreturn)) void exception_handler(regs *dump)
 			cpuerror("#MC Machine check", dump, false);
 	}
 	endofexception:
-		if (dump->cs==SEL_KERNEL_CODE)
+		if ((dump->cs & 0xFFF8)==SEL_KERNEL_CODE)
 		{
 			setESP(dump);
 			restcpu_kernel();

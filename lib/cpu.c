@@ -7,6 +7,7 @@
 #include "string.h"
 #include "asm.h"
 #include "gdt.h"
+#include "process.h"
 
 /* Technologies supportées */
 
@@ -36,11 +37,18 @@ static u8 space[] = " ";
 /******************************************************************************/
 /* Affiche une erreur CPU et fige l'ordinateur */
 
-void cpuerror(const u8 * src, const regs * stack, bool returnto)
+void cpuerror(const u8 * src, const regs * dump, bool returnto)
 {
-	printf("\033[31m*** ERREUR CPU : %s *** \r\n", src);
-	if (stack != NULL)
-		show_cpu(stack);
+	process *aprocess=findcurrentprocess();
+	if (!aprocess->iskernel && !returnto)
+	{
+		printf("\033[31m*** ERREUR CPU, KILLING PROCESS %u : %s *** \r\n", aprocess->pid, src);
+		deleteprocess(aprocess->pid);
+	}
+	else
+		printf("\033[31m*** ERREUR CPU : %s *** \r\n", src);
+	if (dump != NULL)
+		show_cpu(dump);
 	print("<Appuyer une touche pour continuer>\033[0m\r\n");
 	sti();
 	waitascii();

@@ -136,8 +136,8 @@ int testtask()
 	pid_t pid;
 	pid = createprocess(&programs_test2, false);
 	runprocess(pid);
-	//pid = createprocess(&programs_test, false);
-	//runprocess(pid);
+	pid = createprocess(&programs_test, false);
+	runprocess(pid);
 }
 
 /*******************************************************************************/

@@ -270,10 +270,12 @@ void switchtask(tid_t tid)
 	{
 		setTSS(0x0, 0x0);
 		wrmsr(0x175, 0x0, 0x0);
-	}	
+	}
+	if (((atask->dump.cs & 0xFFF8) !=SEL_KERNEL_CODE) && ((atask->dump.cs & 0xFFF8) !=SEL_USER_CODE))
+		cpuerror("SWITCH ERROR", &atask->dump, false);
 	atask->dump.eflags = (atask->dump.eflags | 0x200) & 0xFFFFBFFF;
 	createdump(atask->dump);
-	if (atask->dump.cs==SEL_KERNEL_CODE)
+	if ((atask->dump.cs & 0xFFF8)==SEL_KERNEL_CODE)
 		restcpu_kernel();
 	else
 		restcpu_user();
@@ -382,11 +384,12 @@ void deletetask(tid_t tid)
 	stoptask(tid);
 	process* aprocess=findprocess(tid.pid);
 	if (aprocess==NULL) return;
+	if (current.pid=tid.pid && current.number==tid.number)
+		current=maketid(1,1);
 	task *atask=findtask(tid);
 	if (atask==NULL) return;
 	TAILQ_REMOVE(&aprocess->task_head, atask, tailq);
 	vfree(atask);
-	sti();
 }
 
 /*******************************************************************************/
@@ -394,15 +397,10 @@ void deletetask(tid_t tid)
 
 void runtask(tid_t tid)
 {
-	cli();
 	task *atask=findtask(tid);
 	if (atask==NULL) return;
 	if (atask->status == TASK_STATUS_READY)
-	{
 		atask->status = TASK_STATUS_RUN;
-		//switchtask(tid);
-	}
-	sti();
 }
 
 /*******************************************************************************/
@@ -466,7 +464,6 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	new->dump.edi = 0;
 	new->status = TASK_STATUS_READY;
 	return new->tid;
-	sti();
 }
 
 /*******************************************************************************/
@@ -474,11 +471,9 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 
 void stoptask(tid_t tid)
 {
-	cli();
 	task *atask=findtask(tid);
 	if (atask==NULL) return;
 	atask->status=TASK_STATUS_STOP;
-	sti();
 }
 
 /*******************************************************************************/
@@ -495,9 +490,9 @@ pid_t createprocess(u8 *src, bool kerneltask)
 	if (new==NULL) return NULL;
 	new->parent=oldprocess->pid;
 	new->pdd = virtual_pd_create();
+	new->iskernel=kerneltask;
 	TAILQ_INIT(&new->page_head);
 	TAILQ_INIT(&new->task_head);
-	new->iskernel=kerneltask;
 	setCR3(new->pdd->addr->paddr);
 	new->entry = loadelf(src, new->pid);
 	createtask(new->pid,new->entry, new->iskernel);
@@ -509,8 +504,8 @@ pid_t createprocess(u8 *src, bool kerneltask)
 		cr3=old->pdd->addr->paddr;
 	setCR3(cr3);
 	new->status=PROCESS_STATUS_READY;
-	sti();
 	return new->pid;
+	sti();
 }
 
 /*******************************************************************************/
@@ -522,6 +517,8 @@ void deleteprocess(pid_t pid)
 	stopprocess(pid);
 	process* aprocess=findprocess(pid);
 	if (aprocess==NULL) return;
+	if (current.pid==pid)
+		current=maketid(1,1);
 	task *next;
 	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
 		deletetask(next->tid);
@@ -544,7 +541,6 @@ void runprocess(pid_t pid)
 		task *atask=findtask(tid);
 		if (atask==NULL) return;
 		atask->status=TASK_STATUS_RUN;
-		//switchtask(tid);
 	}
 	sti();
 }
