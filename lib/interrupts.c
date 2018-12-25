@@ -260,7 +260,7 @@ void initidt(void)
 	/* recopie de la IDT a son adresse */
 	memcpy(&idt, (u8 *) idtreg.base, idtreg.limite, 1);
 	/* chargement du registre IDTR */
-	lidt(&idtreg);
+	lidt(idtreg);
 }
 
 /******************************************************************************/

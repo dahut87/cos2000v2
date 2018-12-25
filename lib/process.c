@@ -160,6 +160,7 @@ void initprocesses(void)
 	if (aprocess==NULL) return NULL;
 	aprocess->pid = pid;
 	aprocess->result = 0;
+	aprocess->pdd = NULL;
 	aprocess->status = PROCESS_STATUS_RUN;
 	aprocess->iskernel = true;
 	TAILQ_INIT(&aprocess->task_head);
@@ -487,11 +488,12 @@ pid_t createprocess(u8 *src, bool kerneltask)
 {
 	cli();
 	tid_t previous = current;
+	process* oldprocess=findcurrentprocess();
 	current.pid = getfreepid();
 	current.number = 0;
 	process* new=findcurrentprocess();
 	if (new==NULL) return NULL;
-	//new->pid = current.pid;
+	new->parent=oldprocess->pid;
 	new->pdd = virtual_pd_create();
 	TAILQ_INIT(&new->page_head);
 	TAILQ_INIT(&new->task_head);

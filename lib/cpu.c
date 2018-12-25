@@ -295,10 +295,10 @@ void show_cpu(regs * stack)
 	       getdestype(tss), getdessize(tss), getdesbit3(tss),
 	       getdesbit2(tss), getdesbit1(tss), getdesalign(tss));
 	struct gdtr gdtreg;
-	sgdt(&gdtreg);
+	sgdt(gdtreg);
 	printf("GDT=     %Y %Y\r\n", gdtreg.base, gdtreg.limite);
 	struct idtr idtreg;
-	sidt(&idtreg);
+	sidt(idtreg);
 	printf("IDT=     %Y %Y\r\n", idtreg.base, idtreg.limite);
 	printf("CR0=%Y CR2=%Y CR3=%Y CR4=%Y\r\n", stack->cr0, stack->cr2,
 	       stack->cr3, stack->cr4);

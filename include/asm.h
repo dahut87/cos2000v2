@@ -40,19 +40,19 @@
 #   define irqendslave() asm("movb $0x20,%al; \
                        outb %al,$0xA0;")
 
-#   define lidt(idtr) asm ("lidtl %0"::"m" (*idtr))
+#   define lidt(idtr) asm ("lidtl %0"::"m" (idtr))
 
-#   define lgdt(gdtr) asm ("lgdtl %0"::"m" (*gdtr))
+#   define lgdt(gdtr) asm ("lgdtl %0"::"m" (gdtr))
 
-#   define lldt(ldtr) asm ("lldtl %0"::"m" (*ldtr))
+#   define lldt(ldtr) asm ("lldtl %0"::"m" (ldtr))
 
 #   define ltr(tss) asm volatile ("ltr %%ax":: "a" (tss))
 
-#   define sidt(idtr) asm ("sidtl %0"::"m" (*idtr))
+#   define sidt(idtr) asm ("sidtl %0"::"m" (idtr))
 
-#   define sgdt(gdtr) asm ("sgdtl %0"::"m" (*gdtr))
+#   define sgdt(gdtr) asm ("sgdtl %0"::"m" (gdtr))
 
-#   define sldt(ldtr) asm ("sldtl %0"::"m" (*ldtr))
+#   define sldt(ldtr) asm ("sldtl %0"::"m" (ldtr))
 
 #   define str(tss) asm volatile ("str %%ax;\
                                 mov %%ax,%0":: "m" (tss))

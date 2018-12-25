@@ -41,7 +41,7 @@ void initgdt(u32 offset)
 	/* recopie de la GDT a son adresse */
 	memcpy(&gdt, (u8 *) gdtreg.base, gdtreg.limite, 1);
 	/* chargement du registre GDT */
-	lgdt(&gdtreg);
+	lgdt(gdtreg);
 	/* initialisation des segments */
 	initselectors(offset);
 }

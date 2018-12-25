@@ -602,7 +602,6 @@ void malloc_init(void)
 	kernelcurrentheap = KERNEL_HEAP + PAGESIZE;
 	chunk->size = PAGESIZE;
 	chunk->used = 0;
-	//virtual_range_new_kernel(kernelcurrentheap, chunk->size, PAGE_NOFLAG);
 }
 
 

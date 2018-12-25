@@ -92,15 +92,29 @@ int test(void)
 /*******************************************************************************/
 /* Afiche les processus */
 
+static u8* processstatus[] = {"LIBRE","PRET ","EXEC.","PAUSE"};
+static u8* taskstatus[] = {"PRET ","EXEC.","PAUSE"};
+
+/*******************************************************************************/
+/* Affiche les tâches et processus */
+
 int ps()
 {
-	print("Processus en memoire\r\n[   PID  | Status |\r\n");
+	print("*** Processus en memoire\r\n|   PID  |  Parent|Status|K|P.|   Pages|\r\n");
 	process* aprocess=findprocess((pid_t)1);	
 	while(true)
 	{
-		printf("|%Y|%Y|\r\n",(u32)aprocess->pid,aprocess->status);
+		printf("|%Y|%Y| %s|%c|%hh u|%Y|\r\n",(u32)aprocess->pid,(u32)aprocess->parent,processstatus[aprocess->status],(aprocess->iskernel?'X':' '),aprocess->priority,(u32)aprocess->pdd);
 		aprocess=getnextprocess(aprocess,PROCESS_STATUS_ALL);
 		if (aprocess==NULL || aprocess->pid==(pid_t)1) break; 
+	}
+	print("\r\n\r\n*** Taches en memoire\r\n|   TID  |   PID  |Status| CS |   EIP  | SS |   ESP  |\r\n");
+	task* atask=findtask(maketid(1,1));	
+	while(true)
+	{
+		printf("|%Y|%Y| %s|%hY|%Y|%hY|%Y|\r\n",(u32)atask->tid.number,(u32)atask->tid.pid,taskstatus[atask->status],atask->dump.cs,atask->dump.eip,atask->dump.ss,atask->dump.esp);
+		atask=getnexttask(atask,TASK_STATUS_ALL);
+		if (atask==NULL || atask->tid.number==1) break; 
 	}
 }
 
@@ -649,7 +663,7 @@ int showidt()
 	u32     index, i = 0;
 	idtdes *desc;
 	struct idtr idtreg;
-	sidt(&idtreg);
+	sidt(idtreg);
 	printf("Information sur l'IDT\r\nAdresse:%X Limite:%hX\r\n",
 	       idtreg.base, (u32) idtreg.limite);
 	desc = idtreg.base;
@@ -700,7 +714,7 @@ int showgdt()
 {
 	u32     index;
 	struct gdtr gdtreg;
-	sgdt(&gdtreg);
+	sgdt(gdtreg);
 	printf("Information sur la GDT\r\nAdresse:%X Limite:%hX\r\n",
 	       gdtreg.base, gdtreg.limite);
 	for (index = 0; index < gdtreg.limite; index += sizeof(gdtdes))
