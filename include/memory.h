@@ -100,6 +100,7 @@ typedef TAILQ_HEAD(page_s, page) page_t;
 
      typedef TAILQ_HEAD(vrange_s, vrange) vrange_t;
 
+     void virtual_pd_show(pd *dst);
      void panic(u8 * string);
      void memset(void *dst, u8 val, u32 count, u32 size);
      void memcpy(void *src, void *dst, u32 count, u32 size);

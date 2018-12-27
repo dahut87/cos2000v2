@@ -1,5 +1,18 @@
 [
 {
+"ID":5,
+"LIBRARY":"libsys",
+"NAME":"exit",
+"INTERNALNAME":"processexit",
+"DESCRIPTION":"End a task for user or kernel domain",
+"ARGS": [
+{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
+],
+"RETURN":"u32"
+}
+
+,
+{
 "ID":4, 
 "NAME":"getticks",
 "LIBRARY":"libsys",
@@ -24,6 +37,17 @@
 
 ,
 {
+"ID":1,
+"LIBRARY":"libsys",
+"NAME":"waitkey",
+"INTERNALNAME":"waitascii",
+"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
+"ARGS": [],
+"RETURN":"u8"
+}
+
+,
+{
 "ID":0,
 "LIBRARY":"libsys",
 "NAME":"testapi",
@@ -36,30 +60,6 @@
 ],
 "RETURN":"u32",
 "DUMP":"yes"
-}
-
-,
-{
-"ID":1,
-"LIBRARY":"libsys",
-"NAME":"waitkey",
-"INTERNALNAME":"waitascii",
-"DESCRIPTION":"Wait for user to press a key and return the ascii code pressed",
-"ARGS": [],
-"RETURN":"u8"
-}
-
-,
-{
-"ID":5,
-"LIBRARY":"libsys",
-"NAME":"exit",
-"INTERNALNAME":"processexit",
-"DESCRIPTION":"End a task for user or kernel domain",
-"ARGS": [
-{"TYPE":"u32","NAME":"resultcode","DESCRIPTION":"Code result of the execution"}
-],
-"RETURN":"u32"
 }
 
 ]

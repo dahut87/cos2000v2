@@ -3,7 +3,6 @@
 /*                                                                             */
 #include "types.h"
 #include "memory.h"
-#include "multiboot2.h"
 #include "queue.h"
 #include "asm.h"
 
@@ -155,7 +154,7 @@ void vfree(void *vaddr)
 
 u64 physical_getmemorysize()
 {
-	u64     maxaddr = 0;
+	/*u64     maxaddr = 0;
 	struct multiboot_tag_mmap *tag = getgrubinfo_mem();
 	multiboot_memory_map_t *mmap;
 	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
@@ -168,7 +167,7 @@ u64 physical_getmemorysize()
 			maxaddr = mmap->addr + mmap->len;
 	if (maxaddr >= MAXMEMSIZE)
 		maxaddr = MAXMEMSIZE - 1;
-	return maxaddr;
+	return maxaddr;*/
 }
 
 /*******************************************************************************/
@@ -261,7 +260,7 @@ u64 getmemoryfree(void)
 
 void physical_init(void)
 {
-	u64     page;
+	/*u64     page;
 	for (page = 0; page < sizeof(bitmap); page++)
 		bitmap[page] = 0xFF;
 	struct multiboot_tag_mmap *tag = getgrubinfo_mem();
@@ -276,7 +275,7 @@ void physical_init(void)
 			physical_range_free(mmap->addr, mmap->len);
 		else
 			physical_range_use(mmap->addr, mmap->len);
-	physical_range_use(0x0, KERNELSIZE);
+	physical_range_use(0x0, KERNELSIZE);*/
 }
 
 /*******************************************************************************/
@@ -588,6 +587,23 @@ void virtual_pd_destroy(pd * dst)
 	virtual_page_free(dst->addr->vaddr);
 	vfree(dst);
 	return 0;
+}
+
+/*******************************************************************************/
+/* Affiche toutes les page du directory */
+
+void virtual_pd_show(pd *dst)
+{
+	page   *pg;
+	bool first=true;
+	TAILQ_FOREACH(pg, &dst->page_head, tailq)
+	{
+		if (!first)
+			print(",");
+		else
+			first=false;
+		printf("%Y",(u32)pg->vaddr);
+	}
 }
 
 /*******************************************************************************/

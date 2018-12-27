@@ -47,7 +47,7 @@ void initsyscall(void)
 "RETURN":"u32",
 "DUMP":"yes"
 }
-END */
+END-SYSCALL */
 
 u32 testapi(u32 arg1, u32 arg2, u32 arg3, regs* dump)
 {

@@ -228,8 +228,10 @@ Pour l'instant quelques commandes seulement sont disponibles:
 
 #### En cours
 
-* correction de bogues - stabilisation du projet
+* correction de bogues - libération des ressources après destruction processus,
 * liste d'API automatiquement mise à jour avec intégration de librairies & header,
+* gestion du système de fichier CRAMFS,
+* lancement du noyau par kernel et non par multiboot afin de bénéficier de initrd, 
 
 #### A faire
 
@@ -247,6 +249,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 Des fichiers sources utilisés par COS2000 sont sous d'autres licences, parmis ceux-ci figurent :
 
 * `include/queues.h` sous licence Berkeley Software Distribution License
+* `tools/*` sous licence GPL V2.0, fichiers issus du noyau Linux
 
 #### Historique du projet
 * Version 2.2fr - C en mode protégé Reprise du projet

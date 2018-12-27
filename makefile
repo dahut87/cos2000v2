@@ -1,4 +1,4 @@
-all: programs bits32 bits64 harddisk uefi
+all: tools programs bits32 bits64 harddisk uefi
 	sync
 
 bits32: ARCH=bits32 
@@ -8,6 +8,11 @@ bits32: lib/libs.o system/system.sys
 bits64: ARCH=bits64
 bits64: lib/libs.o system/system.sys
 	sync
+
+tools: tools/build
+	
+tools/build:
+	make -C tools
 
 syscall: clean remakeapi all
 
@@ -37,6 +42,7 @@ togit:
 	make -C lib togit
 	make -C final togit
 	make -C programs togit
+	make -C tools togit
 	git status
 	sync
 
@@ -45,6 +51,7 @@ clean:
 	make -C lib clean
 	make -C final clean
 	make -C programs clean
+	make -C tools clean
 	sync
 
 littleclean:	
@@ -58,6 +65,7 @@ indent:
 	make -C system indent
 	make -C lib indent
 	make -C programs indent
+	make -C tools indent
 	sync
 
 backup: clean

@@ -133,7 +133,7 @@ u8     *getstring(u8 * temp)
 "ARGS": [],
 "RETURN":"u8"
 }
-END */
+END-SYSCALL */
 
 u8 waitascii(void)
 {

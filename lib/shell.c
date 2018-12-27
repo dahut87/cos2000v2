@@ -11,7 +11,6 @@
 #include "string.h"
 #include "gdt.h"
 #include "shell.h"
-#include "multiboot2.h"
 #include "math.h"
 #include "debug.h"
 #include "VGA/ansi.c"
@@ -100,11 +99,13 @@ static u8* taskstatus[] = {"PRET ","EXEC.","PAUSE"};
 
 int ps()
 {
-	print("*** Processus en memoire\r\n|   PID  |  Parent|Status|K|P.|   Pages|\r\n");
+	print("*** Processus en memoire\r\n|   PID  |  Parent|Status|K|P.|Directo.|Pages...\r\n");
 	process* aprocess=findprocess((pid_t)1);	
 	while(true)
 	{
-		printf("|%Y|%Y| %s|%c|%hh u|%Y|\r\n",(u32)aprocess->pid,(u32)aprocess->parent,processstatus[aprocess->status],(aprocess->iskernel?'X':' '),aprocess->priority,(u32)aprocess->pdd);
+		printf("|%Y|%Y| %s|%c|%hh u|%Y|",(u32)aprocess->pid,(u32)aprocess->parent,processstatus[aprocess->status],(aprocess->iskernel?'X':' '),aprocess->priority,(u32)aprocess->pdd);
+		if (aprocess->pdd!=NULL) virtual_pd_show(aprocess->pdd);
+		print("\r\n");
 		aprocess=getnextprocess(aprocess,PROCESS_STATUS_ALL);
 		if (aprocess==NULL || aprocess->pid==(pid_t)1) break; 
 	}
@@ -477,7 +478,6 @@ int err(u8 * commandline)
 /* Information sur le démarrage */
 int showinfo()
 {
-	getgrubinfo_all();
 	return 0;
 }
 

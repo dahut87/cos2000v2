@@ -28,7 +28,7 @@ static u32 time = 0;
 "ARGS": [],
 "RETURN":"u32"
 }
-END */
+END-SYSCALL */
 
 u32 gettimer(void)
 {

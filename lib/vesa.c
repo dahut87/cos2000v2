@@ -6,7 +6,6 @@
 #include "memory.h"
 #include "asm.h"
 #include "types.h"
-#include "multiboot2.h"
 
 static videoinfos infos;
 
@@ -19,11 +18,11 @@ static capabilities vesacapabilities[] = {
 
 void VESA_remap_memory(u32 vaddr)
 {
-	struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
+/*	struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
 	u32     len = infos.pagesize * 2;
 	u32     paddr = tagfb->common.framebuffer_addr;
 	virtual_range_use_kernel(vaddr, paddr, len, PAGE_NOFLAG);
-	infos.baseaddress = vaddr;
+	infos.baseaddress = vaddr;*/
 }
 
 /*******************************************************************************/
@@ -31,7 +30,7 @@ void VESA_remap_memory(u32 vaddr)
 
 u8     *VESA_detect_hardware(void)
 {
-	struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
+/*	struct multiboot_tag_framebuffer *tagfb = getgrubinfo_fb();
 	switch (tagfb->common.framebuffer_type)
 	{
 		case MULTIBOOT_FRAMEBUFFER_TYPE_RGB:
@@ -54,7 +53,7 @@ u8     *VESA_detect_hardware(void)
 		case MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT:
 			return NULL;
 			break;
-	}
+	}*/
 }
 
 /*******************************************************************************/

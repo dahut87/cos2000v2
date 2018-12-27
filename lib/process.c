@@ -72,7 +72,7 @@ u32 iself(u8 * src)
 ],
 "RETURN":"u32"
 }
-END */
+END-SYSCALL */
 
 void processexit(void)
 {
@@ -273,6 +273,7 @@ void switchtask(tid_t tid)
 	}
 	if (((atask->dump.cs & 0xFFF8) !=SEL_KERNEL_CODE) && ((atask->dump.cs & 0xFFF8) !=SEL_USER_CODE))
 		cpuerror("SWITCH ERROR", &atask->dump, false);
+	//printf("%Y\r\n",atask->tid.pid);		
 	atask->dump.eflags = (atask->dump.eflags | 0x200) & 0xFFFFBFFF;
 	createdump(atask->dump);
 	if ((atask->dump.cs & 0xFFF8)==SEL_KERNEL_CODE)
@@ -433,10 +434,12 @@ tid_t createtask(pid_t pid,u8 *entry, bool kerneltask)
 	}
 	else
 	{
+		TAILQ_INSERT_TAIL(&aprocess->pdd->page_head, apage, tailq);
 		new->kernel_stack.ss0 = SEL_KERNEL_STACK;
 		new->kernel_stack.esp0 =
 			(u32) apage->vaddr + PAGESIZE - 16;
 		page *apage = virtual_page_getfree();
+		TAILQ_INSERT_TAIL(&aprocess->pdd->page_head, apage, tailq);
 		new->syscall_stack.ss0 = SEL_KERNEL_STACK;
 		new->syscall_stack.esp0 =
 			(u32) apage->vaddr + PAGESIZE - 16;
@@ -517,11 +520,12 @@ void deleteprocess(pid_t pid)
 	stopprocess(pid);
 	process* aprocess=findprocess(pid);
 	if (aprocess==NULL) return;
-	if (current.pid==pid)
-		current=maketid(1,1);
 	task *next;
 	TAILQ_FOREACH(next, &aprocess->task_head, tailq)
 		deletetask(next->tid);
+	virtual_pd_destroy(aprocess->pdd);
+	if (current.pid==pid)
+		current=maketid(1,1);
 	aprocess->status = PROCESS_STATUS_FREE;
 	sti();
 }

@@ -1045,7 +1045,7 @@ void triangle(vertex2d * AA, vertex2d * BB, vertex2d * CC, u32 color)
 ],
 "RETURN":"u32"
 }
-END */
+END-SYSCALL */
 
 u32 print(u8 * string)
 {
@@ -1082,6 +1082,11 @@ u32 storestr(u8 * src, u8 ** dest, u32 len)
 	return len;
 }
 
+/* EXPORT
+{
+"LIBRARY":"libsys"
+}
+*/
 #define maxbuffersize 4096
 
 /*******************************************************************************/
@@ -1155,14 +1160,18 @@ u32 format(const u8 * string, va_list args, u32 maxsize,
 	u8      strbase16[] = "0x\000";
 	u8      hexadecimal[] = "*0x\000";
 	u8      achar, temp;
-	u8      asize, charadd, unit, precisioni, precisionf;
+	u8      asize=2;
+	u8	  charadd=0xFF;
+	u8 	  unit = 0;
+	u8 	  precisioni = 0;
+	u8 	  precisionf = 0;
 	u8      buffer[maxbuffersize];
 	u8     *bufferend;
 	u32     buffersize;
 	u8     *str = string;
 	u8     *strtemp;
 	u32     i = 0, counter = 0;
-	u64     num;
+	u64     num = 0;
 	bool    flag = false, intok = false, decok = false;
 
 	for (achar = *str; achar != '\000'; i++, achar = *(str + i))
@@ -1383,7 +1392,6 @@ u32 format(const u8 * string, va_list args, u32 maxsize,
 								   u64);
 					if (charadd == 0xFF)
 						charadd = ' ';
-					unit = 0;
 					while (num > 1024 * 10)
 					{
 						num = num >> 10;
@@ -1715,3 +1723,5 @@ u8     *sitoa(u64 num, u8 * str, u64 dim)
 	strinvert(str);
 	return pointer;
 }
+
+/* END-EXPORT */

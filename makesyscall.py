@@ -41,7 +41,7 @@ def get_duplicates(sorted_list):
 
 path = "./"
 files = os.listdir(path)
-pattern = r'\/\* SYSCALL.*END \*\/'
+pattern = r'\/\* SYSCALL.*END-SYSCALL \*\/'
 output_file = "syscalls.txt"
 if os.path.exists(output_file):
     os.remove(output_file)
@@ -59,7 +59,7 @@ for root, dirs, files in os.walk(path):
                  results = re.findall(pattern, content, re.MULTILINE| re.DOTALL)
                  for result in results:
                        print("Fichier :"+os.path.join(root, name))
-                       new=string.replace(string.replace(result,"/* SYSCALL ",""),"END */","")
+                       new=string.replace(string.replace(result,"/* SYSCALL ",""),"END-SYSCALL */","")
                        if fo.tell()>2:
                            new=","+new;
                        fo.write(new+"\r\n")

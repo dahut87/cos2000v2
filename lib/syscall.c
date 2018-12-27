@@ -47,7 +47,7 @@ void initsyscall(void)
 "RETURN":"u32",
 "DUMP":"yes"
 }
-END */
+END-SYSCALL */
 
 u32 testapi(u32 arg1, u32 arg2, u32 arg3, regs* dump)
 {
@@ -62,20 +62,20 @@ __attribute__ ((noreturn)) void sysenter_handler(regs *dump)
 	sti();
 	switch (dump->eax)
 	{
+     		case 5:
+			dump->eax=(u32) processexit(dump->ebx);
+			break;
      		case 4:
 			dump->eax=(u32) gettimer();
 			break;
      		case 2:
 			dump->eax=(u32) print(dump->ebx);
 			break;
-     		case 0:
-			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
-			break;
      		case 1:
 			dump->eax=(u32) waitascii();
 			break;
-     		case 5:
-			dump->eax=(u32) processexit(dump->ebx);
+     		case 0:
+			dump->eax=(u32) testapi(dump->ebx, dump->esi, dump->edi, dump);
 			break;
 
 		default:

@@ -9,6 +9,18 @@ All fonctions in the "libsys" library.
 
 ------
 
+`u32 exit(u32 resultcode);`
+
+*Description:End a task for user or kernel domain*
+
+* syscall id : **5**
+* arguments : **1**
+* * argument 1 : **u32 resultcode** *Code result of the execution*
+* results : **u32**
+* dump of register cpu: **no**
+
+------
+
 `u32 getticks(void);`
 
 *Description:Return the internal value of the timer*
@@ -16,6 +28,17 @@ All fonctions in the "libsys" library.
 * syscall id : **4**
 * arguments : **0**
 * results : **u32**
+* dump of register cpu: **no**
+
+------
+
+`u8 waitkey(void);`
+
+*Description:Wait for user to press a key and return the ascii code pressed*
+
+* syscall id : **1**
+* arguments : **0**
+* results : **u8**
 * dump of register cpu: **no**
 
 ------
@@ -31,29 +54,6 @@ All fonctions in the "libsys" library.
 * * argument 3 : **u32 arg3** *third argument of your choice*
 * results : **u32**
 * dump of register cpu: **yes**
-
-------
-
-`u8 waitkey(void);`
-
-*Description:Wait for user to press a key and return the ascii code pressed*
-
-* syscall id : **1**
-* arguments : **0**
-* results : **u8**
-* dump of register cpu: **no**
-
-------
-
-`u32 exit(u32 resultcode);`
-
-*Description:End a task for user or kernel domain*
-
-* syscall id : **5**
-* arguments : **1**
-* * argument 1 : **u32 resultcode** *Code result of the execution*
-* results : **u32**
-* dump of register cpu: **no**
 
 
 ###  LIBVIDEO

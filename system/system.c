@@ -46,11 +46,9 @@ void error()
 	return;
 }
 
-int main(u32 magic, u32 addr)
+int main(u8* info)
 {
 	cli();
-	if (magic == MULTIBOOT2_BOOTLOADER_MAGIC)
-		initmultiboot(addr);
 	initdriver();
 	registerdriver(&vgafonctions);
 	registerdriver(&vesafonctions);
