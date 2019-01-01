@@ -13,7 +13,7 @@ COMP=gzip -5
 
 all: system.sys 
 
-system.sys:	system.bin voffset.h zoffset.h realmode/setup.bin
+system.sys:	piggy.o voffset.h zoffset.h realmode/setup.bin
 	tools/build setup.bin system.bin zoffset.h system.sys
 	sync
 
@@ -25,6 +25,9 @@ zoffset.h: system
 
 togit: clean indent
 
+piggy.o: piggy.S
+	$(ASM) $@ $^ 
+
 system: systemc.o system.o ../lib/libs.o
 	$(LINK) -T system.ld system.o ../lib/libs.o
 
@@ -34,7 +37,8 @@ system.bin: system
 system.bin.gz: system.bin
 	cat $^|$(COMP) > $@ 
 
-piggy.s: system.bin.gz
+piggy.S: system.bin.gz
+	../tools/mkpiggy $^ > $@ 
 
 realmode/setup.bin:
 	make -C realmode
@@ -48,6 +52,7 @@ system.o: system.S
 clean:
 	make -C realmode clean
 	$(REMOVE) system  
+	$(REMOVE) piggy.S
 	$(REMOVE) *.o
 	$(REMOVE) *.gz
 	$(REMOVE) *.h

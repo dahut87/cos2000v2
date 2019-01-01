@@ -9,8 +9,8 @@
 
 .code32
 .section ".text"
-.global startup_32
-startup_32:
+.global start
+start:
 	ljmp $SEL_KERNEL_CODE,$suite
 suite:
 	movw $SEL_KERNEL_DATA, %ax

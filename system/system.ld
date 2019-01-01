@@ -17,4 +17,9 @@ SECTIONS
    .bss  ALIGN(16): { 
         *(.bss) 
     }
+  _end = .;
 }
+
+
+
+
