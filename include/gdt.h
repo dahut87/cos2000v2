@@ -1,5 +1,3 @@
-#include <types.h>
-
 /* Ordre imposé par SYSENTER */
 #define	SEL_KERNEL_CODE  0x8	/* Selecteur code du kernel */
 #define	SEL_KERNEL_STACK 0x10	/* Selecteur pile du kernel */
@@ -7,7 +5,6 @@
 #define	SEL_USER_STACK   0x20	/* Selecteur pile utilisateur */
 #define	SEL_KERNEL_DATA  0x28	/* Selecteur data du kernel */
 #define	SEL_USER_DATA    0x30	/* Selecteur data utilisateur */
-
 #define	SEL_TSS 0x38		/* Selecteur TSR */
 
 #define GDT_SIZE		0x8	/* Nombre de descripteurs */
@@ -38,6 +35,10 @@
 #define SEG_RING3       0b01100000	/* Segment anneau 3 */
 
 #define SEG_NORMAL      0b00010000	/* Segment normal pile/data/code (0 pour système) */
+
+#ifndef _ASSEMBLY
+
+#include "types.h"
 
 typedef struct gdtdes
 {
@@ -78,7 +79,7 @@ typedef struct tss
 } __attribute__ ((packed));
 
 void    inittr(void);
-void    initgdt(u32 offset);
+void    initgdt();
 void    makegdtdes(u32 base, u32 limite, u8 acces, u8 flags,
 		   gdtdes * desc);
 u32     getdesbase(u16 sel);
@@ -90,3 +91,5 @@ u8      getdesbit3(u16 sel);
 u32     getdesdpl(u16 sel);
 u16     getdesalign(u16 sel);
 void    setTSS(u32 ss, u32 sp);
+
+#endif

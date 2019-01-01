@@ -14,7 +14,6 @@
 #include "gdt.h"
 #include "shell.h"
 #include "syscall.h"
-#include "multiboot2.h"
 #include "memory.h"
 
 static u8 warnmsg[] =
@@ -60,8 +59,6 @@ int main(u8* info)
 	logo();
 
 	print("\033[37m\033[0m -Initilisation de la memoire virtuelle");
-	initgdt(&&next);
-      next:
 	initpaging();
 	remap_memory(VESA_FBMEM);
 	ok();

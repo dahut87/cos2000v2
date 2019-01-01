@@ -1,16 +1,12 @@
 OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
 OUTPUT_ARCH(i386)
-OUPUT(system.bin)
+OUTPUT(system)
 
 ENTRY(start)
 
 SECTIONS
 {
    . = 0x100000;
-    .boot ALIGN(8) :
-    {
-        *(.multiboot)
-    }
    .text  ALIGN(16): { 
         *(.text) 
     }

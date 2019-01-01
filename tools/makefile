@@ -1,4 +1,4 @@
-CC=gcc -I . -o
+CC=gcc -DCONFIG_X86_32 -I . -o 
 SRCS= $(wildcard *.c)
 EXECS= $(SRCS:.c=)
 CONVERT=dos2unix

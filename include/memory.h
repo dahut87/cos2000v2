@@ -1,9 +1,6 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
-#include "types.h"
-#include "queue.h"
-
 #ifndef _MEMORY
 #   define _MEMORY
 
@@ -65,6 +62,11 @@
 
 #   define setCR3(addr) \
     asm volatile ("mov %[memaddr], %%eax; mov %%eax, %%cr3"::[memaddr] "m" (addr) );
+
+#ifndef _ASSEMBLY
+
+#include "types.h"
+#include "queue.h"
 
 /* Malloc, pour l'attribution de mémoire en heap */
 typedef struct tmalloc
@@ -137,4 +139,5 @@ typedef TAILQ_HEAD(page_s, page) page_t;
      u32 getmallocnonallocated(void);
      u32 virtual_getpagesfree();
 
+#endif
 #endif
