@@ -19,6 +19,8 @@
 
 #include "voffset.h"
 #include "zoffset.h"
+#define 	__AC(X, Y)   (X##Y) 
+#define 	_AC(X, Y)   __AC(X,Y)
 
 SEGBOOT		= 0x07C0
 SEGSYS		= 0x1000

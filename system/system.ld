@@ -10,12 +10,13 @@ SECTIONS
    .text  ALIGN(16): { 
         *(.text) 
     }
-   . = 0x200000;
    .data  ALIGN(16): { 
         *(.data) 
     }
-   .bss  ALIGN(16): { 
-        *(.bss) 
+   .bss  ALIGN(16): {
+		__bss_start = .;
+		*(.bss)
+		__bss_end = .;
     }
   _end = .;
 }

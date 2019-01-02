@@ -1,17 +1,24 @@
 GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -I ../../include -m16 -fomit-frame-pointer -fno-pic -mno-mmx -mno-sse -mno-80387 -mno-fp-ret-in-387 -c -o
-ASM=gcc -nostdinc -ffreestanding -fno-builtin -m16 -fomit-frame-pointer -fno-pic -mno-mmx -mno-sse -mno-80387 -mno-fp-ret-in-387 -c -o
+ASM=gcc -nostdinc -ffreestanding -fno-builtin -m16 -fomit-frame-pointer -fno-pic -mno-mmx -mno-sse -mno-80387 -mno-fp-ret-in-387 -I ../ -I ../../include -c -o
 LINK=ld -m elf_i386 -n
 CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
 REMOVE=rm -f
 CHANGEPERM=chmod 644
+NM=nm
+OBJCOPY=objcopy -O binary  -R .note -R .comment -S
+OBJDEBUG=objcopy --only-keep-debug
 
 all: setup.bin 
 	sync
 
-setup.bin: setupc.o setup.o 
+setup: setupc.o setup.o 
 	$(LINK) -T setup.ld setupc.o setup.o
-	$(OBJDUMP)
+
+setup.bin: setup
+	$(OBJCOPY) $^ $@	
+	$(OBJDEBUG) setup setup.sym
+	$(NM) setup > setup.map
 
 setupc.o: setup.c
 	$(GCC) $@ $^
@@ -20,7 +27,10 @@ setup.o: setup.S
 	$(ASM) $@ $^
 
 clean:
+	$(REMOVE) setup
 	$(REMOVE) *.o
+	$(REMOVE) *.sym
+	$(REMOVE) *.map
 	$(REMOVE) *.out
 	$(REMOVE) *.bin
 	$(REMOVE) *.sys
