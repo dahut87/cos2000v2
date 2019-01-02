@@ -1,5 +1,5 @@
 GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -I ../include -m32 -fno-pie -no-pie -c -o
-ASM=gcc -nostdinc -ffreestanding -fno-builtin -m32 -c -fno-pie -no-pie -I ../include -c -o
+ASM=gcc -nostdinc -ffreestanding -fno-builtin -m32 -c -fno-pie -no-pie -I ../include -D__ASSEMBLY__ -c -o
 LINK=ld -m elf_i386 -n
 CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
@@ -11,15 +11,17 @@ OBJDEBUG=objcopy --only-keep-debug
 ZOFFSET=sed -n -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(startup_32\|startup_64\|efi32_stub_entry\|efi64_stub_entry\|efi_pe_entry\|input_data\|_end\|_ehead\|_text\|z_.*\)$$/\#define ZO_\2 0x\1/p'
 VOFFSET=sed -n -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(_text\|__bss_start\|_end\)$$/\#define VO_\2 _AC(0x\1,UL)/p'
 COMP=gzip -9 -f
+BUILD=../tools/build
+MKPIGGY=../tools/mkpiggy
 
 all: system.sys
 
-system.sys: system.tmp
-	$(OBJCOPY) $^ $@	 
-
-system.tmp:	piggy.o voffset.h zoffset.h realmode/setup.bin
-	tools/build realmode/setup.bin system.bin zoffset.h system.tmp
+system.sys:	piggy.o voffset.h zoffset.h realmode/setup.bin
+	$(BUILD) realmode/setup.bin system.bin zoffset.h system.sys
 	sync
+
+allpiggy.o: piggy.o decompress.o header.o
+	$(LINK) -T allpiggy piggy.o decompress.o header.o
 
 voffset.h: system
 	$(NM) system|$(VOFFSET)>voffset.h
@@ -44,7 +46,7 @@ system.bin.gz: system.bin
 	cat $^|$(COMP) > $@ 
 
 piggy.S: system.bin.gz
-	../tools/mkpiggy $^ > $@ 
+	$(MKPIGGY) $^ > $@ 
 
 realmode/setup.bin:
 	make -C realmode

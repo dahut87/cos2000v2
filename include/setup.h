@@ -3,6 +3,8 @@
 /*                                                                             */
 #include "types.h"
 
+#define E820_MAX_ENTRIES 128
+
 typedef struct entrye820 {
 	u64 addr;
 	u64 size;

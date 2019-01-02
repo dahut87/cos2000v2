@@ -63,7 +63,7 @@
 #   define setCR3(addr) \
     asm volatile ("mov %[memaddr], %%eax; mov %%eax, %%cr3"::[memaddr] "m" (addr) );
 
-#ifndef _ASSEMBLY
+#ifndef __ASSEMBLY__
 
 #include "types.h"
 #include "queue.h"

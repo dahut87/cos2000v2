@@ -36,7 +36,7 @@
 
 #define SEG_NORMAL      0b00010000	/* Segment normal pile/data/code (0 pour système) */
 
-#ifndef _ASSEMBLY
+#ifndef __ASSEMBLY__
 
 #include "types.h"
 

@@ -8,6 +8,7 @@ SECTIONS
 {
    . = 0x100000;
    .text  ALIGN(16): { 
+		_text = .;
         *(.text) 
     }
    .data  ALIGN(16): { 

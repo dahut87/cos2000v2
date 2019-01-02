@@ -21,6 +21,19 @@
 #include "zoffset.h"
 #define 	__AC(X, Y)   (X##Y) 
 #define 	_AC(X, Y)   __AC(X,Y)
+#define ROOT_RDONLY 1
+#define LOADED_HIGH 1
+#define SVGA_MODE 0
+#define CONFIG_PHYSICAL_ALIGN 0x100000
+#define MIN_KERNEL_ALIGN_LG2 4
+#define COMMAND_LINE_SIZE 512
+#define LOAD_PHYSICAL_ADDR 0x100000
+/* loadflags */
+#define LOADED_HIGH_FLAG	(1<<0)
+#define KASLR_FLAG	(1<<1)
+#define QUIET_FLAG	(1<<5)
+#define KEEP_SEGMENTS	(1<<6)
+#define CAN_USE_HEAP	(1<<7)
 
 SEGBOOT		= 0x07C0
 SEGSYS		= 0x1000
@@ -353,7 +366,7 @@ setup:
 # Setup corrupt somehow...
 setup_bad:
 	movl	$setup_corrupt, %eax
-	calll	puts
+	calll	showstr
 	# Fall through...
 
 	.globl	die

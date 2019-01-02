@@ -2,8 +2,6 @@
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 
-#define _ASSEMBLY
-
 #include "memory.h"
 #include "gdt.h"
 

@@ -8,7 +8,7 @@
 #include "memory.h"
 
 struct params {
-	entrye820 *e820_table;
+	entrye820 e820_table[E820_MAX_ENTRIES];
 	u32	e820_numbers;
 	u8 kbflag;
 } params;
@@ -19,8 +19,16 @@ static struct gdtr gdtreg;
 /* table de GDT */
 static gdtdes gdt[GDT_SIZE];
 
+#define STRINGIFY(x) #x
+#define MACRO(x)     STRINGIFY(x)
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+#define __must_be_array(a) BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
+#define __same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:(-!!(e)); }))
+
+u8 kernel_version[] = "COS2000 Version " MACRO(VERSION) "- compiled " __DATE__ ;
+
 #define EFLAGS_CF			0x00000001
-#define CR0_PE			0x00000001
 #define LOOPS_8042		100000
 #define FF_8042			32
 #define LOOPS_A20_ENABLE 	255
@@ -135,7 +143,7 @@ u8 empty8042(void)
 				return NULL; 
 		}
 		if (status & 1) {
-			io_delay();
+			iodelay();
 			(void)inb(0x60);
 		} else if (!(status & 2)) {
 			return 1;
@@ -252,7 +260,7 @@ void memcpy(void *src, void *dst, u32 count, u32 size)
 void initselectors(u32 executingoffset)
 {
 	asm(" movl	%%cr0, %%eax \n \
-		orb	$CR0_PE, %%eax \n \
+		orb	$0x00000001, %%eax \n \
 		movl	%%eax, %%cr0 \n \
             ljmp %[code], $raz\n\
 		raz:\n \
@@ -319,7 +327,7 @@ void maskinterrupts(void)
 	outb(0x80, 0x70); /* Disable NMI */
 	iodelay();
 	outb(0xff, 0xa1);	/* Mask all interrupts on the secondary PIC */
-	idelay();
+	iodelay();
 	outb(0xfb, 0x21);	/* Mask all but cascade on the primary PIC */
 	iodelay();
 }
@@ -336,7 +344,7 @@ void initpmode(u32 offset)
 {
 	if (enableA20()) {
 		showstr("impossible d'ouvrir la ligne A20...\n");
-		hlt();
+		halt();
 	}
 	maskinterrupts();
 	initgdt();
