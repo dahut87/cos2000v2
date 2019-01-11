@@ -59,6 +59,11 @@ ordinateur (http://www.linuxmint.com/edition.php?id=259).
 Les numéros de version des logiciels sont données à titre indicatif car il est fort probable que
  cela fonctionne parfaitement avec d'autres versions antérieures.
 
+Je conseille l'usage du debogueur GDB avec l'ajout de GDB dashboard - Modular visual interface for 
+GDB in Python.qui permet de visualiser le contenu des registres CPU en permanence.
+#
+# https://github.com/cyrus-and/gdb-dashboard
+
 Compilation:
 
 Nom | Paquet | Version
@@ -73,7 +78,7 @@ Nom | Paquet | Version
 --- | --- | ---
 fuse-umfuse-ext2 | fuseext2 | 0.4 29
 fusefat | fusefat | 0.1a-1.1
-CGDB: a curses debugger | cgdb | 0.6.7
+GDB | gdb | 8.1.0.20180409-git
 QEMU emulator | qemu | 2.5.0
 OVMF | ovmf | 0~20160408.ffea0a2c-2
 hexdump | bsdmainutils | 9.0.6

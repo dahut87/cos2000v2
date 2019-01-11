@@ -35,7 +35,8 @@ harddisk: final/harddisk.img.final
 uefi: final/harddiskuefi.img.final
 
 install:
-	(sudo apt-get install gcc qemu fusefat fuseext2 cgdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix)
+	(sudo apt-get install gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix)
+	cp ./debug/.gdbinit ~/
 
 togit:	
 	make -C system togit
@@ -47,6 +48,7 @@ togit:
 	sync
 
 clean:	
+	rm -f .gdb_history	
 	make -C system clean
 	make -C lib clean
 	make -C final clean
@@ -92,20 +94,28 @@ debug64: debug-system64
 
 redebug64: littleclean debug-system64
 
+kernel: debug-kernel
+
 debug-boot: programs bits32 harddisk qemu-debug
-	(sleep 2;cgdb -x ./debug/boot.txt)
+	(sleep 2;gdb -x ./debug/boot.txt)
 
 debug-loader: programs bits32 harddisk qemu-debug
-	(sleep 2;cgdb -x ./debug/loader.txt)
+	(sleep 2;gdb -x ./debug/loader.txt)
 
 debug-system: programs bits32 harddisk qemu-debug
-	(sleep 2;cgdb -x ./debug/system.txt)
+	(sleep 2;gdb -x ./debug/system.txt)
 
 debug-system64: programs bits64 uefi qemu-debug64
-	(sleep 2;cgdb -x ./debug/system.txt)
+	(sleep 2;gdb -x ./debug/system.txt)
+
+debug-kernel: all qemu-kernel
+	(sleep 2;gdb -x ./debug/kernel.txt)	
 
 bochs-debug:
 	(killall bochs-debug;bochs -f ./debug/config.bochs)
+
+qemu-kernel:
+	(killall qemu-system-i386;qemu-system-i386 -m 1G -kernel ./system/system.sys -s -S &)
 
 qemu-debug:
 	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &)
