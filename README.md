@@ -196,7 +196,6 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * * `floppy.img.final`
 * `Graphisme` - fichiers images
 * *  `screenshots` - screenshots de l'évolution du système
-* *  `Thème` - thème de démarrage COS2000 pour plymouth
 * `include` - fichier d'entête C
 * `lib` - librairies pour le noyau
 * `makefile` - Makefile du projet
@@ -206,6 +205,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * *  `lib` - librairies pour le domaine utilisateur
 * `README.md` - ce que vous lisez
 * `LICENSE.md` - la licence LGPLv3.0
+* `INFORMATIONS.md` - informations sur le développement de COS2000
 * `BUGS.md` - bugs rélevés dans le système
 * `API.md` - Liste des APIs fournies par le système COS2000
 * `system` - le noyau lui-même
