@@ -59,12 +59,9 @@ ordinateur (http://www.linuxmint.com/edition.php?id=259).
 Les numéros de version des logiciels sont données à titre indicatif car il est fort probable que
  cela fonctionne parfaitement avec d'autres versions antérieures.
 
-Je conseille l'usage du debogueur GDB avec l'ajout de GDB dashboard - Modular visual interface for 
-GDB in Python.qui permet de visualiser le contenu des registres CPU en permanence.
-#
-# https://github.com/cyrus-and/gdb-dashboard
-
-Compilation:
+Je conseille l'usage du debogueur GDB avec l'ajout de [GDB dashboard - Modular visual interface for 
+GDB in Python](https://github.com/cyrus-and/gdb-dashboard) qui permet de visualiser le contenu des registres CPU en permanence. 
+Compilation.
 
 Nom | Paquet | Version
 --- | --- | ---
