@@ -1,3 +1,11 @@
+DEBUG=exec gnome-terminal --geometry=120x40+1+1 -x ./debug/debug.sh
+REMOVE=rm -f
+INSTALL=sudo apt-get install
+COPY=cp
+EMULATOR=bochs -f
+GIT=git status
+MAKECALL=python makesyscall.py
+
 all: tools programs bits32 bits64 harddisk uefi
 	sync
 
@@ -17,7 +25,7 @@ tools/build:
 syscall: clean remakeapi all
 
 remakeapi:
-	python makesyscall.py
+	$(MAKECALL)
 
 programs: programs/test lib/TEST/test.c lib/TEST/test2.c
 
@@ -35,8 +43,7 @@ harddisk: final/harddisk.img.final
 uefi: final/harddiskuefi.img.final
 
 install:
-	(sudo apt-get install gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix)
-	cp ./debug/.gdbinit ~/
+	$(INSTALL) gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix gnome-terminal
 
 togit:	
 	make -C system togit
@@ -44,11 +51,11 @@ togit:
 	make -C final togit
 	make -C programs togit
 	make -C tools togit
-	git status
+	$(GIT)
 	sync
 
 clean:	
-	rm -f .gdb_history	
+	$(RM) -f .gdb_history	
 	make -C system clean
 	make -C lib clean
 	make -C final clean
@@ -71,7 +78,8 @@ indent:
 	sync
 
 backup: clean
-	(cd .. ; tar cf - Source\ C | gzip -f - > backup.tar.gz)
+	cd .. 
+	tar cf - Source\ C | gzip -f - > backup.tar.gz
 
 test: programs bits32 harddisk qemu
 
@@ -84,7 +92,7 @@ retest64: littleclean test64
 testbochs: programs bits32 harddisk bochs-debug
 
 view:
-	(hexdump  -C ./final/harddisk.img.final|head -c10000)
+	hexdump  -C ./final/harddisk.img.final|head -c10000
 
 debug: debug-system
 
@@ -97,37 +105,38 @@ redebug64: littleclean debug-system64
 kernel: debug-kernel
 
 debug-boot: programs bits32 harddisk qemu-debug
-	(sleep 2;gdb -x ./debug/boot.txt)
-
-debug-loader: programs bits32 harddisk qemu-debug
-	(sleep 2;gdb -x ./debug/loader.txt)
+	sleep 2
+	$(DEBUG) ./debug/boot.txt
 
 debug-system: programs bits32 harddisk qemu-debug
-	(sleep 2;gdb -x ./debug/system.txt)
+	sleep 2
+	$(DEBUG) ./debug/system.txt
 
 debug-system64: programs bits64 uefi qemu-debug64
-	(sleep 2;gdb -x ./debug/system.txt)
+	sleep 2
+	$(DEBUG) ./debug/system.txt
 
-debug-kernel: all qemu-kernel
-	(sleep 2;gdb -x ./debug/kernel.txt)	
+bochs-debug: killer
+	$(EMULATOR) ./debug/config.bochs
 
-bochs-debug:
-	(killall bochs-debug;bochs -f ./debug/config.bochs)
+killer: 
+	killall bochs-debug || true
+	killall qemu-system-x86_64 || true
+	killall qemu-system-i386 || true
+	killall gnome-terminal-server || true
+	tmux kill-session -t debug || true
 
-qemu-kernel:
-	(killall qemu-system-i386;qemu-system-i386 -m 1G -kernel ./system/system.sys -s -S &)
+qemu-debug: killer
+	qemu-system-i386 -monitor telnet:127.0.0.1:6666,server,nowait -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &
 
-qemu-debug:
-	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final -s -S &)
+qemu-debug64: killer
+	qemu-system-x86_64 -monitor telnet:127.0.0.1:6666,server,nowait -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &
 
-qemu-debug64:
-	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd -s -S &)
+qemu: killer
+	qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &
 
-qemu:
-	(killall qemu-system-i386;qemu-system-i386 -m 1G -drive format=raw,file=./final/harddisk.img.final --enable-kvm -cpu host -s &)  
-
-qemu64:
-	(killall qemu-system-x86_64;qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &)  
+qemu64: killer
+	qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &
 	
 system/system.sys:
 	make -C system VESA=$(VESA)

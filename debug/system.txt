@@ -1,7 +1,7 @@
 target remote localhost:1234
 set disassembly-flavor intel
 set architecture i386
-symbol-file ./system/system.sys
+symbol-file ./system/realmode/setup.sym
 break system.c:50
 cont
 clear system.c:50

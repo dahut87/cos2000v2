@@ -1,7 +1,0 @@
-target remote localhost:1234
-set disassembly-flavor intel
-set architecture i8086
-symbol-file ./system/realmode/setup.sym
-break *0x90000
-break *0x90200
-cont

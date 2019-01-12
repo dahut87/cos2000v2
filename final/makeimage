@@ -8,8 +8,23 @@ echo ${lo}
 losetup -P ${lo} harddisk.img
 mkfs.ext2 ${lo}p1
 mount ${lo}p1 /mnt
-grub-install --no-floppy --install-modules="biosdisk part_msdos ext2 configfile normal multiboot2 video video_colors video_cirrus video_fb" --boot-directory=/mnt/boot ${lo} --target=i386-pc
-echo -en "set timeout=4\nset default=0\nmenuentry "cos2000" {\nset root=(hd0,1)\nmultiboot2 /boot/system.sys\nboot\n}" > /mnt/boot/grub/grub.cfg
+grub-install --no-floppy --install-modules="biosdisk part_msdos ext2 configfile normal linux vbe png gfxmenu video video_colors video_cirrus video_fb" --boot-directory=/mnt/boot ${lo} --target=i386-pc
+echo -en "\
+insmod ext2
+insmod biosdisk
+insmod part_msdos
+insmod linux
+insmod vbe
+insmod gfxterm
+insmod png
+insmod font
+set timeout=4\n\
+set default=0\n\
+menuentry "cos2000" {\n\
+set root=(hd0,1)\n\
+linux /boot/system.sys\n
+boot\n\
+}" > /mnt/boot/grub/grub.cfg
 umount /mnt
 losetup -d ${lo}
 #xz -c harddisk.img > harddisk.img.xz
