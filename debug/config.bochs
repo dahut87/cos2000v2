@@ -6,3 +6,4 @@ ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, mode=flat, translation=auto, path="./final/harddisk.img.final", cylinders=0, heads=0, spt=0, biosdetect=auto, model="Generic 1234"
 cpu: count=1, ips=20000000
 mouse: enabled=1
+display_library: wx, options="gui_debug"

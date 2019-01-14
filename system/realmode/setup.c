@@ -354,6 +354,7 @@ void initpmode(u32 offset)
 void main(void)
 {
 	showstr("Chargement de COS2000 - mode reel");
+waitchar();
 	/* initparams(); */
 	initmemory();
 	initkeyboard();
