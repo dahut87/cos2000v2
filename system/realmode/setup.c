@@ -1,10 +1,9 @@
-/*******************************************************************************/
+//*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
 #include "types.h"                                                             
 #include "asm.h"
 #include "setup.h"
-#include "gdt.h"
 #include "memory.h"
 
 struct params {
@@ -19,52 +18,13 @@ static struct gdtr gdtreg;
 /* table de GDT */
 static gdtdes gdt[GDT_SIZE];
 
-#define STRINGIFY(x) #x
-#define MACRO(x)     STRINGIFY(x)
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
-#define __must_be_array(a) BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
-#define __same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
-#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:(-!!(e)); }))
-
 u8 kernel_version[] = "COS2000 Version " MACRO(VERSION) "- compiled " __DATE__ ;
-
-#define EFLAGS_CF			0x00000001
-#define LOOPS_8042		100000
-#define FF_8042			32
-#define LOOPS_A20_ENABLE 	255
-#define LOOPS_DELAY 		32768
-#define SMAP	0x534d4150
-
-#define interrupt(num, regs) ({\
-	asm("pushal\n\
-          mov %[eflagsregs],%%eax\n\
-	    pushl %%eax\n\
-	    popfl\n\
-	    mov %[eaxregs],%%eax\n\
-	    mov %[ebxregs],%%ebx\n\
-	    mov %[ecxregs],%%ecx\n\
-	    mov %[edxregs],%%edx\n\
-	    mov %[esiregs],%%esi\n\
-	    mov %[ediregs],%%edi\n\
-	    mov %[ebpregs],%%ebp\n\
-          int %[numregs]\n\
-	    pushfl\n\
-          popl %%eax\n\
-          mov %%eax,%[eflagsregs]\n\
-	    mov %%eax,%[eaxregs]\n\
-	    mov %%ebx,%[ebxregs]\n\
-	    mov %%ecx,%[ecxregs]\n\
-	    mov %%edx,%[edxregs]\n\
-	    mov %%esi,%[esiregs]\n\
-	    mov %%edi,%[ediregs]\n\
-	    mov %%ebp,%[ebpregs]\n\
-          popal":[eaxregs] "+m" (regs.eax),[ebxregs] "+m" (regs.ebx),[ecxregs] "+m" (regs.ecx),[edxregs] "+m" (regs.edx),[esiregs] "+m" (regs.esi),[ediregs] "+m" (regs.edi),[ebpregs] "+m" (regs.ebp),[eflagsregs] "+m" (regs.eflags):[numregs] "i" (num):);})
-
 
 u8 initmemory(void)
 {
 	u32 count = 0;
 	miniregs reg;
+	cleanreg(&reg);
 	entrye820 *desc = params.e820_table;
 	static struct entrye820 buf; 
 	do {
@@ -86,9 +46,22 @@ u8 initmemory(void)
 	return params.e820_numbers= count;
 }
 
+void showstr(u8 *str)
+{
+	while (*str!='\000')
+		showchar(*str++);
+}
+
+void cleanreg(miniregs *reg)
+{
+	for (u8 i;i<sizeof(miniregs);i++)
+		*((u8 *)reg+i)=0;
+}
+
 void showchar(u8 achar)
 {
 	miniregs reg;
+	cleanreg(&reg);
 	reg.bx = 0x0007;
 	reg.cx = 0x0001;
 	reg.ah = 0x0e;
@@ -96,15 +69,10 @@ void showchar(u8 achar)
 	interrupt(0x10, reg); /* INT 10 - VIDEO - TELETYPE OUTPUT */
 }
 
-void showstr(u8 *str)
-{
-	while (*str!='\000')
-		showchar(*str++);
-}
-
 u8 gettime(void)
 {
 	miniregs reg;
+	cleanreg(&reg);
 	reg.ah = 0x02;
 	interrupt(0x1a, reg); /* TIME - GET REAL-TIME CLOCK TIME (AT,XT286,PS) */
 	return reg.dh;
@@ -113,6 +81,7 @@ u8 gettime(void)
 u8 waitchar(void)
 {
 	miniregs reg;
+	cleanreg(&reg);
 	reg.ah = 0x00;
 	interrupt(0x16, reg); /* INT 16 - KEYBOARD - GET KEYSTROKE */
 	return reg.al;
@@ -121,6 +90,7 @@ u8 waitchar(void)
 void initkeyboard(void)
 {
 	miniregs reg;
+	cleanreg(&reg);
 	reg.ah = 0x02;
 	interrupt(0x16, reg); /* INT 16 - KEYBOARD - GET SHIFT FLAGS */
 	params.kbflag=reg.al;
@@ -281,7 +251,8 @@ void initselectors(u32 executingoffset)
 		xor %%esi,%%esi\n\
 		xor %%edi,%%edi\n\
 		xor %%ebp,%%ebp\n\
-		jmp %%ebx"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE),[stack] "i"(SEL_KERNEL_STACK),[stackoff] "i"(KERNEL_STACK_ADDR),[offset] "m"(executingoffset));
+		jmp %%ebx\n\
+	.code16gcc"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE),[stack] "i"(SEL_KERNEL_STACK),[stackoff] "i"(KERNEL_STACK_ADDR),[offset] "m"(executingoffset));
 }
 
 /*******************************************************************************/
@@ -353,12 +324,15 @@ void initpmode(u32 offset)
 
 void main(void)
 {
-	showstr("Chargement de COS2000 - mode reel");
-waitchar();
+	showstr("*** Chargement de COS2000 - mode reel ***\r\n");
 	/* initparams(); */
+	showstr(" -Initialisation de la memoire\r\n");
 	initmemory();
+	showstr(" -Initialisation du clavier\r\n");
 	initkeyboard();
 	/* initvideo(); */
+	showstr(" -Initialisation du coprocesseur\r\n");
 	initcoprocessor();
+	showstr(" -Passage en mode protege\r\n");
 	initpmode(0x10000);
 }

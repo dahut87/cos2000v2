@@ -1,5 +1,5 @@
-GCC=gcc -O0 -g -nostdinc -ffreestanding -fno-builtin -Wall -w -I ../../include -march=i386 -m16 -fomit-frame-pointer -fno-pie -no-pie -mno-mmx -mno-sse -mno-80387 -mno-fp-ret-in-387 -c
-ASM=gcc -m16 -march=i386 -fomit-frame-pointer -fno-pie -no-pie -mno-mmx -mno-sse -mno-80387 -mno-fp-ret-in-387 -D__ASSEMBLY__ -I ../ -I ../../include -c -o
+GCC=gcc -O0 -g -nostdinc -ffreestanding -Wall -Wstrict-prototypes -fno-stack-protector -march=i386 -m16 -mpreferred-stack-boundary=2 -mregparm=3 -fno-pic -fno-strict-aliasing -mno-mmx -mno-sse -w -I ../../include -c
+ASM=gcc -O0 -m16 -march=i386 -fno-pic -D__ASSEMBLY__ -I ../ -I ../../include -c -o
 LINK=ld -m elf_i386 -n
 CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
