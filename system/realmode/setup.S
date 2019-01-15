@@ -123,7 +123,7 @@ setup_move_size: .word  0x8000		# size to move, when setup is not
 
 code32_start:				# here loaders can put a different
 					# start address for 32-bit code.
-		.long	0x100000	# 0x100000 = default for big kernel
+		.long	LOAD_PHYSICAL_ADDR	# 0x100000 = default for big kernel
 
 ramdisk_image:	.long	0		# address of loaded ramdisk image
 					# Here the loader puts the 32-bit

@@ -1,4 +1,4 @@
-GCC=gcc -O0 -g -nostdinc -ffreestanding -Wall -Wstrict-prototypes -fno-stack-protector -march=i386 -m16 -mpreferred-stack-boundary=2 -mregparm=3 -fno-pic -fno-strict-aliasing -mno-mmx -mno-sse -w -I ../../include -c
+GCC=gcc -O0 -g -nostdinc -ffreestanding -Wall -Wstrict-prototypes -fno-stack-protector -march=i386 -m16 -fno-pic -fno-strict-aliasing -mno-mmx -mno-sse -w -I ../../include -c
 ASM=gcc -O0 -m16 -march=i386 -fno-pic -D__ASSEMBLY__ -I ../ -I ../../include -c -o
 LINK=ld -m elf_i386 -n
 CONVERT=dos2unix
@@ -13,8 +13,8 @@ $(eval VERSION=$(shell git describe --tags))
 all: setup.bin 
 	sync
 
-setup: setupc.o setup.o 
-	$(LINK) -T setup.ld setupc.o setup.o
+setup: setupc.o setup.o setup32.o
+	$(LINK) -T setup.ld setupc.o setup.o setup32.o
 
 setup.bin: setup
 	$(OBJCOPY) $^ $@	
@@ -25,6 +25,9 @@ setupc.o: setup.c
 	$(GCC) -DVERSION=$(VERSION) -o $@ $^
 
 setup.o: setup.S
+	$(ASM) $@ $^
+
+setup32.o: pmode.S
 	$(ASM) $@ $^
 
 clean:

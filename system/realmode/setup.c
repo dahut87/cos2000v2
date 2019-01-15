@@ -175,85 +175,36 @@ u8 enableA20(void)
        int loops = LOOPS_A20_ENABLE;
        int kbcerr;
        while (loops--) {
-	       if (testA20())
-		       return 1;
+	       if (!testA20())
+		       return NULL;
 	       kbcerr = empty8042();
-	       if (testA20())
-		       return 1;
+	       if (!testA20())
+		       return NULL;
 	       if (!kbcerr) {
 		       enableA20kbc();
-		       if (testA20())
-			       return 1;
+		       if (!testA20())
+			       return NULL;
 	       }
 	       enableA20fast();
-	       if (testA20())
+	       if (!testA20())
 		       return NULL;
        }
        return 1;
 }
 
 /*******************************************************************************/
-/* Copie un octet une ou plusieurs fois en mémoire */
-
-void memset(void *dst, u8 val, u32 count, u32 size)
-{
-	u8     *d = (u8 *) dst;
-	if (size > 0)
-		size--;
-	for (; count != 0; count--)
-	{
-		*(d++) = val;
-		d += size;
-	}
-}
-
-/*******************************************************************************/
 /* Copie une portion de mémoire vers une autre */
 
-void memcpy(void *src, void *dst, u32 count, u32 size)
+void memcpyto(void *src, void *dst, u32 count)
 {
-	u8     *s = (u8 *) src;
-	u8     *d = (u8 *) dst;
-	if (size > 0)
-		size--;
-	for (; count != 0; count--)
-	{
-		*(d++) = *(s++);
-		d += size;
-	}
+	asm("push %%es\n\
+           cld\n\
+           xor %%eax,%%eax\n\
+           mov %%ax,%%es\n\
+           rep movsb\n\
+           pop %%es"::"S" (src), "D" (dst), "c" (count):);
 }
 
-
-/*******************************************************************************/
-/* Initialise les selecteurs avec la GDT */
-
-void initselectors(u32 executingoffset)
-{
-	asm(" movl	%%cr0, %%eax \n \
-		orb	$0x00000001, %%eax \n \
-		movl	%%eax, %%cr0 \n \
-            ljmp %[code], $raz\n\
-		raz:\n \
-	.code32\n\
-		movw %[data], %%ax	\n \
-            movw %%ax, %%ds	\n \
-            movw %%ax, %%es	\n \
-            movw %%ax, %%fs	\n \
-            movw %%ax, %%gs   \n \
-            movl %[offset], %%ebx \n \
-            movw %[stack], %%ax \n \
-            movw %%ax, %%ss \n \
-            movl %[stackoff], %%esp \n \
-		xor %%eax,%%eax\n\
-		xor %%ebx,%%ebx\n\
-		xor %%ecx,%%ecx\n\
-		xor %%edx,%%edx\n\
-		xor %%esi,%%esi\n\
-		xor %%edi,%%edi\n\
-		xor %%ebp,%%ebp\n\
-		jmp %%ebx\n\
-	.code16gcc"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE),[stack] "i"(SEL_KERNEL_STACK),[stackoff] "i"(KERNEL_STACK_ADDR),[offset] "m"(executingoffset));
-}
 
 /*******************************************************************************/
 /* Créé un descripteur GDT */
@@ -278,16 +229,16 @@ void initgdt()
 	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[0]);	/* descripteur nul         */
 	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING0 | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[1]);	/* code -> SEL_KERNEL_CODE */
 	makegdtdes(0x0, 0x00000, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING0 | SEG_EXPAND_DOWN | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[2]);	/* pile -> SEL_KERNEL_STACK */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_CODE | SEG_RING3 | SEG_CONFORMING | SEG_READ | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[3]);	/* code -> SEL_USER_CODE */
-	makegdtdes(0x0, 0x00000, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING3 | SEG_EXPAND_DOWN | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[4]);	/* pile -> SEL_USER_STACK */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[3]);	/* LIBRE */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[4]);	/* LIBRE */
 	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING0 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[5]);	/* data -> SEL_KERNEL_DATA */
-	makegdtdes(0x0, 0xFFFFF, SEG_PRESENT | SEG_NORMAL | SEG_DATA | SEG_RING3 | SEG_READ_WRITE | SEG_ACCESSED, GRANULARITY_4K | OPSIZE_32B | SYS_AVAILABLE, &gdt[6]);	/* data -> SEL_USER_DATA */
-	makegdtdes(0x0, 0x67, SEG_PRESENT | SEG_CODE | SEG_RING3 | SEG_ACCESSED, 0x00, &gdt[7]);	/* descripteur de tss */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[6]);	/* LIBRE */
+	makegdtdes(0x0, 0x00000, 0x00, 0x00, &gdt[7]);	/* LIBRE */
 	/* initialise le registre gdt */
 	gdtreg.limite = GDT_SIZE * sizeof(gdtdes);
 	gdtreg.base = GDT_ADDR;
 	/* recopie de la GDT a son adresse */
-	memcpy(&gdt, (u8 *) gdtreg.base, gdtreg.limite, 1);
+	memcpyto(&gdt, (u8 *) gdtreg.base, gdtreg.limite);
 	/* chargement du registre GDT */
 	lgdt(gdtreg);
 }
@@ -311,7 +262,7 @@ void initcoprocessor(void)
 	iodelay();
 }
 
-void initpmode(u32 offset)
+void initpmode()
 {
 	if (enableA20()) {
 		showstr("impossible d'ouvrir la ligne A20...\n");
@@ -319,7 +270,7 @@ void initpmode(u32 offset)
 	}
 	maskinterrupts();
 	initgdt();
-	initselectors(offset);
+	gotopmode();		
 }
 
 void main(void)
@@ -334,5 +285,5 @@ void main(void)
 	showstr(" -Initialisation du coprocesseur\r\n");
 	initcoprocessor();
 	showstr(" -Passage en mode protege\r\n");
-	initpmode(0x10000);
+	initpmode();
 }

@@ -882,7 +882,12 @@ class Source(Dashboard.Module):
         if not gdb.selected_thread().is_stopped():
             return []
         # try to fetch the current line (skip if no line information)
-        sal = gdb.selected_frame().find_sal()
+        arch = gdb.parameter('architecture');
+        if arch=="i8086":
+             realpc=int(gdb.parse_and_eval('$pc'))+int(gdb.parse_and_eval('$cs'))*16
+             sal = gdb.find_pc_line(realpc)
+        else:
+             sal = gdb.selected_frame().find_sal()
         current_line = sal.line
         if current_line == 0:
             return []
@@ -962,7 +967,12 @@ instructions constituting the current statement are marked, if available."""
         if not gdb.selected_thread().is_stopped():
             return []
         line_info = None
+        arch = gdb.parameter('architecture');
         frame = gdb.selected_frame()  # PC is here
+        if arch=="i8086":
+              realpc=frame.pc()+int(gdb.parse_and_eval('$cs'))*16
+        else:
+              realpc=frame.pc()
         disassemble = frame.architecture().disassemble
         try:
             # try to fetch the function boundaries using the disassemble command
@@ -971,21 +981,20 @@ instructions constituting the current statement are marked, if available."""
             end = int(re.split('[ :]', output[-3][3:], 1)[0], 16)
             asm = disassemble(start, end_pc=end)
             # find the location of the PC
-            pc_index = next(index for index, instr in enumerate(asm)
-                            if instr['addr'] == frame.pc())
+            pc_index = next(index for index, instr in enumerate(asm) if instr['addr'] == realpc)
             start = max(pc_index - self.context, 0)
             end = pc_index + self.context + 1
             asm = asm[start:end]
             # if there are line information then use it, it may be that
             # line_info is not None but line_info.last is None
-            line_info = gdb.find_pc_line(frame.pc())
+            line_info = gdb.find_pc_line(realpc)
             line_info = line_info if line_info.last else None
         except (gdb.error, StopIteration):
             # if it is not possible (stripped binary or the PC is not present in
             # the output of `disassemble` as per issue #31) start from PC and
             # end after twice the context
             try:
-                asm = disassemble(frame.pc(), count=2 * self.context + 1)
+                asm = disassemble(realpc, count=2 * self.context + 1)
             except gdb.error as e:
                 msg = '{}'.format(e)
                 return [ansi(msg, R.style_error)]
@@ -1046,7 +1055,7 @@ instructions constituting the current statement are marked, if available."""
             format_string = '{}{}{}{}{}'
             indicator = ' '
             text = ' ' + highlighter.process(text)
-            if addr == frame.pc():
+            if addr == realpc:
                 if not R.ansi:
                     indicator = '>'
                 addr_str = ansi(addr_str, R.style_selected_1)

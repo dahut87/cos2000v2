@@ -34,7 +34,7 @@ togit: clean indent
 piggy.o: piggy.S
 	$(ASM) $@ $^ 
 
-system: systemc.o system.o ../lib/libs.o
+system: system.o system_asm.o ../lib/libs.o
 	$(LINK) -T system.ld system.o ../lib/libs.o
 	$(OBJDEBUG) system system.sym
 	$(NM) system > system.map
@@ -51,10 +51,10 @@ piggy.S: system.bin.gz
 realmode/setup.bin:
 	make -C realmode
 
-systemc.o: system.c
+system.o: system.c
 	$(GCC) $@ $^
 
-system.o: system.S
+system_asm.o: system_asm.S
 	$(ASM) $@ $^
 
 clean:

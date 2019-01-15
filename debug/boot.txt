@@ -1,7 +1,10 @@
 target remote localhost:1234
 set disassembly-flavor att
-symbol-file ./system/realmode/setup.sym
+add-symbol-file ./system/realmode/setup.sym 0x902f6
 set architecture i8086
 break *0x90200
 cont
 clear *0x90200
+break main
+cont
+clear main

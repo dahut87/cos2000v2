@@ -8,9 +8,8 @@
 .code32
 .section ".text"
 .global start
+.extern main
 start:
-	ljmp $SEL_KERNEL_CODE,$suite
-suite:
 	movw $SEL_KERNEL_DATA, %ax
       movw %ax, %ds
       movw %ax, %es
@@ -26,3 +25,4 @@ suite:
 	xor %esi,%esi
 	xor %edi,%edi
 	xor %ebp,%ebp
+	call main

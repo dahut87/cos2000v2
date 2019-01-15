@@ -1,4 +1,4 @@
-DEBUG=exec gnome-terminal --geometry=120x40+1+1 -x ./debug/debug.sh
+DEBUG=exec gnome-terminal --geometry=120x55+1+1 -x ./debug/debug.sh
 REMOVE=rm -f
 INSTALL=sudo apt-get install
 COPY=cp
@@ -81,15 +81,15 @@ backup: clean
 	cd .. 
 	tar cf - Source\ C | gzip -f - > backup.tar.gz
 
-test: programs bits32 harddisk qemu
+test: tools programs bits32 harddisk qemu
 
-test64: programs bits64 uefi qemu64
+test64: tools programs bits64 uefi qemu64
 
 retest: littleclean test
 
 retest64: littleclean test64
 
-testbochs: programs bits32 harddisk bochs-debug
+testbochs: tools programs bits32 harddisk bochs-debug
 
 view:
 	hexdump  -C ./final/harddisk.img.final|head -c10000
@@ -104,15 +104,15 @@ redebug64: littleclean debug-system64
 
 kernel: debug-kernel
 
-debug-boot: programs bits32 harddisk qemu-debug
+debug-boot: tools programs bits32 harddisk qemu-debug
 	sleep 2
 	$(DEBUG) ./debug/boot.txt
 
-debug-system: programs bits32 harddisk qemu-debug
+debug-system: tools programs bits32 harddisk qemu-debug
 	sleep 2
 	$(DEBUG) ./debug/system.txt
 
-debug-system64: programs bits64 uefi qemu-debug64
+debug-system64: tools programs bits64 uefi qemu-debug64
 	sleep 2
 	$(DEBUG) ./debug/system.txt
 

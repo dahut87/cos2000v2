@@ -15,6 +15,7 @@
 #include "shell.h"
 #include "syscall.h"
 #include "memory.h"
+#include "system.h"
 
 static u8 warnmsg[] =
 	"\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
@@ -59,6 +60,8 @@ int main(u8* info)
 	logo();
 
 	print("\033[37m\033[0m -Initilisation de la memoire virtuelle");
+	initgdt(&&next);
+next:
 	initpaging();
 	remap_memory(VESA_FBMEM);
 	ok();
