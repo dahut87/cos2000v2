@@ -67,6 +67,7 @@
 
 #include "types.h"
 #include "queue.h"
+#include "boot.h"
 
 /* Malloc, pour l'attribution de mémoire en heap */
 typedef struct tmalloc
@@ -114,8 +115,8 @@ typedef TAILQ_HEAD(page_s, page) page_t;
      void physical_range_use(u64 addr, u64 len);
      void physical_range_free(u64 addr, u64 len);
      u8     *physical_page_getfree(void);
-     void physical_init(void);
-     void initpaging(void);
+     void physical_init();
+     void initpaging();
      void virtual_init(void);
      tmalloc *mallocpage(u64 size);
      void   *vmalloc(u32 size);

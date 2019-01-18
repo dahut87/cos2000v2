@@ -6,7 +6,7 @@
 #include "gdt.h"
 
 .code32
-.section ".text"
+.section ".inittext"
 .global start
 .extern main
 start:
@@ -17,7 +17,9 @@ start:
       movw %ax, %gs
       movw $SEL_KERNEL_STACK, %ax
       movw %ax, %ss
-      movl $KERNEL_STACK_ADDR, %esp
+      movl %cr3, %eax
+	mov $KERNEL_STACK_ADDR,%esp
+	pushl %eax
 	xor %eax,%eax
 	xor %ebx,%ebx
 	xor %ecx,%ecx
@@ -25,4 +27,4 @@ start:
 	xor %esi,%esi
 	xor %edi,%edi
 	xor %ebp,%ebp
-	call main
+	calll main

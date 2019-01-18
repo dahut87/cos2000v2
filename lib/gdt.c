@@ -71,10 +71,13 @@ void initselectors(u32 executingoffset)
             movw %%ax, %%es	\n \
             movw %%ax, %%fs	\n \
             movw %%ax, %%gs   \n \
-            movl %[offset], %%ebx \n \
             movw %[stack], %%ax \n \
+            movl %[offset], %%ebx \n \
             movw %%ax, %%ss \n \
             movl %[stackoff], %%esp \n \
+            pushl %%ebx \n \
+            ljmp %[code],$raz \n \
+raz:\n \
 		xor %%eax,%%eax\n\
 		xor %%ebx,%%ebx\n\
 		xor %%ecx,%%ecx\n\
@@ -82,7 +85,7 @@ void initselectors(u32 executingoffset)
 		xor %%esi,%%esi\n\
 		xor %%edi,%%edi\n\
 		xor %%ebp,%%ebp\n\
-		jmp %%ebx"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE),[stack] "i"(SEL_KERNEL_STACK),[stackoff] "i"(KERNEL_STACK_ADDR),[offset] "m"(executingoffset));
+		ret"::[data] "i"(SEL_KERNEL_DATA),[code] "i"(SEL_KERNEL_CODE),[stack] "i"(SEL_KERNEL_STACK),[stackoff] "i"(KERNEL_STACK_ADDR),[offset] "m"(executingoffset));
 }
 
 /*******************************************************************************/

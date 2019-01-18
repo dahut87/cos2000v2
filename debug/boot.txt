@@ -6,5 +6,5 @@ break *0x90200
 cont
 clear *0x90200
 break main
-cont
+###cont
 clear main

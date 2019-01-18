@@ -1,3 +1,6 @@
+#ifndef _GDT
+#define _GDT
+
 /* Ordre imposé par SYSENTER */
 #define	SEL_KERNEL_CODE  0x8	/* Selecteur code du kernel */
 #define	SEL_KERNEL_STACK 0x10	/* Selecteur pile du kernel */
@@ -92,4 +95,5 @@ u32     getdesdpl(u16 sel);
 u16     getdesalign(u16 sel);
 void    setTSS(u32 ss, u32 sp);
 
+#endif
 #endif

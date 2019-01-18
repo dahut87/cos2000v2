@@ -35,7 +35,7 @@ piggy.o: piggy.S
 	$(ASM) $@ $^ 
 
 system: system.o system_asm.o ../lib/libs.o
-	$(LINK) -T system.ld system.o ../lib/libs.o
+	$(LINK) -T system.ld system.o system_asm.o ../lib/libs.o
 	$(OBJDEBUG) system system.sym
 	$(NM) system > system.map
 

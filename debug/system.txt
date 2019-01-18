@@ -3,6 +3,9 @@ set disassembly-flavor att
 set architecture i386
 symbol-file ./system/system.sym
 break start
-break system.c:50
+break *0x100000
 cont
-clear system.c:50
+clear *0x100000
+si
+break *0x100000
+cont

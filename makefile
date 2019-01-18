@@ -139,7 +139,7 @@ qemu64: killer
 	qemu-system-x86_64 -m 5G -drive format=raw,file=./final/harddiskuefi.img.final --bios /usr/share/qemu/OVMF.fd --enable-kvm -cpu host -s &
 	
 system/system.sys:
-	make -C system VESA=$(VESA)
+	make -C system
 
 final/harddisk.img.final:
 	make -C final harddisk.img.final

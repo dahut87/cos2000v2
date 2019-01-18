@@ -16,6 +16,7 @@
 #include "syscall.h"
 #include "memory.h"
 #include "system.h"
+#include "boot.h"
 
 static u8 warnmsg[] =
 	"\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
@@ -27,6 +28,8 @@ static u8 key = 0;
 
 extern wrapper_timer;
 extern wrapper_interruption20;
+
+bootparams* allparams;
 
 void ok()
 {
@@ -46,9 +49,10 @@ void error()
 	return;
 }
 
-int main(u8* info)
+void main(bootparams** params)
 {
 	cli();
+	allparams=params;
 	initdriver();
 	registerdriver(&vgafonctions);
 	registerdriver(&vesafonctions);
@@ -62,7 +66,7 @@ int main(u8* info)
 	print("\033[37m\033[0m -Initilisation de la memoire virtuelle");
 	initgdt(&&next);
 next:
-	initpaging();
+	initpaging(*allparams);
 	remap_memory(VESA_FBMEM);
 	ok();
 

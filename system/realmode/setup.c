@@ -6,11 +6,10 @@
 #include "setup.h"
 #include "memory.h"
 
-struct params {
-	entrye820 e820_table[E820_MAX_ENTRIES];
-	u32	e820_numbers;
-	u8 kbflag;
-} params;
+extern hdr;
+
+/* paramètres de démarrage */
+static bootparams params;
 
  /* registre gdt */
 static struct gdtr gdtreg;
@@ -273,17 +272,31 @@ void initpmode()
 	gotopmode();		
 }
 
+void initparams()
+{
+	//params.cmdline=((header*)hdr)->cmd_line_ptr; 
+	asm("xorl %%eax,%%eax\n \
+           movw %%ds,%%ax\n \
+           shl $4,%%eax\n \
+           addw %[bootparams],%%ax \n \
+	     movl %%eax,%%cr3"::[bootparams] "i" (&params));	
+}
+
+void initvideo()
+{
+}
+
 void main(void)
 {
 	showstr("*** Chargement de COS2000 - mode reel ***\r\n");
-	/* initparams(); */
+	initparams();
 	showstr(" -Initialisation de la memoire\r\n");
 	initmemory();
 	showstr(" -Initialisation du clavier\r\n");
 	initkeyboard();
-	/* initvideo(); */
 	showstr(" -Initialisation du coprocesseur\r\n");
 	initcoprocessor();
-	showstr(" -Passage en mode protege\r\n");
+	showstr(" -Initialisation video & passage en mode protege\r\n");
+	initvideo();	
 	initpmode();
 }

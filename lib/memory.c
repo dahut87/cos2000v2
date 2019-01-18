@@ -5,10 +5,14 @@
 #include "memory.h"
 #include "queue.h"
 #include "asm.h"
+#include "boot.h"
 
 static u8 *kernelcurrentheap = NULL;	/* pointeur vers le heap noyau */
 static u8 bitmap[MAXMEMPAGE / 8];	/* bitmap */
 static vrange_t vrange_head;
+static u64 memorysize=0;
+
+extern bootparams* allparams;
 
 /*******************************************************************************/
 /* Erreur fatale */
@@ -154,20 +158,7 @@ void vfree(void *vaddr)
 
 u64 physical_getmemorysize()
 {
-	/*u64     maxaddr = 0;
-	struct multiboot_tag_mmap *tag = getgrubinfo_mem();
-	multiboot_memory_map_t *mmap;
-	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
-	     (u8 *) mmap < (u8 *) tag + tag->size;
-	     mmap =
-	     (multiboot_memory_map_t *) ((unsigned long) mmap +
-					 ((struct multiboot_tag_mmap *)
-					  tag)->entry_size))
-		if ((mmap->addr + mmap->len > maxaddr) && mmap->type == 1)
-			maxaddr = mmap->addr + mmap->len;
-	if (maxaddr >= MAXMEMSIZE)
-		maxaddr = MAXMEMSIZE - 1;
-	return maxaddr;*/
+	return memorysize;
 }
 
 /*******************************************************************************/
@@ -258,24 +249,22 @@ u64 getmemoryfree(void)
 /*******************************************************************************/
 /* Initialisation du bitmap pour la gestion physique de la mémoire */
 
-void physical_init(void)
+void physical_init()
 {
-	/*u64     page;
-	for (page = 0; page < sizeof(bitmap); page++)
+	for (u64 page = 0; page < sizeof(bitmap); page++)
 		bitmap[page] = 0xFF;
-	struct multiboot_tag_mmap *tag = getgrubinfo_mem();
-	multiboot_memory_map_t *mmap;
-	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
-	     (u8 *) mmap < (u8 *) tag + tag->size;
-	     mmap =
-	     (multiboot_memory_map_t *) ((unsigned long) mmap +
-					 ((struct multiboot_tag_mmap *)
-					  tag)->entry_size))
-		if (mmap->type == 1)
-			physical_range_free(mmap->addr, mmap->len);
+	for (u8 i=0;i<allparams->e820_numbers;i++)
+	{
+		if (allparams->e820_table[i].type == E820_TYPE_RAM)
+			physical_range_free(allparams->e820_table[i].addr, allparams->e820_table[i].size);
 		else
-			physical_range_use(mmap->addr, mmap->len);
-	physical_range_use(0x0, KERNELSIZE);*/
+			physical_range_use(allparams->e820_table[i].addr, allparams->e820_table[i].size);
+		if ((allparams->e820_table[i].addr + allparams->e820_table[i].size > memorysize) && allparams->e820_table[i].type == E820_TYPE_RAM)
+			memorysize = allparams->e820_table[i].addr + allparams->e820_table[i].size;
+		if (memorysize >= MAXMEMSIZE)
+			memorysize = MAXMEMSIZE - 1;
+	}
+	physical_range_use(0x0, KERNELSIZE);		
 }
 
 /*******************************************************************************/
@@ -668,7 +657,7 @@ void registry_init(void)
 /*******************************************************************************/
 /* Initialisation de la mémoire paginée */
 
-void initpaging(void)
+void initpaging()
 {
 	identity_init();
 	registry_init();

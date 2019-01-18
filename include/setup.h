@@ -1,16 +1,14 @@
 /*******************************************************************************/
 /* COS2000 - Compatible Operating System - LGPL v3 - Hordé Nicolas             */
 /*                                                                             */
+/* Sources modifiées du noyau Linux linux-source-4.15.0/arch/x86/include/uapi/asm/bootparam.h
+/* Sources modifiées du noyau Linux linux-source-4.15.0/arch/x86/include/asm/e820/type.h
+
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
+
 #include "types.h"
 #include "gdt.h"
-
-#define E820_MAX_ENTRIES 128
-
-typedef struct entrye820 {
-	u64 addr;
-	u64 size;
-	u32 type;
-} entrye820 __attribute__((packed));
+#include "boot.h"
 
 typedef struct miniregs {
 	union {
@@ -70,8 +68,7 @@ typedef struct miniregs {
 	    mov %[ediregs],%%edi\n\
           int %[numregs]\n\
 	    pushfl\n\
-          popl %%eax\n\
-          mov %%eax,%[eflagsregs]\n\
+          popl %[eflagsregs]\n\
 	    mov %%eax,%[eaxregs]\n\
 	    mov %%ebx,%[ebxregs]\n\
 	    mov %%ecx,%[ecxregs]\n\
