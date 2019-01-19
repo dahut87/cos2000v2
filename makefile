@@ -27,15 +27,7 @@ syscall: clean remakeapi all
 remakeapi:
 	$(MAKECALL)
 
-programs: programs/test lib/TEST/test.c lib/TEST/test2.c
-
-lib/TEST/test.c:
-	xxd -i programs/test lib/TEST/test.c
-
-lib/TEST/test2.c:
-	xxd -i programs/test2 lib/TEST/test2.c
-
-programs/test:
+programs: 
 	make -C programs
 
 harddisk: final/harddisk.img.final
@@ -43,7 +35,7 @@ harddisk: final/harddisk.img.final
 uefi: final/harddiskuefi.img.final
 
 install:
-	$(INSTALL) gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix gnome-terminal
+	$(INSTALL) gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils cramfsprogs indent binutils bochs bochs-x bochsbios dos2unix gnome-terminal
 
 togit:	
 	make -C system togit

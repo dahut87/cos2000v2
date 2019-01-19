@@ -274,7 +274,9 @@ void initpmode()
 
 void initparams()
 {
-	//params.cmdline=((header*)hdr)->cmd_line_ptr; 
+	params.cmdline=((header*)&hdr)->cmd_line_ptr;
+	params.ramdiskaddr=((header*)&hdr)->ramdisk_image;
+	params.ramdisksize=((header*)&hdr)->ramdisk_size;
 	asm("xorl %%eax,%%eax\n \
            movw %%ds,%%ax\n \
            shl $4,%%eax\n \

@@ -25,6 +25,8 @@ typedef struct bootparams {
 	u32	e820_numbers;
 	u8* cmdline;
 	u8 kbflag;
+	u32 ramdisksize;
+	u32 ramdiskaddr;
 } bootparams;
 
 
