@@ -17,6 +17,7 @@
 #include "memory.h"
 #include "system.h"
 #include "boot.h"
+#include "cramfs.h"
 
 static u8 warnmsg[] =
 	"\033[150C\033[8D\033[37m\033[1m[ \033[36mNON\033[37m  ]\033[0m";
@@ -28,6 +29,7 @@ static u8 key = 0;
 
 extern wrapper_timer;
 extern wrapper_interruption20;
+extern u8* initrambloc;
 
 bootparams* allparams;
 
@@ -63,10 +65,14 @@ void main(bootparams** params)
 	print("\033[2J\r\n\000");
 	logo();
 
-	print("\033[37m\033[0m -Initilisation de la memoire virtuelle");
+	print("\033[37m\033[0m -Initialisation de la memoire virtuelle");
 	initgdt(&&next);
 next:
-	initpaging(*allparams);
+	initpaging();
+	ok();
+
+	print("\033[37m\033[0m -Remapping de l'arborescence de demarrage et du VESA");
+	remap_initram();
 	remap_memory(VESA_FBMEM);
 	ok();
 
@@ -108,6 +114,10 @@ next:
 		ok();
 	printf(" -Installation du coprocesseur arithmetique");
 	finit();
+	ok();
+
+	printf(" -Initialisation de l'arborescence");
+	test_super(initrambloc ,allparams->ramdisksize);
 	ok();
 
       retry:

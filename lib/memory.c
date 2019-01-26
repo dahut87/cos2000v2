@@ -16,6 +16,7 @@ extern bootparams* allparams;
 
 /*******************************************************************************/
 /* Erreur fatale */
+
 void panic(u8 * string)
 {
 	printf("KERNEL PANIC: %s\r\nSysteme arrete...\n");

@@ -8,7 +8,7 @@
 #define EPSILON 1E-40
 #define degtorad(deg) (deg * PI / 180.0)
 #define radtodeg(rad) (rad * 180.0 / PI)
-
+u32 crc32(u32 inCrc32, u8 *buf, u32 size);
 double  cos(double x);
 double  sin(double x);
 float   cosf(float x);
