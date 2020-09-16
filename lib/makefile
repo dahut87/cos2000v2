@@ -9,9 +9,10 @@ CONVERT=dos2unix
 INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bli0 -ncdw -nce -cli8 -cbi0 -npcs -cs -saf -sai -saw -nprs -lp -npsl
 REMOVE=rm -f
 CHANGEPERM=chmod 644
+SYNC=sync
 
 all: libs.o
-	sync
+	$(SYNC)
 
 togit: clean indent
 
@@ -41,7 +42,7 @@ clean:
 	$(REMOVE) */*.c~
 	$(REMOVE) ../include/*.h~
 	$(REMOVE) ./TEST/*.c
-	sync
+	$(SYNC)
 
 indent:
 	$(CHANGEPERM) *.c
@@ -56,4 +57,5 @@ indent:
 	$(CONVERT) ../include/*.h
 	$(INDENT) ../include/*.h
 	$(REMOVE) ../include/*.h~
-	sync
+	$(SYNC)
+

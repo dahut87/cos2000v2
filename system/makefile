@@ -13,12 +13,14 @@ VOFFSET=sed -n -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(_text\|__bss_start\|_end\)
 COMP=gzip -9 -f
 BUILD=../tools/build
 MKPIGGY=../tools/mkpiggy
+MAKE=make -C
+SYNC=sync
 
 all: system.sys
 
 system.sys:	piggy.o voffset.h zoffset.h realmode/setup.bin
 	$(BUILD) realmode/setup.bin system.bin zoffset.h system.sys
-	sync
+	$(SYNC)
 
 allpiggy.o: piggy.o decompress.o header.o
 	$(LINK) -T allpiggy piggy.o decompress.o header.o
@@ -49,7 +51,7 @@ piggy.S: system.bin.gz
 	$(MKPIGGY) $^ > $@ 
 
 realmode/setup.bin:
-	make -C realmode
+	$(MAKE) realmode
 
 system.o: system.c
 	$(GCC) $@ $^
@@ -58,7 +60,7 @@ system_asm.o: system_asm.S
 	$(ASM) $@ $^
 
 clean:
-	make -C realmode clean
+	$(MAKE) realmode clean
 	$(REMOVE) system  
 	$(REMOVE) piggy.S
 	$(REMOVE) *.o
@@ -72,12 +74,13 @@ clean:
 	$(REMOVE) *.sys
 	$(REMOVE) *.s
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
 
 indent:
-	make -C realmode indent
+	$(MAKE) realmode indent
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
+

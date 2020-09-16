@@ -7,14 +7,16 @@ INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bl
 REMOVE=rm -f
 CHANGELF=elfedit --output-osabi FenixOS
 CHANGEPERM=chmod 644
+MAKE=make -C
+SYNC=sync
 
 all: lib/libs.a $(EXECS) 
-	sync
+	$(SYNC)
 
 togit: clean indent
 
 lib/libs.a:
-	make -C lib
+	$(MAKE) lib
 
 %: %.c    
 	$(CC) $@.o $<
@@ -23,16 +25,17 @@ lib/libs.a:
 	$(CHANGELF) $@
     
 clean:
-	make -C lib clean
+	$(MAKE) lib clean
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
-	find . -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
-	sync
+	find . -maxdepth 1 -type f ! -perm /u=x -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
+	$(SYNC)
 
 indent: 
-	make -C lib indent
+	$(MAKE) lib indent
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
+
