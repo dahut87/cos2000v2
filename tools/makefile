@@ -17,7 +17,7 @@ togit: clean indent
 clean:
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
-	find . -maxdepth 1 -type f ! -name makefile -perm /u=x -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
+	find . -maxdepth 1 -type f ! -name makefile -perm /u=x -exec $(REMOVE) {} \;
 	sync
 
 indent: 

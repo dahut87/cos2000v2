@@ -9,7 +9,7 @@ MAKECALL=python makesyscall.py
 MAKE=make -C
 SYNC=sync
 KILL=killall
-TAR=tar cf - Source\ C | gzip -f - > backup.tar.gz
+TAR=tar cf - . | gzip -f - > ./backup.tar.gz
 HEXDUMP=hexdump  -C ./final/harddisk.img.final|head -c10000
 TMUXKILL=tmux kill-session -t
 TRUE=|| true
@@ -60,8 +60,29 @@ harddisk: final/harddisk.img.final
 
 harddiskuefi: final/harddiskuefi.img.final
 
-install:
-	$(INSTALL) gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix gnome-terminal spice-client-gtk python2
+system/system.sys:
+	$(MAKE) system
+
+final/harddisk.img.final:
+	$(MAKE) final harddisk.img.final
+
+final/harddiskuefi.img.final:
+	$(MAKE) final harddiskuefi.img.final	
+
+lib/libs.o:
+	$(MAKE) libsystem/system.sys:
+	$(MAKE) system
+
+final/harddisk.img.final:
+	$(MAKE) final harddisk.img.final
+
+final/harddiskuefi.img.final:
+	$(MAKE) final harddiskuefi.img.final	
+
+lib/libs.o:
+	$(MAKE) lib
+
+##### Divers
 
 togit:	
 	$(MAKE) system togit
@@ -73,6 +94,7 @@ togit:
 	$(SYNC)
 
 clean:	
+	$(REMOVE) ./syscalls.txt
 	$(REMOVE) .gdb_history	
 	$(MAKE) system clean
 	$(MAKE) lib clean
@@ -95,9 +117,20 @@ indent:
 	$(MAKE) tools indent
 	$(SYNC)
 
+killer: 
+	$(KILL) bochs-debug $(TRUE)
+	$(KILL) qemu-system-x86_64 $(TRUE)
+	$(KILL) qemu-system-i386 $(TRUE)
+	$(KILL) gnome-terminal-server $(TRUE)
+	$(TMUXKILL) debug $(TRUE)
+
 backup: clean
-	cd .. 
 	$(TAR)
+
+view:
+	$(HEXDUMP)
+
+##### Alias
 
 test: test32
 
@@ -112,9 +145,6 @@ retest32: littleclean test32
 retest64: littleclean test64
 
 testbochs: tools programs system32 harddisk bochs-debug
-
-view:
-	$(HEXDUMP)
 
 ##### Debuguage
 
@@ -143,13 +173,6 @@ debug-system64: tools programs system32 harddiskuefi qemu-debug64
 bochs-debug: killer
 	$(OLDEMUX86) ./debug/config.bochs
 
-killer: 
-	$(KILL) bochs-debug $(TRUE)
-	$(KILL) qemu-system-x86_64 $(TRUE)
-	$(KILL) qemu-system-i386 $(TRUE)
-	$(KILL) gnome-terminal-server $(TRUE)
-	$(TMUXKILL) debug $(TRUE)
-
 ##### Emulation
 
 qemu-debug32: killer
@@ -169,15 +192,4 @@ qemu64: killer
 	$(EMUX64) $(UEFI) &
 	$(WAIT2S)
 	$(SPICE)
-	
-system/system.sys:
-	$(MAKE) system
 
-final/harddisk.img.final:
-	$(MAKE) final harddisk.img.final
-
-final/harddiskuefi.img.final:
-	$(MAKE) final harddiskuefi.img.final	
-
-lib/libs.o:
-	$(MAKE) lib

@@ -7,6 +7,7 @@ INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bl
 REMOVE=rm -f
 CHANGELF=elfedit --output-osabi FenixOS
 CHANGEPERM=chmod 644
+CHANGEEXE=chmod 755
 MAKE=make -C
 SYNC=sync
 
@@ -21,14 +22,14 @@ lib/libs.a:
 %: %.c    
 	$(CC) $@.o $<
 	$(LINK) $@ $@.o lib/libs.a
-	$(CHANGEPERM) $@
+	$(CHANGEEXE) $@
 	$(CHANGELF) $@
     
 clean:
 	$(MAKE) lib clean
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
-	find . -maxdepth 1 -type f ! -perm /u=x -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
+	find . -maxdepth 1 -type f ! -name makefile -perm /u=x -exec $(REMOVE) {} \;
 	$(SYNC)
 
 indent: 
