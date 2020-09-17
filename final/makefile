@@ -6,7 +6,6 @@ COMPRESS=xz
 SYNC=sync
 CREATEDIR=mkdir
 CAT=cat
-MAKE=make -C
 
 all: harddisk.img.final harddiskuefi.img.final
 
@@ -18,10 +17,10 @@ harddiskuefi.img.before:
 	$(CREATEDIR) ./mnt -p
 
 harddiskuefi.img.final: harddiskuefi.img.before
-	mount.fuse-ext2 -o rw+ harddiskuefi.img.part1 ./mnt
+	mount -t ext2 -o rw harddiskuefi.img.part1 ./mnt
 	$(COPY) ../system/system.sys ./mnt/boot/
 	$(SYNC)
-	fusermount ./mnt -u
+	umount ./mnt
 	cat harddiskuefi.img.before > harddiskuefi.img.final
 	cat harddiskuefi.img.part1 >> harddiskuefi.img.final
 	$(SYNC)
@@ -34,10 +33,10 @@ harddisk.img.before:
 	$(CREATEDIR) ./mnt -p
 
 harddisk.img.final: harddisk.img.before
-	mount.fuse-ext2 -o rw+ harddisk.img.part1 ./mnt
+	mount -t ext2 -o rw harddisk.img.part1 ./mnt
 	$(COPY) ../system/system.sys ./mnt/boot/
 	$(SYNC)
-	fusermount ./mnt -u
+	umount ./mnt
 	cat harddisk.img.before > harddisk.img.final
 	cat harddisk.img.part1 >> harddisk.img.final
 	$(SYNC)
@@ -55,3 +54,4 @@ clean:
 	$(REMOVE) *.part1
 	$(REMOVE) *.img
 	$(REMOVE) *.final
+

@@ -7,6 +7,7 @@ INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bl
 REMOVE=rm -f
 CHANGELF=elfedit --output-osabi FenixOS
 CHANGEPERM=chmod 644
+CHANGEEXE=chmod 755
 MOVE=mv
 SYNC=sync
 MAKE=make -C
@@ -17,7 +18,7 @@ all: lib/libs.a ../final/initram.img
 togit: clean indent
 
 ../final/initram.img: $(EXECS)
-	(find . -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(MOVE) {} ../final/cramfs/executables/ \;;true)	
+	(find . -maxdepth 1 -type f ! -name makefile -perm /u=x -exec $(MOVE) {} ../final/cramfs/executables/ \;;true)	
 	mkcramfs ../final/cramfs/ ../final/initram.img
 
 lib/libs.a:
@@ -26,15 +27,15 @@ lib/libs.a:
 %: %.c    
 	$(CC) $@.o $<
 	$(LINK) $@ $@.o lib/libs.a
-	$(CHANGEPERM) $@
+	$(CHANGEEXE) $@
 	$(CHANGELF) $@
     
 clean:
 	make -C lib clean
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
-	(find ../final/cramfs/executables -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;;true)
-	(find . -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;;true)
+	(find ../final/cramfs/executables -maxdepth 1 -type f ! -name makefile -perm /u=x -exec $(REMOVE) {} \;;true)
+	(find . -maxdepth 1-type f ! -name makefile -perm /u=x  -exec $(REMOVE) {} \;;true)
 	$(SYNC)
 
 indent: 

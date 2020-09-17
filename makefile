@@ -52,10 +52,19 @@ harddisk: final/harddisk.img.final
 
 harddiskuefi: final/harddiskuefi.img.final
 
-install:
-	$(INSTALL) gcc qemu fusefat fuseext2 gdb ovmf bsdmainutils tar bsdmainutils indent binutils bochs bochs-x bochsbios dos2unix gnome-terminal spice-client-gtk python2
-	wget http://ftp.fr.debian.org/debian/pool/main/c/cramfs/cramfsprogs_1.1-6_amd64.deb -O /tmp/cramfsprogs_1.1-6_amd64.deb
-	dpkg -i /tmp/cramfsprogs_1.1-6_amd64.deb
+system/system.sys:
+	$(MAKE) system
+
+final/harddisk.img.final:
+	$(MAKE) final harddisk.img.final
+
+final/harddiskuefi.img.final:
+	$(MAKE) final harddiskuefi.img.final	
+
+lib/libs.o:
+	$(MAKE) lib
+
+##### Divers
 
 togit:	
 	$(MAKE) system togit
@@ -67,6 +76,7 @@ togit:
 	$(SYNC)
 
 clean:	
+	$(REMOVE) ./syscalls.txt
 	$(REMOVE) .gdb_history	
 	$(MAKE) system clean
 	$(MAKE) lib clean
@@ -93,6 +103,11 @@ backup: clean
 	cd .. 
 	$(TAR)
 
+view:
+	$(HEXDUMP)
+
+##### Alias
+
 test: test32
 
 retest: retest32
@@ -106,9 +121,6 @@ retest32: littleclean test32
 retest64: littleclean test64
 
 testbochs: tools programs system32 harddisk bochs-debug
-
-view:
-	$(HEXDUMP)
 
 ##### Debuguage
 
@@ -164,14 +176,3 @@ qemu64: killer
 	$(WAIT2S)
 	$(SPICE)
 	
-system/system.sys:
-	$(MAKE) system
-
-final/harddisk.img.final:
-	$(MAKE) final harddisk.img.final
-
-final/harddiskuefi.img.final:
-	$(MAKE) final harddiskuefi.img.final	
-
-lib/libs.o:
-	$(MAKE) lib
