@@ -6,9 +6,10 @@ INDENT=indent -nhnl -l75 -ppi3 -ts8 -bls -nbc -di8 -nbad -nbap -nsob -i8 -bl -bl
 REMOVE=rm -f
 CHANGELF=elfedit --output-osabi FenixOS
 CHANGEPERM=chmod 644
+SYNC=sync
 
 all: $(EXECS) 
-	sync
+	$(SYNC)
 
 togit: clean indent
 
@@ -17,12 +18,13 @@ togit: clean indent
 clean:
 	$(REMOVE) *.o
 	$(REMOVE) *.c~
-	find . -type f ! -name makefile -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
-	sync
+	find . -maxdepth 1 -type f ! -name makefile -perm /u=x -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;
+	$(SYNC)
 
 indent: 
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
+

@@ -1,47 +1,57 @@
-harddiskuefi.img.before:
-	xz -d -k harddiskuefi.img.xz
-	dd if=harddiskuefi.img of=harddiskuefi.img.part1 skip=13672 bs=512
-	dd if=harddiskuefi.img of=harddiskuefi.img.before count=13672 bs=512
-	mkdir ./mnt -p
-	sync
+REMOVE=rm -f
+INSTALL=sudo apt-get install
+COPY=cp
+DISKCOPY=dd
+COMPRESS=xz
+SYNC=sync
+CREATEDIR=mkdir
+CAT=cat
+MAKE=make -C
 
-harddiskuefi.img.final: initram.img harddiskuefi.img.before
+all: harddisk.img.final harddiskuefi.img.final
+
+harddiskuefi.img.before:
+	$(COMPRESS) -d -k harddiskuefi.img.xz
+	$(DISKCOPY) if=harddiskuefi.img of=harddiskuefi.img.part1 skip=13672 bs=512
+	$(DISKCOPY) if=harddiskuefi.img of=harddiskuefi.img.before count=13672 bs=512
+	$(SYNC)
+	$(CREATEDIR) ./mnt -p
+
+harddiskuefi.img.final: harddiskuefi.img.before
 	mount.fuse-ext2 -o rw+ harddiskuefi.img.part1 ./mnt
-	cp ../system/system.sys ./mnt/boot/
-	cp ./initram.img ./mnt/boot/
-	sync
+	$(COPY) ../system/system.sys ./mnt/boot/
+	$(SYNC)
 	fusermount ./mnt -u
 	cat harddiskuefi.img.before > harddiskuefi.img.final
 	cat harddiskuefi.img.part1 >> harddiskuefi.img.final
-	sync
+	$(SYNC)
 
 harddisk.img.before:
-	xz -d -k harddisk.img.xz
-	dd if=harddisk.img of=harddisk.img.part1 skip=63 bs=512
-	dd if=harddisk.img of=harddisk.img.before count=63 bs=512
-	mkdir ./mnt -p
-	sync
+	$(COMPRESS) -d -k harddisk.img.xz
+	$(DISKCOPY) if=harddisk.img of=harddisk.img.part1 skip=63 bs=512
+	$(DISKCOPY) if=harddisk.img of=harddisk.img.before count=63 bs=512
+	$(SYNC)
+	$(CREATEDIR) ./mnt -p
 
-harddisk.img.final: initram.img harddisk.img.before
+harddisk.img.final: harddisk.img.before
 	mount.fuse-ext2 -o rw+ harddisk.img.part1 ./mnt
-	cp ../system/system.sys ./mnt/boot/
-	cp ./initram.img ./mnt/boot/
-	sync
+	$(COPY) ../system/system.sys ./mnt/boot/
+	$(SYNC)
 	fusermount ./mnt -u
 	cat harddisk.img.before > harddisk.img.final
 	cat harddisk.img.part1 >> harddisk.img.final
-	sync	
+	$(SYNC)
 
 initram.img:
-	make -C ../programs
+	$(MAKE) ../programs
 
 littleclean:
-	rm -f *.final
+	$(REMOVE) *.final
 
 togit: clean
 
 clean:
-	rm -f *.before
-	rm -f *.part1
-	rm -f *.img
-	rm -f *.final
+	$(REMOVE) *.before
+	$(REMOVE) *.part1
+	$(REMOVE) *.img
+	$(REMOVE) *.final

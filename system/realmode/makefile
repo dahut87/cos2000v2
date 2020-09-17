@@ -9,9 +9,10 @@ NM=nm
 OBJCOPY=objcopy -O binary  -R .note -R .comment -S
 OBJDEBUG=objcopy --only-keep-debug
 $(eval VERSION=$(shell git describe --tags))
+SYNC=sync
 
 all: setup.bin 
-	sync
+	$(SYNC)
 
 setup: setupc.o setup.o setup32.o
 	$(LINK) -T setup.ld setupc.o setup.o setup32.o
@@ -40,11 +41,12 @@ clean:
 	$(REMOVE) *.sys
 	$(REMOVE) *.s
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
 
 indent:
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
+

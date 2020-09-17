@@ -8,9 +8,11 @@ REMOVE=rm -f
 CHANGELF=elfedit --output-osabi FenixOS
 CHANGEPERM=chmod 644
 MOVE=mv
+SYNC=sync
+MAKE=make -C
 
 all: lib/libs.a ../final/initram.img
-	sync
+	$(SYNC)
 
 togit: clean indent
 
@@ -19,7 +21,7 @@ togit: clean indent
 	mkcramfs ../final/cramfs/ ../final/initram.img
 
 lib/libs.a:
-	make -C lib
+	$(MAKE) lib
 
 %: %.c    
 	$(CC) $@.o $<
@@ -33,12 +35,13 @@ clean:
 	$(REMOVE) *.c~
 	(find ../final/cramfs/executables -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;;true)
 	(find . -type f ! -perm /u=x -maxdepth 1 -regex '.+/\.?[^\.]+' -exec $(REMOVE) {} \;;true)
-	sync
+	$(SYNC)
 
 indent: 
-	make -C lib indent
+	$(MAKE) lib indent
 	$(CHANGEPERM) *.c
 	$(CONVERT) *.c
 	$(INDENT) *.c
 	$(REMOVE) *.c~
-	sync
+	$(SYNC)
+
