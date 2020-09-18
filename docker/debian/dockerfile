@@ -1,0 +1,9 @@
+FROM debian:10
+
+RUN apt-get update -yq \
+&& apt-get install --no-install-recommends gcc make qemu fusefat fuseext2 gdb ovmf xz-utils psmisc tmux git libc6-dev bsdmainutils tar wget bsdmainutils indent binutils xxd bochs bochs-x bochsbios dos2unix nasm gnome-terminal spice-client-gtk python2.7 qemu-system-x86 -yq \
+&& apt-get clean -y
+RUN wget http://ftp.fr.debian.org/debian/pool/main/c/cramfs/cramfsprogs_1.1-6_amd64.deb -O /tmp/cramfsprogs_1.1-6_amd64.deb
+RUN dpkg -i /tmp/cramfsprogs_1.1-6_amd64.deb
+RUN mkdir /data
+WORKDIR /data
