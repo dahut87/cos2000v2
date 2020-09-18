@@ -1,13 +1,15 @@
 ![logo](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/logo.png)
 
-## Présentation du projet
+## COS2000
 
-### Qu'est ce que COS2000 ?
+### Présentation du projet
 
-COS2000 est un système d'exploitation minimaliste qui vise essentiellement un objectif pédagogique.
+#### Qu'est ce que COS2000 ?
+
+COS2000 est un système d'exploitation minimaliste dont l'objectif est essentiellement pédagogique.
 Il s'agit avant tout du travail d'un passionné de programmation système.
 
-Le système est développé essentiellement en langage C mais il comporte aussi un peu d'assembleur X86.
+Le système est développé essentiellement en langage C mais il comporte aussi quelques lignes d'assembleur X86.
 
 #### Qu'est ce qu'un système d'exploitation ?
 
@@ -45,21 +47,33 @@ Les détails se trouvent dans le fichier `LICENSE.md`
 
 ### Compilation de COS2000
 
-#### Avant la compilation
+#### Logiciels utilisés
 
-##### Logiciels utilisés
+L'OS a été développé sous Linux afin de disposer d'un maximum d'outils dont GCC/GAS/Docker et l'ensemble des BINUTILS. Je vous conseille donc d'utiliser Linux afin de procéder à la compilation même si celle-ci peut fonctionner depuis Windows grace à Cygwin. Des distributions "Live" existent si vous ne souhaitez pas installer sur votre ordinateur (http://www.linuxmint.com/edition.php?id=259).
 
-L'OS a été développé sous Linux afin de disposer d'un maximum d'outils dont GCC/GAS/Docker et l'ensemble de BINUTILS. Je vous conseille donc d'utiliser Linux afin de procéder à la compilation même si celle-ci peut fonctionner depuis Windows grace à Cygwin. Des distributions "Live" existent si vous ne souhaitez pas installer sur votre ordinateur (http://www.linuxmint.com/edition.php?id=259).
+Le système de conteneurisation Docker est exploité afin de d'assurer une reproductibilité totale de l'environnement de compilation quelque soit le système d'exploitation utilisé.
 
-Je conseille l'usage du debogueur GDB avec l'ajout de [GDB dashboard - Modular visual interface for GDB in Python](https://github.com/cyrus-and/gdb-dashboard) qui permet de visualiser le contenu des registres CPU en permanence. 
+#### Installation/compilation automatique
 
-Le système de conteneurisation Docker est exploité afin de d'assurer une reproductibilité totale de l'environnement de compilation quelque soit la distribution linux utilisée.
+Téléchargez et exécutez le script d'installation automatique et de compilation "menu.sh"
+
+`wget https://raw.githubusercontent.com/dahut87/cos2000v2/develop/menu.sh`
+
+Executez le script et les sources seront ainsi automatiquement téléchargées sur votre ordinateur par le biais de Git.
+
+`chmod 755 ./menu.sh && ./menu.s`
+
+Un menu s'affiche ensuite qui vous propose de réaliser différentes tâches dont la compilation et/ou le test de COS2000.
+
+![Menu de compilation](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/compilation.png)
+
+#### Installation/compilation manuelle
 
 ##### Téléchargement de COS2000
 
 Afin de faciliter la mise à jour et le suivi des version de COS2000, GIT est utilisé.
 
-Si vous n'avez pas GIT, installez le avec la commande suivante :
+Si vous n'avez pas GIT, installez le avec la commande suivante (sous paquet debian .deb):
 
 `sudo apt-get install git`
 
@@ -67,7 +81,7 @@ Puis cloner le source chez vous avec la commande :
 
 `git clone https://github.com/dahut87/cos2000.git`
 
-#### Compilation
+##### Compilation en ligne de commande
   
 Docker est utilisé afin de permettre le fonctionnement correcte de la compilation. Au premier lancement de make.sh, si vous utilisez une distribution basée sur le système de paquet Debian, l'installation sera réalisée automatiquement. Dans le cas contraire, installez Docker et relancez le script. Une image docker est produite afin de procéder ensuite à la compilation du système.
 
@@ -87,13 +101,13 @@ Autres commandes de compilation de COS2000
 * `./make.sh programs` compile les programmes du domaine utilisateur
 * `VESA=no ./make.sh test` préfixe à utiliser (VESA=no) pour faire appel au pilote VGA et non pas VESA
 
-#### Utilisation
+### Utilisation
 
-##### Sur un ordinateur émulé
+#### Sur un ordinateur émulé
 
 Pour tester l'OS en émulation taper donc la commande `./make.sh test` qui compilera avant de lancer Qemu.
 
-##### Sur un ordinateur physique
+#### Sur un ordinateur physique
 
 Lancer une compilation du système COS2000
 
@@ -113,7 +127,7 @@ Pour connaitre le numéro de votre périphérique (clé)
 
 `lsblk`
 
-##### Usage de COS2000
+#### Commandes de COS2000
 
 Pour l'instant quelques commandes seulement sont disponibles:
 
@@ -140,7 +154,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 
 ![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/28-09-2018.png)
 
-#### Organisation du dépôt
+### Organisation du dépôt
 
 * `debug` - fichiers configuration débogueur
 * `docker` - fichiers pour la construction de containers
@@ -209,6 +223,7 @@ Des fichiers sources utilisés par COS2000 sont sous d'autres licences, parmis c
 
 * `include/queues.h` sous licence Berkeley Software Distribution License
 * `tools/*` sous licence GPL V2.0, fichiers issus du noyau Linux
+* `debug/gdbinit`, GDB dashboard - Modular visual interface for GDB in Python Copyright (c) 2015-2017 Andrea Cardaci <cyrus.and@gmail.com>.
 
 #### Historique du projet
 * Version 2.2fr - C en mode protégé Reprise du projet
