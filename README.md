@@ -61,7 +61,7 @@ Téléchargez et exécutez le script d'installation automatique et de compilatio
 
 Executez le script et les sources seront ainsi automatiquement téléchargées sur votre ordinateur par le biais de Git.
 
-`chmod 755 ./menu.sh && ./menu.s`
+`chmod 755 ./menu.sh && ./menu.sh`
 
 Un menu s'affiche ensuite qui vous propose de réaliser différentes tâches dont la compilation et/ou le test de COS2000.
 
