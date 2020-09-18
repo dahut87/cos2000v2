@@ -3,14 +3,14 @@ GODEBUG=exec gnome-terminal --geometry=120x55+1+1 -x ./debug/debug.sh
 REMOVE=rm -f
 INSTALL=sudo apt-get install
 COPY=cp
-OLDEMUX86=bochs -f
 GIT=git status
 MAKECALL=python makesyscall.py
 MAKE=make -C
 SYNC=sync
 KILL=killall
-TAR=tar cf - Source\ C | gzip -f - > backup.tar.gz
-HEXDUMP=hexdump  -C ./final/harddisk.img.final|head -c10000
+TAR=tar cf - . | gzip -f - > ./backup.tar.gz
+HEXDUMPDSK=hexdump  -C ./final/harddisk.img.final|head -c10000
+HEXDUMPSYS=hexdump  -C ./system/system.sys
 TMUXKILL=tmux kill-session -t
 TRUE=|| true
 SPICE=spicy --uri=spice://127.0.0.1?port=5900
@@ -24,15 +24,10 @@ WAIT2S=sleep 2
 
 ##### Construction
 
-all: tools programs system32 system64 harddisk harddiskuefi
+all: tools programs system harddisk harddiskuefi
 	$(SYNC)
 
-system32: ARCH=bits32 
-system32: lib/libs.o system/system.sys
-	$(SYNC)
-
-system64: ARCH=bits64
-system64: lib/libs.o system/system.sys
+system: lib/libs.o system/system.sys
 	$(SYNC)
 
 tools: tools/build
@@ -100,11 +95,13 @@ indent:
 	$(SYNC)
 
 backup: clean
-	cd .. 
 	$(TAR)
 
-view:
-	$(HEXDUMP)
+view-dsk:
+	$(HEXDUMPDSK)
+
+view-sys:
+	$(HEXDUMPSYS)
 
 ##### Alias
 
@@ -112,15 +109,13 @@ test: test32
 
 retest: retest32
 
-test32: tools programs system32 harddisk qemu32
+test32: all qemu32
 
-test64: tools programs system64 harddiskuefi qemu64
+test64: all qemu64
 
 retest32: littleclean test32
 
 retest64: littleclean test64
-
-testbochs: tools programs system32 harddisk bochs-debug
 
 ##### Debuguage
 
@@ -134,27 +129,21 @@ redebug64: littleclean debug-system64
 
 kernel: debug-kernel
 
-debug-boot: tools programs system32 harddisk qemu-debug32
+debug-boot32: all qemu-debug32
 	$(WAIT2S)
 	$(GODEBUG) ./debug/boot.txt
 
-debug-system32: tools programs system32 harddisk qemu-debug32
+debug-boot64: all qemu-debug64
+	$(WAIT2S)
+	$(GODEBUG) ./debug/boot.txt
+
+debug-system32: all qemu-debug32
 	$(WAIT2S)
 	$(GODEBUG) ./debug/system.txt
 
-debug-system64: tools programs system32 harddiskuefi qemu-debug64
+debug-system64: all qemu-debug64
 	$(WAIT2S)
 	$(GODEBUG) ./debug/system.txt
-
-bochs-debug: killer
-	$(OLDEMUX86) ./debug/config.bochs
-
-killer: 
-	$(KILL) bochs-debug $(TRUE)
-	$(KILL) qemu-system-x86_64 $(TRUE)
-	$(KILL) qemu-system-i386 $(TRUE)
-	$(KILL) gnome-terminal-server $(TRUE)
-	$(TMUXKILL) debug $(TRUE)
 
 ##### Emulation
 
@@ -175,4 +164,4 @@ qemu64: killer
 	$(EMUX64) $(UEFI) &
 	$(WAIT2S)
 	$(SPICE)
-	
+
