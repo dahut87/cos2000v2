@@ -8,6 +8,7 @@ clean:
 	(cd boot; make clean)
 	(cd lib;make clean)
 	(cd final;make clean)
+	rm -f configuration
 	sync
 
 backup: clean
@@ -49,3 +50,13 @@ boot/boot12.bin:
 
 lib/libs.o:
 	(cd lib; make)	
+
+config:
+	@echo "*** Options de compilation"
+	@echo "Quelle distribution utiliser avec Docker comme environnement de compilation ?"
+	@echo "Alpine Linux ou Debian [A*/D]"
+	@read line; if [ $$line = "D" ]; then sed -i -r 's/compilation=.*/compilation=debian/'  configuration ; else sed -i -r 's/compilation=.*/compilation=alpine/'  configuration ; fi
+	@echo "Quel mode vidéo préférez vous utiliser ?"
+	@echo "VESA ou VGA [E*/G]"
+	@read line; if [ $$line = "G" ]; then sed -i -r 's/video=.*/video=vga/'  configuration ; else sed -i -r 's/video=.*/video=vesa/'  configuration ; fi
+

@@ -1,0 +1,7 @@
+FROM debian:10
+
+RUN apt-get update -yq \
+&& apt-get install --no-install-recommends gcc make qemu dosfstools gdb psmisc tmux git libc6-dev bsdmainutils tar wget bsdmainutils indent binutils xxd dos2unix nasm gnome-terminal spice-client-gtk python2.7 qemu-system-x86 -yq \
+&& apt-get clean -y
+RUN mkdir /data
+WORKDIR /data

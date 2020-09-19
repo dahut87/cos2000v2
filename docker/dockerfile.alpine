@@ -1,0 +1,8 @@
+FROM alpine:3.12.0
+RUN echo "http://alpine.42.fr/v3.12/main" > /etc/apk/repositories
+RUN echo "http://alpine.42.fr/v3.12/community" >> /etc/apk/repositories
+RUN apk --no-cache update
+RUN apk --no-cache upgrade
+RUN apk --no-cache add font-noto git gcc make qemu qemu-system-i386 dosfstools nasm sed gdb tar wget gzip indent binutils hexdump dos2unix xxd tmux git musl-dev gnome-terminal spice-gtk spice-gtk-tools python2
+RUN mkdir /data
+WORKDIR /data

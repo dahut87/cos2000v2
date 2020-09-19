@@ -95,6 +95,7 @@ Autres commandes de compilation de COS2000
 * `./make.sh debug-boot` debogue le système en mode réel depuis le boot
 * `./make.sh debug-loader` debogue le système en mode réel depuis le loader
 * `./make.sh debug-system` debogue le système en mode protégé
+* `./make.sh config` change la configuration de la compilation
 
 ### Utilisation
 
