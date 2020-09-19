@@ -92,14 +92,13 @@ Commande de compilation de base
 Autres commandes de compilation de COS2000
 
 * `./make.sh harddisk` compile la version disque dur
-* `./make.sh uefi` compile la version disque dur UEFI
-* `./make.sh bochstest` lance l'émulation BOCHS en 32 bits sur disque dur
+* `./make.sh harddiskuefi` compile la version disque dur UEFI
 * `./make.sh test` lance l'émulation QEMU en 32 bits sur disque dur
 * `./make.sh test64` lance l'émulation QEMU en 64 bits sur disque dur en UEFI
 * `./make.sh clean` supprime les fichers compilés
 * `./make.sh syscall` réactualise les librairies du domaine utilisateur
 * `./make.sh programs` compile les programmes du domaine utilisateur
-* `VESA=no ./make.sh test` préfixe à utiliser (VESA=no) pour faire appel au pilote VGA et non pas VESA
+* `./make.sh config` change la configuration de la compilation
 
 ### Utilisation
 
@@ -167,6 +166,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * `lib` - librairies pour le noyau
 * `makefile` - Makefile du projet
 * `make.sh` - Script de compilation utilisant Docker
+* `menu.sh` - Script du menu d'autocompilation
 * `templates` - Modèles utilisés pour générer des libraires du domaine utilisateur
 * `programs` - programmes pour le domaine utilisateur
 * *  `include` - fichier d'entête C

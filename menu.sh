@@ -59,7 +59,9 @@ case "${answer}" in
 7*) ./make.sh clean;;
 8*) ./make.sh view-dsk|more;;
 9*) ./make.sh view-sys|more;;
-o*) ./make.sh config;; 
+o*) ./make.sh config
+./make.sh tool
+;; 
 c*) echo "Version disponibles:"
 SELECT=$(git branch|grep "*"|tr -d "* ")
 NUM=1
@@ -83,10 +85,10 @@ else
 fi
 if [ "${CHOOSE}" != "" ]; then
 	echo "*** Application de la version ${CHOOSE}"
-	git pull
 	git checkout $CHOOSE
 	git clean -fd
 	git reset --hard
+	git pull -f
 	./make.sh tool
 fi
 read
