@@ -83,9 +83,9 @@ else
 fi
 if [ "${CHOOSE}" != "" ]; then
 	echo "*** Application de la version ${CHOOSE}"
-	#dgit checkout $CHOOSE
-	#dgit clean -fd
-	#dgit reset --hard
+	git checkout $CHOOSE
+	git clean -fd
+	git reset --hard
 	./make.sh tool
 fi
 read
