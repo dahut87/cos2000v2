@@ -71,6 +71,7 @@ togit:
 	$(SYNC)
 
 clean:	
+	$(REMOVE) ./configuration
 	$(REMOVE) ./syscalls.txt
 	$(REMOVE) .gdb_history	
 	$(MAKE) system clean
@@ -175,3 +176,4 @@ config:
 	@echo "Quel mode vidéo préférez vous utiliser ?"
 	@echo "VESA ou VGA [E*/G]"
 	@read line; if [ $$line = "G" ]; then sed -i -r 's/video=.*/video=vga/'  configuration ; else sed -i -r 's/video=.*/video=vesa/'  configuration ; fi
+

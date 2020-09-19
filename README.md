@@ -1,4 +1,4 @@
-![logo](https://github.com/dahut87/cos2000v2/raw/feature/cramfs/Graphisme/logo.png)
+![logo](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/logo.png)
 
 ## COS2000
 
@@ -57,7 +57,7 @@ Le système de conteneurisation Docker est exploité afin de d'assurer une repro
 
 Téléchargez et exécutez le script d'installation automatique et de compilation "menu.sh"
 
-`wget https://raw.githubusercontent.com/dahut87/cos2000v2/feature/cramfs/menu.sh`
+`wget https://raw.githubusercontent.com/dahut87/cos2000v2/develop/menu.sh`
 
 Executez le script et les sources seront ainsi automatiquement téléchargées sur votre ordinateur par le biais de Git.
 
@@ -65,7 +65,7 @@ Executez le script et les sources seront ainsi automatiquement téléchargées s
 
 Un menu s'affiche ensuite qui vous propose de réaliser différentes tâches dont la compilation et/ou le test de COS2000.
 
-![Menu de compilation](https://github.com/dahut87/cos2000v2/raw/feature/cramfs/Graphisme/screenshots/compilation.png)
+![Menu de compilation](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/compilation.png)
 
 #### Installation/compilation manuelle
 
@@ -92,14 +92,13 @@ Commande de compilation de base
 Autres commandes de compilation de COS2000
 
 * `./make.sh harddisk` compile la version disque dur
-* `./make.sh uefi` compile la version disque dur UEFI
-* `./make.sh bochstest` lance l'émulation BOCHS en 32 bits sur disque dur
+* `./make.sh harddiskuefi` compile la version disque dur UEFI
 * `./make.sh test` lance l'émulation QEMU en 32 bits sur disque dur
 * `./make.sh test64` lance l'émulation QEMU en 64 bits sur disque dur en UEFI
 * `./make.sh clean` supprime les fichers compilés
 * `./make.sh syscall` réactualise les librairies du domaine utilisateur
 * `./make.sh programs` compile les programmes du domaine utilisateur
-* `VESA=no ./make.sh test` préfixe à utiliser (VESA=no) pour faire appel au pilote VGA et non pas VESA
+* `./make.sh config` change la configuration de la compilation
 
 ### Utilisation
 
@@ -152,7 +151,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * `BPCLR` efface un point d'arrêt (ARGUMENTS),
 * `DISASM` désassemble une portion de mémoire (ARGUMENTS),
 
-![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/feature/cramfs/Graphisme/screenshots/28-09-2018.png)
+![COS2000 le 28-09-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/28-09-2018.png)
 
 ### Organisation du dépôt
 
@@ -167,6 +166,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * `lib` - librairies pour le noyau
 * `makefile` - Makefile du projet
 * `make.sh` - Script de compilation utilisant Docker
+* `menu.sh` - Script du menu d'autocompilation
 * `templates` - Modèles utilisés pour générer des libraires du domaine utilisateur
 * `programs` - programmes pour le domaine utilisateur
 * *  `include` - fichier d'entête C
@@ -215,7 +215,7 @@ Pour l'instant quelques commandes seulement sont disponibles:
 * virtualisation par VMX,
 * Gestion du système de fichier EXT2FS.
 
-![COS2000 le 29-11-2018](https://github.com/dahut87/cos2000v2/raw/feature/cramfs/Graphisme/screenshots/29-11-2018.png)
+![COS2000 le 29-11-2018](https://github.com/dahut87/cos2000v2/raw/develop/Graphisme/screenshots/29-11-2018.png)
 
 #### Autres Licences (autres auteurs)
 
