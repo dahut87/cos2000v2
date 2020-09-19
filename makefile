@@ -183,3 +183,11 @@ qemu64: killer
 	$(WAIT2S)
 	$(SPICE)
 
+config:
+	@echo "*** Options de compilation"
+	@echo "Quelle distribution utiliser avec Docker comme environnement de compilation ?"
+	@echo "Alpine Linux ou Debian [A*/D]"
+	@read line; if [ $$line = "D" ]; then sed -i -r 's/compilation=.*/compilation=debian/'  configuration ; else sed -i -r 's/compilation=.*/compilation=alpine/'  configuration ; fi
+	@echo "Quel mode vidéo préférez vous utiliser ?"
+	@echo "VESA ou VGA [E*/G]"
+	@read line; if [ $$line = "G" ]; then sed -i -r 's/video=.*/video=vga/'  configuration ; else sed -i -r 's/video=.*/video=vesa/'  configuration ; fi
